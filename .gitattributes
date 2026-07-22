@@ -1,0 +1,16 @@
+# Marilyn Clinics Git attributes
+
+# Binary fonts
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# Binary images and documents
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary

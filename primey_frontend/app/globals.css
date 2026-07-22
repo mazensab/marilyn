@@ -1,0 +1,260 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--bricolage-grotesque);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-scroll: scroll var(--animation-duration, 40s)
+    var(--animation-direction, forwards) linear infinite;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+
+  @keyframes scroll {
+    to {
+      transform: translate(calc(-50% - 0.5rem));
+    }
+  }
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* ======================================================
+     Mhamcloud Black / Neutral Brand Colors
+     Primary:   #111827
+     Secondary: #374151
+
+     Layout direction:
+     - Keep the workspace background visually white and unified.
+     - Keep Mhamcloud black/neutral as action/brand color only.
+  ====================================================== */
+
+  --background: #ffffff;
+  --foreground: #111827;
+
+  --card: #ffffff;
+  --card-foreground: #111827;
+
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+
+  --primary: #111827;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f8fafc;
+  --secondary-foreground: #111827;
+
+  --muted: #ffffff;
+  --muted-foreground: #6b7280;
+
+  --accent: #ffffff;
+  --accent-foreground: #111827;
+
+  --destructive: #dc2626;
+
+  --border: #edf0f4;
+  --input: #edf0f4;
+  --ring: #374151;
+
+  --chart-1: #111827;
+  --chart-2: #374151;
+  --chart-3: #4b5563;
+  --chart-4: #9ca3af;
+  --chart-5: #e5e7eb;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #111827;
+  --sidebar-primary: #111827;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #111827;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #edf0f4;
+  --sidebar-ring: #111827;
+}
+
+.dark {
+  --background: #030712;
+  --foreground: #f9fafb;
+
+  --card: #111827;
+  --card-foreground: #f9fafb;
+
+  --popover: #111827;
+  --popover-foreground: #f9fafb;
+
+  --primary: #f9fafb;
+  --primary-foreground: #030712;
+
+  --secondary: #111827;
+  --secondary-foreground: #ffffff;
+
+  --muted: #1f2937;
+  --muted-foreground: #d1d5db;
+
+  --accent: #374151;
+  --accent-foreground: #f9fafb;
+
+  --destructive: #f87171;
+
+  --border: rgb(255 255 255 / 12%);
+  --input: rgb(255 255 255 / 16%);
+  --ring: #374151;
+
+  --chart-1: #374151;
+  --chart-2: #9ca3af;
+  --chart-3: #4b5563;
+  --chart-4: #e5e7eb;
+  --chart-5: #111827;
+
+  --sidebar: #111827;
+  --sidebar-foreground: #f9fafb;
+  --sidebar-primary: #374151;
+  --sidebar-primary-foreground: #030712;
+  --sidebar-accent: #1f2937;
+  --sidebar-accent-foreground: #f9fafb;
+  --sidebar-border: rgb(255 255 255 / 12%);
+  --sidebar-ring: #111827;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    direction: rtl;
+    scroll-behavior: smooth;
+    background: var(--background);
+  }
+
+  html[dir="ltr"] {
+    direction: ltr;
+  }
+
+  html[dir="rtl"] {
+    direction: rtl;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    min-height: 100vh;
+    direction: inherit;
+    text-align: start;
+    font-family: var(--font-sans), sans-serif;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
+
+  input,
+  textarea {
+    text-align: start;
+  }
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-sans);
+}
+
+.btn-bezel {
+  box-shadow:
+    inset 0 2px 0 0 hsla(0, 0%, 100%, 0.25),
+    inset 0 -1px 0 0 rgba(17, 24, 39, 0.2),
+    0 2px 6px 0 rgba(17, 24, 39, 0.12);
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+
+  @media (width >= --theme(--breakpoint-sm)) {
+    max-width: none;
+  }
+
+  @media (width >= 1400px) {
+    max-width: 1400px;
+  }
+}
+
+/* ======================================================
+   RTL / LTR HELPERS
+====================================================== */
+
+[dir="rtl"] .rtl-flip-x {
+  transform: scaleX(-1);
+}
+
+[dir="ltr"] .rtl-flip-x {
+  transform: scaleX(1);
+}
+
+[dir="rtl"] .force-ltr {
+  direction: ltr;
+  text-align: left;
+}
+
+[dir="ltr"] .force-rtl {
+  direction: rtl;
+  text-align: right;
+}
