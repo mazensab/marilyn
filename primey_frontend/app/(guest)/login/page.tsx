@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 /* =========================================================
-   📌 Mhamcloud - Unified Login Page
+   📌 Marilyn Clinics - Unified Login Page
    Path: primey_frontend/app/(guest)/login/page.tsx
 
    ✅ صفحة دخول موحدة للنظام والشركات
@@ -279,13 +279,13 @@ export default function Page() {
 
   const content = useMemo(
     () => ({
-      title: isArabic ? "مرحبا بعودتك إلى Mhamcloud" : "Welcome back to Mhamcloud",
+      title: isArabic ? "مرحبا بعودتك إلى Marilyn Clinics" : "Welcome back to Marilyn Clinics",
       subtitle: isArabic
-        ? "سجل الدخول لإدارة المحاسبة والفواتير والمخزون والاشتراكات من منصة واحدة آمنة."
-        : "Sign in to manage accounting, invoicing, inventory, and subscriptions from one secure platform.",
+        ? "سجل الدخول لإدارة المرضى والمواعيد والسجلات الطبية والفوترة والمدفوعات من منصة واحدة آمنة."
+        : "Sign in to manage patients, appointments, medical records, billing, and payments from one secure platform.",
 
       systemTab: isArabic ? "إدارة المنصة" : "Platform admin",
-      companyTab: isArabic ? "بوابة الشركة" : "Company portal",
+      companyTab: isArabic ? "بوابة المنشأة الطبية" : "Medical organization portal",
 
       usernameLabel: isArabic ? "اسم المستخدم" : "Username",
       passwordLabel: isArabic ? "كلمة المرور" : "Password",
@@ -320,19 +320,19 @@ export default function Page() {
       modeNote:
         mode === "system"
           ? isArabic
-            ? "دخول إدارة المنصة مخصص لفريق Mhamcloud وصلاحيات النظام العليا."
-            : "Platform admin access is for Mhamcloud internal and system-level roles."
+            ? "دخول إدارة المنصة مخصص لفريق Marilyn Clinics وصلاحيات النظام العليا."
+            : "Platform admin access is for Marilyn Clinics internal and system-level roles."
           : isArabic
-            ? "دخول الشركة مخصص للمالك والمدير والمحاسب والموظفين حسب صلاحيات العضوية."
-            : "Company portal access is for owners, admins, accountants, and staff based on membership permissions.",
+            ? "دخول المنشأة الطبية مخصص للمالك ومدير العيادة والممارسين والموظفين حسب صلاحيات العضوية."
+            : "Medical organization portal access is for owners, clinic administrators, practitioners, and staff based on membership permissions.",
       formTitle:
         mode === "system"
           ? isArabic
-            ? "دخول إدارة Mhamcloud"
-            : "Mhamcloud admin sign in"
+            ? "دخول إدارة Marilyn Clinics"
+            : "Marilyn Clinics admin sign in"
           : isArabic
-            ? "دخول حساب الشركة"
-            : "Company account sign in",
+            ? "دخول حساب المنشأة الطبية"
+            : "Medical organization account sign in",
       formSubtitle:
         mode === "system"
           ? isArabic
@@ -349,7 +349,8 @@ export default function Page() {
     try {
       const savedLocale =
         typeof window !== "undefined"
-          ? ((window.localStorage.getItem("Mhamcloud-locale") ||
+          ? ((window.localStorage.getItem("marilyn-locale") ||
+              window.localStorage.getItem("Mhamcloud-locale") ||
               window.localStorage.getItem("primey-locale")) as AppLocale | null)
           : null;
 
@@ -372,7 +373,8 @@ export default function Page() {
       setLocale(nextLocale);
 
       if (typeof window !== "undefined") {
-        window.localStorage.setItem("Mhamcloud-locale", nextLocale);
+        window.localStorage.setItem("marilyn-locale", nextLocale);
+        window.localStorage.setItem("primey-locale", nextLocale);
       }
 
       if (typeof document !== "undefined") {
@@ -410,7 +412,7 @@ export default function Page() {
   };
 
   /* =========================================================
-     🚀 Mhamcloud Login Handler
+     🚀 Marilyn Clinics Login Handler
   ========================================================= */
   const handleLoginSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -462,7 +464,7 @@ export default function Page() {
 
       setError(message);
       toast.error(message);
-      console.error("Mhamcloud login error:", err);
+      console.error("Marilyn Clinics login error:", err);
     } finally {
       setLoading(false);
     }
@@ -500,7 +502,7 @@ export default function Page() {
                     {content.welcomeBadge}
                   </p>
                   <h1 className="text-2xl font-bold tracking-tight">
-                    Mhamcloud
+                    Marilyn Clinics
                   </h1>
                 </div>
               </div>
@@ -523,8 +525,8 @@ export default function Page() {
 
                 <p className="mt-6 max-w-xl text-base leading-8 text-white/85 xl:text-lg">
                   {isArabic
-                    ? "Mhamcloud يجمع المحاسبة والفواتير والمخزون والمدفوعات والتقارير المالية في تجربة واحدة آمنة ومهيأة للشركات داخل السعودية."
-                    : "Mhamcloud brings accounting, invoicing, inventory, payments, and financial reports into one secure experience for Saudi businesses."}
+                    ? "تجمع Marilyn Clinics إدارة المرضى والمواعيد والسجلات الطبية والفوترة والمدفوعات والتقارير في تجربة واحدة آمنة ومهيأة للعيادات والمراكز الطبية داخل السعودية."
+                    : "Marilyn Clinics brings patients, appointments, medical records, billing, payments, and reports into one secure experience for clinics and medical centers in Saudi Arabia."}
                 </p>
               </div>
 
@@ -564,8 +566,8 @@ export default function Page() {
                   </div>
                   <p className="text-sm leading-7 text-white/80">
                     {isArabic
-                      ? "جاهزية للتقارير القيود الفواتير الخزينة والمدفوعات."
-                      : "Ready for reports, journals, invoices, treasury, and payments."}
+                      ? "جاهزية للسجلات الطبية والمواعيد والفوترة والمدفوعات والتقارير."
+                      : "Ready for medical records, appointments, billing, payments, and reports."}
                   </p>
                 </div>
 
@@ -584,8 +586,8 @@ export default function Page() {
                   </div>
                   <p className="text-sm leading-7 text-white/80">
                     {isArabic
-                      ? "إدارة اشتراكات الشركات ومدفوعات المنصة من نفس النظام."
-                      : "Manage company subscriptions and platform payments from the same system."}
+                      ? "إدارة اشتراكات المنشآت الطبية ومدفوعات المنصة من نفس النظام."
+                      : "Manage medical organization subscriptions and platform payments from the same system."}
                   </p>
                 </div>
 
@@ -623,8 +625,8 @@ export default function Page() {
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Image
-                    src="/logo/primey.svg"
-                    alt="Mhamcloud"
+                    src="/hero logo.png"
+                    alt="Marilyn Clinics"
                     width={132}
                     height={44}
                     priority

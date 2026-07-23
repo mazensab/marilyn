@@ -23,11 +23,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 /* =========================================================
-   📌 Mhamcloud - Guest Reset Password Page
+   📌 Marilyn Clinics - Guest Reset Password Page
    Path: primey_frontend/app/(guest)/reset-password/page.tsx
 
    ✅ صفحة إعادة تعيين كلمة المرور
-   ✅ متوافقة مع هوية Mhamcloud
+   ✅ متوافقة مع هوية Marilyn Clinics
    ✅ يدعم العربية والإنجليزية
    ✅ يدعم RTL / LTR
    ✅ CSRF + Cookies Session
@@ -138,8 +138,8 @@ export default function ResetPasswordPage() {
     () => ({
       title: isArabic ? "إعادة تعيين كلمة المرور" : "Reset password",
       subtitle: isArabic
-        ? "أدخل اسم المستخدم أو البريد الإلكتروني وحدد كلمة مرور جديدة لحسابك في Mhamcloud."
-        : "Enter your username or email and choose a new password for your Mhamcloud account.",
+        ? "أدخل اسم المستخدم أو البريد الإلكتروني وحدد كلمة مرور جديدة لحسابك في Marilyn Clinics."
+        : "Enter your username or email and choose a new password for your Marilyn Clinics account.",
       badge: isArabic ? "استعادة الوصول" : "Restore access",
       secureSession: isArabic ? "إجراء آمن ومحمي" : "Secure protected action",
 
@@ -200,23 +200,23 @@ export default function ResetPasswordPage() {
         : "Unable to reset password",
 
       sideTitle: isArabic
-        ? "استعادة آمنة لحساب Mhamcloud"
-        : "Secure Mhamcloud account recovery",
+        ? "استعادة آمنة لحساب Marilyn Clinics"
+        : "Secure Marilyn Clinics account recovery",
       sideDescription: isArabic
-        ? "تساعدك هذه الصفحة على استعادة الوصول لحساب النظام أو حساب الشركة مع الحفاظ على حماية الجلسة والتحقق من الطلب عبر الـ Backend."
-        : "This page helps restore access for platform and company accounts while keeping the session protected and the backend in control.",
+        ? "تساعدك هذه الصفحة على استعادة الوصول لحساب النظام أو حساب المنشأة الطبية مع الحفاظ على حماية الجلسة والتحقق من الطلب عبر الـ Backend."
+        : "This page helps restore access for platform and medical organization accounts while keeping the session protected and the backend in control.",
       pointOneTitle: isArabic ? "حسابات النظام" : "System accounts",
       pointOneDescription: isArabic
         ? "مناسب لمستخدمي إدارة المنصة والصلاحيات العليا."
         : "Suitable for platform admins and system-level roles.",
-      pointTwoTitle: isArabic ? "حسابات الشركات" : "Company accounts",
+      pointTwoTitle: isArabic ? "حسابات المنشآت الطبية" : "Medical organization accounts",
       pointTwoDescription: isArabic
-        ? "مناسب للمالك والمدير والمحاسب والموظفين حسب صلاحيات العضوية."
-        : "Suitable for owners, admins, accountants, and staff based on memberships.",
+        ? "مناسب للمالك ومدير العيادة والممارسين والموظفين حسب صلاحيات العضوية."
+        : "Suitable for owners, clinic administrators, practitioners, and staff based on memberships.",
       pointThreeTitle: isArabic ? "جاهز للسعودية" : "Saudi-ready",
       pointThreeDescription: isArabic
-        ? "متوافق مع تجربة Mhamcloud العربية والريال السعودي."
-        : "Aligned with Arabic-first Mhamcloud workflows and SAR.",
+        ? "متوافق مع تجربة Marilyn Clinics العربية والريال السعودي."
+        : "Aligned with Arabic-first Marilyn Clinics workflows and SAR.",
     }),
     [isArabic]
   );
@@ -225,7 +225,8 @@ export default function ResetPasswordPage() {
     try {
       const savedLocale =
         typeof window !== "undefined"
-          ? ((window.localStorage.getItem("Mhamcloud-locale") ||
+          ? ((window.localStorage.getItem("marilyn-locale") ||
+              window.localStorage.getItem("Mhamcloud-locale") ||
               window.localStorage.getItem("primey-locale")) as AppLocale | null)
           : null;
 
@@ -248,7 +249,8 @@ export default function ResetPasswordPage() {
       setLocale(nextLocale);
 
       if (typeof window !== "undefined") {
-        window.localStorage.setItem("Mhamcloud-locale", nextLocale);
+        window.localStorage.setItem("marilyn-locale", nextLocale);
+        window.localStorage.setItem("primey-locale", nextLocale);
       }
 
       if (typeof document !== "undefined") {
@@ -339,7 +341,7 @@ export default function ResetPasswordPage() {
 
       setError(message);
       toast.error(message);
-      console.error("Mhamcloud reset password error:", err);
+      console.error("Marilyn Clinics reset password error:", err);
     } finally {
       setLoading(false);
     }
@@ -377,7 +379,7 @@ export default function ResetPasswordPage() {
                     {content.badge}
                   </p>
                   <h1 className="text-2xl font-bold tracking-tight">
-                    Mhamcloud
+                    Marilyn Clinics
                   </h1>
                 </div>
               </div>
@@ -464,8 +466,8 @@ export default function ResetPasswordPage() {
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Image
-                    src="/logo/primey.svg"
-                    alt="Mhamcloud"
+                    src="/hero logo.png"
+                    alt="Marilyn Clinics"
                     width={132}
                     height={44}
                     priority
