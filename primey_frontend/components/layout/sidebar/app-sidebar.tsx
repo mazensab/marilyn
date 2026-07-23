@@ -1,9 +1,9 @@
 "use client"
 
 // ======================================================
-// 🏛 Mhamcloud — APP SIDEBAR
+// 🏛 Marilyn Clinics — APP SIDEBAR
 // Premium workspace sidebar
-// RTL/LTR ready — keeps Mhamcloud navigation intact
+// RTL/LTR ready — keeps Marilyn Clinics navigation intact
 // ======================================================
 
 import * as React from "react"
@@ -126,29 +126,29 @@ function getWorkspaceCopy(
   if (workspace === "system") {
     return {
       workspaceLabel: isArabic ? "مساحة عمل النظام" : "System Workspace",
-      workspaceBadge: "Mhamcloud",
+      workspaceBadge: "Marilyn Clinics",
       firstItemTitle: isArabic ? "لوحة النظام" : "System Dashboard",
       firstItemStatus: isArabic ? "نشط" : "Active",
       secondItemTitle: isArabic ? "إدارة المنصة" : "Platform Management",
-      secondItemSubtitle: isArabic ? "الشركات، الاشتراكات، والمدفوعات" : "Companies, subscriptions, and payments",
+      secondItemSubtitle: isArabic ? "المنشآت الطبية الاشتراكات والمدفوعات" : "Medical organizations, subscriptions, and payments",
     }
   }
 
   if (workspace === "company") {
     return {
-      workspaceLabel: isArabic ? "مساحة الشركة" : "Company Workspace",
-      workspaceBadge: isArabic ? "نظام ERP متكامل" : "Integrated ERP",
-      firstItemTitle: isArabic ? "لوحة الشركة" : "Company Dashboard",
+      workspaceLabel: isArabic ? "مساحة العيادة" : "Clinic Workspace",
+      workspaceBadge: isArabic ? "إدارة عيادات متكاملة" : "Clinic Management",
+      firstItemTitle: isArabic ? "لوحة العيادة" : "Clinic Dashboard",
       firstItemStatus: isArabic ? "نشط" : "Active",
-      secondItemTitle: isArabic ? "تشغيل الأعمال" : "Business Operations",
-      secondItemSubtitle: isArabic ? "مبيعات، مشتريات، مخزون، ومالية" : "Sales, purchases, inventory, and finance",
+      secondItemTitle: isArabic ? "التشغيل الطبي" : "Clinical Operations",
+      secondItemSubtitle: isArabic ? "المرضى المواعيد الممارسون والمالية" : "Patients, appointments, practitioners, and finance",
     }
   }
 
   if (workspace === "customer") {
     return {
       workspaceLabel: isArabic ? "بوابة العميل" : "Customer Portal",
-      workspaceBadge: "Mhamcloud",
+      workspaceBadge: "Marilyn Clinics",
       firstItemTitle: isArabic ? "لوحة العميل" : "Customer Dashboard",
       firstItemStatus: isArabic ? "نشط" : "Active",
       secondItemTitle: isArabic ? "الفواتير والمدفوعات" : "Invoices & Payments",
@@ -158,7 +158,7 @@ function getWorkspaceCopy(
 
   return {
     workspaceLabel: isArabic ? "مساحة المندوب" : "Agent Workspace",
-    workspaceBadge: "Mhamcloud",
+    workspaceBadge: "Marilyn Clinics",
     firstItemTitle: isArabic ? "لوحة المندوب" : "Agent Dashboard",
     firstItemStatus: isArabic ? "نشط" : "Active",
     secondItemTitle: isArabic ? "العملاء والعمولات" : "Customers & Commissions",

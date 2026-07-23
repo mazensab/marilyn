@@ -38,12 +38,12 @@ function getMetadataBase(): URL {
   const rawUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.NEXT_PUBLIC_API_BASE_URL ||
-    "https://mhamcloud.com";
+    "http://127.0.0.1:3000";
 
   try {
     return new URL(rawUrl);
   } catch {
-    return new URL("https://mhamcloud.com");
+    return new URL("http://127.0.0.1:3000");
   }
 }
 
@@ -53,8 +53,8 @@ function getMetadataBase(): URL {
 
 export const metadata: Metadata = {
   metadataBase: getMetadataBase(),
-  title: "Mham Cloud",
-  description: "Mham Cloud Platform",
+  title: "Marilyn Clinics",
+  description: "Integrated clinic and medical center management platform",
   icons: {
     icon: "/favicon.ico",
   },

@@ -16,7 +16,7 @@ type LogoIconProps = {
 };
 
 /* =========================================================
-   🖼️ Mhamcloud Logo Icon
+   🖼️ Marilyn Clinics Logo Icon
 ========================================================= */
 export default function LogoIcon({
   href = "/",
@@ -27,19 +27,19 @@ export default function LogoIcon({
   return (
     <Link
       href={href}
-      aria-label="Mhamcloud"
+      aria-label="Marilyn Clinics"
       className={cn(
         "inline-flex items-center justify-center rounded-2xl transition hover:opacity-85",
         className
       )}
     >
       <Image
-        src="/logo/primey-icon.ico"
-        alt="Mhamcloud"
+        src="/hero logo.png"
+        alt="Marilyn Clinics"
         width={40}
         height={40}
         priority={priority}
-        className={cn("h-10 w-10 rounded-xl object-cover", imageClassName)}
+        className={cn("h-10 w-10 rounded-xl object-contain", imageClassName)}
       />
     </Link>
   );
