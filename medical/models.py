@@ -821,3 +821,1015 @@ class MedicalClinicSpecialty(MedicalAuditModel):
 
         self.full_clean()
         super().save(*args, **kwargs)
+
+# Phase 10.2-B - Healthcare Practitioners Models
+from django.core.validators import MinValueValidator
+
+
+class MedicalPractitionerType(models.TextChoices):
+    PHYSICIAN = "PHYSICIAN", "Physician"
+    DENTIST = "DENTIST", "Dentist"
+    NURSE = "NURSE", "Nurse"
+    PHARMACIST = "PHARMACIST", "Pharmacist"
+    TECHNICIAN = "TECHNICIAN", "Technician"
+    THERAPIST = "THERAPIST", "Therapist"
+    OTHER = "OTHER", "Other"
+
+
+class MedicalPractitionerStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    INACTIVE = "INACTIVE", "Inactive"
+    SUSPENDED = "SUSPENDED", "Suspended"
+    ON_LEAVE = "ON_LEAVE", "On leave"
+
+
+class MedicalPractitionerGender(models.TextChoices):
+    MALE = "MALE", "Male"
+    FEMALE = "FEMALE", "Female"
+    UNSPECIFIED = "UNSPECIFIED", "Unspecified"
+
+
+class MedicalLicenseStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending"
+    ACTIVE = "ACTIVE", "Active"
+    EXPIRED = "EXPIRED", "Expired"
+    SUSPENDED = "SUSPENDED", "Suspended"
+    REVOKED = "REVOKED", "Revoked"
+
+
+class MedicalPractitioner(MedicalAuditModel):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="medical_practitioners",
+    )
+
+    membership = models.ForeignKey(
+        "accounts.CompanyMembership",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="medical_practitioner_profiles",
+    )
+
+    employee = models.ForeignKey(
+        "hr.Employee",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="medical_practitioner_profiles",
+    )
+
+    practitioner_number = models.CharField(
+        max_length=50,
+    )
+
+    full_name_ar = models.CharField(
+        max_length=220,
+        blank=True,
+        default="",
+    )
+    full_name_en = models.CharField(
+        max_length=220,
+        blank=True,
+        default="",
+    )
+
+    professional_title = models.CharField(
+        max_length=160,
+        blank=True,
+        default="",
+    )
+
+    practitioner_type = models.CharField(
+        max_length=30,
+        choices=MedicalPractitionerType.choices,
+        default=MedicalPractitionerType.PHYSICIAN,
+    )
+
+    gender = models.CharField(
+        max_length=20,
+        choices=MedicalPractitionerGender.choices,
+        default=MedicalPractitionerGender.UNSPECIFIED,
+    )
+
+    nationality = models.CharField(
+        max_length=120,
+        blank=True,
+        default="",
+    )
+    mobile = models.CharField(
+        max_length=30,
+        blank=True,
+        default="",
+    )
+    email = models.EmailField(
+        blank=True,
+        default="",
+    )
+
+    primary_specialty = models.ForeignKey(
+        MedicalSpecialty,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="primary_practitioners",
+    )
+
+    default_branch = models.ForeignKey(
+        "companies.Branch",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="default_medical_practitioners",
+    )
+
+    default_department = models.ForeignKey(
+        MedicalDepartment,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="default_practitioners",
+    )
+
+    default_clinic = models.ForeignKey(
+        MedicalClinic,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="default_practitioners",
+    )
+
+    hire_date = models.DateField(
+        null=True,
+        blank=True,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=MedicalPractitionerStatus.choices,
+        default=MedicalPractitionerStatus.ACTIVE,
+    )
+
+    is_accepting_appointments = models.BooleanField(
+        default=True,
+    )
+
+    notes = models.TextField(
+        blank=True,
+        default="",
+    )
+    extra_data = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = [
+            "company_id",
+            "practitioner_number",
+            "id",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "practitioner_number",
+                ],
+                name="medical_practitioner_number_company_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "membership",
+                ],
+                condition=models.Q(
+                    membership__isnull=False,
+                ),
+                name="medical_practitioner_membership_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "employee",
+                ],
+                condition=models.Q(
+                    employee__isnull=False,
+                ),
+                name="medical_practitioner_employee_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "status",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "practitioner_type",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "primary_specialty",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "default_branch",
+                ],
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return (
+            f"{self.practitioner_number} - "
+            f"{self.display_name}"
+        )
+
+    @property
+    def display_name(self) -> str:
+        return (
+            self.full_name_ar
+            or self.full_name_en
+            or self.practitioner_number
+        )
+
+    def clean(self) -> None:
+        super().clean()
+
+        self.practitioner_number = (
+            self.practitioner_number or ""
+        ).strip().upper()
+
+        self.full_name_ar = (
+            self.full_name_ar or ""
+        ).strip()
+        self.full_name_en = (
+            self.full_name_en or ""
+        ).strip()
+        self.professional_title = (
+            self.professional_title or ""
+        ).strip()
+        self.nationality = (
+            self.nationality or ""
+        ).strip()
+        self.mobile = (
+            self.mobile or ""
+        ).strip()
+        self.email = (
+            self.email or ""
+        ).strip().lower()
+        self.notes = (
+            self.notes or ""
+        ).strip()
+
+        if not self.practitioner_number:
+            raise ValidationError(
+                {
+                    "practitioner_number":
+                        "Practitioner number is required."
+                }
+            )
+
+        if not self.full_name_ar and not self.full_name_en:
+            raise ValidationError(
+                {
+                    "full_name_ar":
+                        "At least one practitioner name is required."
+                }
+            )
+
+        if (
+            self.membership_id
+            and self.company_id
+            and self.membership.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "membership":
+                        "Membership must belong to the same company."
+                }
+            )
+
+        if (
+            self.employee_id
+            and self.company_id
+            and self.employee.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "employee":
+                        "Employee must belong to the same company."
+                }
+            )
+
+        if (
+            self.membership_id
+            and self.employee_id
+            and getattr(
+                self.employee,
+                "user_id",
+                None,
+            )
+            and self.membership.user_id
+            != self.employee.user_id
+        ):
+            raise ValidationError(
+                {
+                    "employee":
+                        "Employee and membership must belong "
+                        "to the same user."
+                }
+            )
+
+        if (
+            self.primary_specialty_id
+            and self.company_id
+            and self.primary_specialty.company_id
+            not in [
+                None,
+                self.company_id,
+            ]
+        ):
+            raise ValidationError(
+                {
+                    "primary_specialty":
+                        "Specialty is not available "
+                        "to this company."
+                }
+            )
+
+        if (
+            self.default_branch_id
+            and self.company_id
+            and self.default_branch.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "default_branch":
+                        "Branch must belong to the same company."
+                }
+            )
+
+        if (
+            self.default_department_id
+            and self.company_id
+            and self.default_department.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "default_department":
+                        "Department must belong "
+                        "to the same company."
+                }
+            )
+
+        if (
+            self.default_clinic_id
+            and self.company_id
+            and self.default_clinic.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "default_clinic":
+                        "Clinic must belong to the same company."
+                }
+            )
+
+        if (
+            self.default_clinic_id
+            and self.default_branch_id
+            and self.default_clinic.branch_id
+            != self.default_branch_id
+        ):
+            raise ValidationError(
+                {
+                    "default_clinic":
+                        "Default clinic must belong "
+                        "to the default branch."
+                }
+            )
+
+        if (
+            self.default_clinic_id
+            and self.default_department_id
+            and self.default_clinic.department_id
+            != self.default_department_id
+        ):
+            raise ValidationError(
+                {
+                    "default_clinic":
+                        "Default clinic must belong "
+                        "to the default department."
+                }
+            )
+
+        if self.status != MedicalPractitionerStatus.ACTIVE:
+            self.is_accepting_appointments = False
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class MedicalPractitionerSpecialty(MedicalAuditModel):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="medical_practitioner_specialties",
+    )
+
+    practitioner = models.ForeignKey(
+        MedicalPractitioner,
+        on_delete=models.CASCADE,
+        related_name="specialty_assignments",
+    )
+
+    specialty = models.ForeignKey(
+        MedicalSpecialty,
+        on_delete=models.PROTECT,
+        related_name="practitioner_assignments",
+    )
+
+    is_primary = models.BooleanField(
+        default=False,
+    )
+    is_active = models.BooleanField(
+        default=True,
+    )
+
+    years_experience = models.PositiveIntegerField(
+        default=0,
+    )
+
+    valid_from = models.DateField(
+        null=True,
+        blank=True,
+    )
+    valid_until = models.DateField(
+        null=True,
+        blank=True,
+    )
+
+    notes = models.TextField(
+        blank=True,
+        default="",
+    )
+
+    class Meta:
+        ordering = [
+            "company_id",
+            "practitioner_id",
+            "-is_primary",
+            "id",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "practitioner",
+                    "specialty",
+                ],
+                name="medical_practitioner_specialty_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=[
+                    "practitioner",
+                ],
+                condition=models.Q(
+                    is_primary=True,
+                    is_active=True,
+                ),
+                name="medical_practitioner_primary_specialty_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "specialty",
+                    "is_active",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "practitioner",
+                    "is_active",
+                ],
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return (
+            f"{self.practitioner} - "
+            f"{self.specialty}"
+        )
+
+    def clean(self) -> None:
+        super().clean()
+
+        self.notes = (
+            self.notes or ""
+        ).strip()
+
+        if (
+            self.practitioner_id
+            and self.company_id
+            and self.practitioner.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "practitioner":
+                        "Practitioner must belong "
+                        "to the same company."
+                }
+            )
+
+        if (
+            self.specialty_id
+            and self.company_id
+            and self.specialty.company_id
+            not in [
+                None,
+                self.company_id,
+            ]
+        ):
+            raise ValidationError(
+                {
+                    "specialty":
+                        "Specialty is not available "
+                        "to this company."
+                }
+            )
+
+        if (
+            self.valid_from
+            and self.valid_until
+            and self.valid_until < self.valid_from
+        ):
+            raise ValidationError(
+                {
+                    "valid_until":
+                        "Valid-until date cannot be "
+                        "before valid-from date."
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class MedicalPractitionerAssignment(MedicalAuditModel):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="medical_practitioner_assignments",
+    )
+
+    practitioner = models.ForeignKey(
+        MedicalPractitioner,
+        on_delete=models.CASCADE,
+        related_name="location_assignments",
+    )
+
+    branch = models.ForeignKey(
+        "companies.Branch",
+        on_delete=models.PROTECT,
+        related_name="medical_practitioner_assignments",
+    )
+
+    department = models.ForeignKey(
+        MedicalDepartment,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="practitioner_assignments",
+    )
+
+    clinic = models.ForeignKey(
+        MedicalClinic,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="practitioner_assignments",
+    )
+
+    is_primary = models.BooleanField(
+        default=False,
+    )
+    is_active = models.BooleanField(
+        default=True,
+    )
+
+    start_date = models.DateField(
+        null=True,
+        blank=True,
+    )
+    end_date = models.DateField(
+        null=True,
+        blank=True,
+    )
+
+    working_hours = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+    notes = models.TextField(
+        blank=True,
+        default="",
+    )
+
+    class Meta:
+        ordering = [
+            "company_id",
+            "practitioner_id",
+            "-is_primary",
+            "branch_id",
+            "id",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "practitioner",
+                ],
+                condition=models.Q(
+                    is_primary=True,
+                    is_active=True,
+                ),
+                name="medical_practitioner_primary_assignment_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "branch",
+                    "is_active",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "department",
+                    "is_active",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "clinic",
+                    "is_active",
+                ],
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return (
+            f"{self.practitioner} - "
+            f"{self.branch}"
+        )
+
+    def clean(self) -> None:
+        super().clean()
+
+        self.notes = (
+            self.notes or ""
+        ).strip()
+
+        if (
+            self.practitioner_id
+            and self.company_id
+            and self.practitioner.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "practitioner":
+                        "Practitioner must belong "
+                        "to the same company."
+                }
+            )
+
+        if (
+            self.branch_id
+            and self.company_id
+            and self.branch.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "branch":
+                        "Branch must belong to the same company."
+                }
+            )
+
+        if (
+            self.department_id
+            and self.company_id
+            and self.department.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "department":
+                        "Department must belong "
+                        "to the same company."
+                }
+            )
+
+        if (
+            self.department_id
+            and self.branch_id
+            and not MedicalDepartmentBranch.objects.filter(
+                company_id=self.company_id,
+                department_id=self.department_id,
+                branch_id=self.branch_id,
+                is_active=True,
+            ).exists()
+        ):
+            raise ValidationError(
+                {
+                    "department":
+                        "Department is not active "
+                        "inside the selected branch."
+                }
+            )
+
+        if (
+            self.clinic_id
+            and self.company_id
+            and self.clinic.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "clinic":
+                        "Clinic must belong to the same company."
+                }
+            )
+
+        if (
+            self.clinic_id
+            and self.branch_id
+            and self.clinic.branch_id
+            != self.branch_id
+        ):
+            raise ValidationError(
+                {
+                    "clinic":
+                        "Clinic must belong to "
+                        "the selected branch."
+                }
+            )
+
+        if (
+            self.clinic_id
+            and self.department_id
+            and self.clinic.department_id
+            != self.department_id
+        ):
+            raise ValidationError(
+                {
+                    "clinic":
+                        "Clinic must belong to "
+                        "the selected department."
+                }
+            )
+
+        if (
+            self.start_date
+            and self.end_date
+            and self.end_date < self.start_date
+        ):
+            raise ValidationError(
+                {
+                    "end_date":
+                        "End date cannot be "
+                        "before start date."
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+class MedicalPractitionerLicense(MedicalAuditModel):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="medical_practitioner_licenses",
+    )
+
+    practitioner = models.ForeignKey(
+        MedicalPractitioner,
+        on_delete=models.CASCADE,
+        related_name="licenses",
+    )
+
+    specialty = models.ForeignKey(
+        MedicalSpecialty,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="practitioner_licenses",
+    )
+
+    license_number = models.CharField(
+        max_length=100,
+    )
+    license_type = models.CharField(
+        max_length=120,
+        blank=True,
+        default="",
+    )
+    issuing_authority = models.CharField(
+        max_length=180,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=MedicalLicenseStatus.choices,
+        default=MedicalLicenseStatus.PENDING,
+    )
+
+    issued_at = models.DateField(
+        null=True,
+        blank=True,
+    )
+    expires_at = models.DateField(
+        null=True,
+        blank=True,
+    )
+    verified_at = models.DateField(
+        null=True,
+        blank=True,
+    )
+
+    document_reference = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+    )
+
+    notes = models.TextField(
+        blank=True,
+        default="",
+    )
+    extra_data = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = [
+            "company_id",
+            "practitioner_id",
+            "license_number",
+            "id",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "license_number",
+                ],
+                name="medical_license_number_company_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "status",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "expires_at",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "practitioner",
+                ],
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return (
+            f"{self.license_number} - "
+            f"{self.practitioner}"
+        )
+
+    def clean(self) -> None:
+        super().clean()
+
+        self.license_number = (
+            self.license_number or ""
+        ).strip().upper()
+        self.license_type = (
+            self.license_type or ""
+        ).strip()
+        self.issuing_authority = (
+            self.issuing_authority or ""
+        ).strip()
+        self.document_reference = (
+            self.document_reference or ""
+        ).strip()
+        self.notes = (
+            self.notes or ""
+        ).strip()
+
+        if not self.license_number:
+            raise ValidationError(
+                {
+                    "license_number":
+                        "License number is required."
+                }
+            )
+
+        if not self.issuing_authority:
+            raise ValidationError(
+                {
+                    "issuing_authority":
+                        "Issuing authority is required."
+                }
+            )
+
+        if (
+            self.practitioner_id
+            and self.company_id
+            and self.practitioner.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "practitioner":
+                        "Practitioner must belong "
+                        "to the same company."
+                }
+            )
+
+        if (
+            self.specialty_id
+            and self.company_id
+            and self.specialty.company_id
+            not in [
+                None,
+                self.company_id,
+            ]
+        ):
+            raise ValidationError(
+                {
+                    "specialty":
+                        "Specialty is not available "
+                        "to this company."
+                }
+            )
+
+        if (
+            self.issued_at
+            and self.expires_at
+            and self.expires_at < self.issued_at
+        ):
+            raise ValidationError(
+                {
+                    "expires_at":
+                        "Expiry date cannot be "
+                        "before issue date."
+                }
+            )
+
+        if (
+            self.issued_at
+            and self.verified_at
+            and self.verified_at < self.issued_at
+        ):
+            raise ValidationError(
+                {
+                    "verified_at":
+                        "Verification date cannot be "
+                        "before issue date."
+                }
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+# End Phase 10.2-B - Healthcare Practitioners Models

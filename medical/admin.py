@@ -130,3 +130,138 @@ class MedicalClinicSpecialtyAdmin(CompanyScopedAdmin):
         "is_active",
     )
     list_filter = ("company", "is_primary", "is_active")
+
+# Phase 10.2-B - Healthcare Practitioners Admin
+from .models import (
+    MedicalPractitioner,
+    MedicalPractitionerAssignment,
+    MedicalPractitionerLicense,
+    MedicalPractitionerSpecialty,
+)
+
+
+@admin.register(MedicalPractitioner)
+class MedicalPractitionerAdmin(admin.ModelAdmin):
+    list_display = (
+        "practitioner_number",
+        "full_name_ar",
+        "full_name_en",
+        "company",
+        "practitioner_type",
+        "primary_specialty",
+        "default_branch",
+        "status",
+        "is_accepting_appointments",
+    )
+    list_filter = (
+        "company",
+        "practitioner_type",
+        "status",
+        "is_accepting_appointments",
+        "default_branch",
+    )
+    search_fields = (
+        "practitioner_number",
+        "full_name_ar",
+        "full_name_en",
+        "professional_title",
+        "mobile",
+        "email",
+    )
+    list_select_related = (
+        "company",
+        "membership",
+        "employee",
+        "primary_specialty",
+        "default_branch",
+        "default_department",
+        "default_clinic",
+    )
+
+
+@admin.register(MedicalPractitionerSpecialty)
+class MedicalPractitionerSpecialtyAdmin(admin.ModelAdmin):
+    list_display = (
+        "practitioner",
+        "specialty",
+        "company",
+        "is_primary",
+        "is_active",
+        "years_experience",
+        "valid_until",
+    )
+    list_filter = (
+        "company",
+        "is_primary",
+        "is_active",
+        "specialty",
+    )
+    list_select_related = (
+        "company",
+        "practitioner",
+        "specialty",
+    )
+
+
+@admin.register(MedicalPractitionerAssignment)
+class MedicalPractitionerAssignmentAdmin(admin.ModelAdmin):
+    list_display = (
+        "practitioner",
+        "company",
+        "branch",
+        "department",
+        "clinic",
+        "is_primary",
+        "is_active",
+        "start_date",
+        "end_date",
+    )
+    list_filter = (
+        "company",
+        "branch",
+        "department",
+        "clinic",
+        "is_primary",
+        "is_active",
+    )
+    list_select_related = (
+        "company",
+        "practitioner",
+        "branch",
+        "department",
+        "clinic",
+    )
+
+
+@admin.register(MedicalPractitionerLicense)
+class MedicalPractitionerLicenseAdmin(admin.ModelAdmin):
+    list_display = (
+        "license_number",
+        "practitioner",
+        "company",
+        "license_type",
+        "issuing_authority",
+        "status",
+        "issued_at",
+        "expires_at",
+    )
+    list_filter = (
+        "company",
+        "status",
+        "issuing_authority",
+        "expires_at",
+    )
+    search_fields = (
+        "license_number",
+        "license_type",
+        "issuing_authority",
+        "practitioner__practitioner_number",
+        "practitioner__full_name_ar",
+        "practitioner__full_name_en",
+    )
+    list_select_related = (
+        "company",
+        "practitioner",
+        "specialty",
+    )
+# End Phase 10.2-B - Healthcare Practitioners Admin

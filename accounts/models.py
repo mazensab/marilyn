@@ -1669,3 +1669,66 @@ for _role_name in ("HR", "ACCOUNTANT", "CASHIER", "EMPLOYEE", "VIEWER"):
 
 # End Phase 10.2-A - Marilyn Medical Structure Permissions
 # ============================================================
+
+# Phase 10.2-B - Healthcare Practitioners Permissions
+MEDICAL_PRACTITIONER_VIEW_PERMISSIONS = [
+    "company.medical.practitioners.view",
+    "company.medical.practitioners.assignments.view",
+    "company.medical.practitioners.specialties.view",
+    "company.medical.practitioners.licenses.view",
+]
+
+MEDICAL_PRACTITIONER_MANAGE_PERMISSIONS = (
+    MEDICAL_PRACTITIONER_VIEW_PERMISSIONS
+    + [
+        "company.medical.practitioners.create",
+        "company.medical.practitioners.update",
+        "company.medical.practitioners.status",
+        "company.medical.practitioners.assignments.manage",
+        "company.medical.practitioners.specialties.manage",
+        "company.medical.practitioners.licenses.create",
+        "company.medical.practitioners.licenses.update",
+        "company.medical.practitioners.licenses.status",
+    ]
+)
+
+for _medical_manage_role_name in [
+    "OWNER",
+    "ADMIN",
+    "MANAGER",
+]:
+    _medical_manage_role = getattr(
+        CompanyRole,
+        _medical_manage_role_name,
+        None,
+    )
+
+    if _medical_manage_role is not None:
+        COMPANY_ROLE_PERMISSIONS.setdefault(
+            _medical_manage_role,
+            [],
+        ).extend(
+            MEDICAL_PRACTITIONER_MANAGE_PERMISSIONS
+        )
+
+for _medical_view_role_name in [
+    "HR",
+    "ACCOUNTANT",
+    "CASHIER",
+    "EMPLOYEE",
+    "VIEWER",
+]:
+    _medical_view_role = getattr(
+        CompanyRole,
+        _medical_view_role_name,
+        None,
+    )
+
+    if _medical_view_role is not None:
+        COMPANY_ROLE_PERMISSIONS.setdefault(
+            _medical_view_role,
+            [],
+        ).extend(
+            MEDICAL_PRACTITIONER_VIEW_PERMISSIONS
+        )
+# End Phase 10.2-B - Healthcare Practitioners Permissions

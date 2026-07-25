@@ -279,3 +279,377 @@ class MedicalStructureFoundationTests(TestCase):
                 "company.medical.specialties.create",
                 COMPANY_ROLE_PERMISSIONS[manager],
             )
+
+# Phase 10.2-B - Healthcare Practitioners Tests
+from datetime import date
+
+
+from .models import (
+    MedicalLicenseStatus,
+    MedicalPractitioner,
+    MedicalPractitionerAssignment,
+    MedicalPractitionerLicense,
+    MedicalPractitionerSpecialty,
+    MedicalPractitionerStatus,
+    MedicalSpecialty,
+)
+
+
+class MedicalPractitionerFoundationTests(TestCase):
+    def setUp(self) -> None:
+        self.company_a = self._create_company(
+            code="PRACT-A",
+            name="Practitioner Company A",
+        )
+        self.company_b = self._create_company(
+            code="PRACT-B",
+            name="Practitioner Company B",
+        )
+
+        self.branch_a = self._create_branch(
+            company=self.company_a,
+            code="PRACT-A-MAIN",
+            name="Practitioner Branch A",
+        )
+        self.branch_b = self._create_branch(
+            company=self.company_b,
+            code="PRACT-B-MAIN",
+            name="Practitioner Branch B",
+        )
+
+        self.user_a = User.objects.create_user(
+            username="practitioner_a",
+            email="practitioner-a@example.com",
+            password="StrongPass123!",
+        )
+        self.user_b = User.objects.create_user(
+            username="practitioner_b",
+            email="practitioner-b@example.com",
+            password="StrongPass123!",
+        )
+
+        self.membership_a = CompanyMembership.objects.create(
+            user=self.user_a,
+            company=self.company_a,
+            role=CompanyRole.EMPLOYEE,
+            is_primary=True,
+        )
+        self.membership_b = CompanyMembership.objects.create(
+            user=self.user_b,
+            company=self.company_b,
+            role=CompanyRole.EMPLOYEE,
+            is_primary=True,
+        )
+
+        self.department_a = MedicalDepartment.objects.create(
+            company=self.company_a,
+            code="DENTAL-A",
+            name_ar="??? ???????",
+        )
+        self.department_b = MedicalDepartment.objects.create(
+            company=self.company_b,
+            code="DENTAL-B",
+            name_ar="??? ??????? ?????",
+        )
+
+        MedicalDepartmentBranch.objects.create(
+            company=self.company_a,
+            department=self.department_a,
+            branch=self.branch_a,
+            is_primary=True,
+        )
+        MedicalDepartmentBranch.objects.create(
+            company=self.company_b,
+            department=self.department_b,
+            branch=self.branch_b,
+            is_primary=True,
+        )
+
+        self.clinic_a = MedicalClinic.objects.create(
+            company=self.company_a,
+            branch=self.branch_a,
+            department=self.department_a,
+            code="DENTAL-A-01",
+            name_ar="????? ???????",
+            room_number="101",
+            is_default=True,
+        )
+        self.clinic_b = MedicalClinic.objects.create(
+            company=self.company_b,
+            branch=self.branch_b,
+            department=self.department_b,
+            code="DENTAL-B-01",
+            name_ar="????? ??????? ??????",
+            room_number="201",
+            is_default=True,
+        )
+
+        self.system_specialty = MedicalSpecialty.objects.get(
+            company__isnull=True,
+            code="DENTISTRY",
+        )
+
+    def _create_company(
+        self,
+        *,
+        code: str,
+        name: str,
+    ) -> Company:
+        fields = {
+            field.name
+            for field in Company._meta.fields
+        }
+
+        payload: dict[str, Any] = {}
+
+        if "company_code" in fields:
+            payload["company_code"] = code
+        if "code" in fields:
+            payload["code"] = code
+        if "name" in fields:
+            payload["name"] = name
+        if "company_name" in fields:
+            payload["company_name"] = name
+        if "display_name" in fields:
+            payload["display_name"] = name
+        if "legal_name" in fields:
+            payload["legal_name"] = name
+        if "currency_code" in fields:
+            payload["currency_code"] = "SAR"
+        if "currency" in fields:
+            payload["currency"] = "SAR"
+        if "is_active" in fields:
+            payload["is_active"] = True
+
+        return Company.objects.create(**payload)
+
+    def _create_branch(
+        self,
+        *,
+        company: Company,
+        code: str,
+        name: str,
+    ) -> Branch:
+        fields = {
+            field.name
+            for field in Branch._meta.fields
+        }
+
+        payload: dict[str, Any] = {
+            "company": company,
+        }
+
+        if "branch_code" in fields:
+            payload["branch_code"] = code
+        if "code" in fields:
+            payload["code"] = code
+        if "name" in fields:
+            payload["name"] = name
+        if "branch_name" in fields:
+            payload["branch_name"] = name
+        if "display_name" in fields:
+            payload["display_name"] = name
+        if "is_active" in fields:
+            payload["is_active"] = True
+        if "status" in fields:
+            payload["status"] = "ACTIVE"
+
+        return Branch.objects.create(**payload)
+
+    def _create_practitioner(
+        self,
+    ) -> MedicalPractitioner:
+        return MedicalPractitioner.objects.create(
+            company=self.company_a,
+            membership=self.membership_a,
+            practitioner_number="PR-A-001",
+            full_name_ar="?. ????",
+            full_name_en="Dr. Ahmed",
+            primary_specialty=self.system_specialty,
+            default_branch=self.branch_a,
+            default_department=self.department_a,
+            default_clinic=self.clinic_a,
+            status=MedicalPractitionerStatus.ACTIVE,
+        )
+
+    def test_practitioner_accepts_same_company_structure(
+        self,
+    ) -> None:
+        practitioner = self._create_practitioner()
+
+        self.assertEqual(
+            practitioner.company_id,
+            self.company_a.id,
+        )
+        self.assertEqual(
+            practitioner.membership_id,
+            self.membership_a.id,
+        )
+        self.assertEqual(
+            practitioner.default_clinic_id,
+            self.clinic_a.id,
+        )
+        self.assertTrue(
+            practitioner.is_accepting_appointments
+        )
+
+    def test_practitioner_rejects_foreign_membership(
+        self,
+    ) -> None:
+        with self.assertRaises(ValidationError):
+            MedicalPractitioner.objects.create(
+                company=self.company_a,
+                membership=self.membership_b,
+                practitioner_number="PR-A-002",
+                full_name_en="Wrong Practitioner",
+            )
+
+    def test_practitioner_rejects_foreign_clinic(
+        self,
+    ) -> None:
+        with self.assertRaises(ValidationError):
+            MedicalPractitioner.objects.create(
+                company=self.company_a,
+                membership=self.membership_a,
+                practitioner_number="PR-A-003",
+                full_name_en="Wrong Clinic Practitioner",
+                default_clinic=self.clinic_b,
+            )
+
+    def test_practitioner_employee_field_targets_hr_employee(
+        self,
+    ) -> None:
+        field = MedicalPractitioner._meta.get_field(
+            "employee"
+        )
+
+        self.assertEqual(
+            field.remote_field.model._meta.label,
+            "hr.Employee",
+        )
+
+    def test_practitioner_specialty_and_assignment(
+        self,
+    ) -> None:
+        practitioner = self._create_practitioner()
+
+        specialty_link = (
+            MedicalPractitionerSpecialty.objects.create(
+                company=self.company_a,
+                practitioner=practitioner,
+                specialty=self.system_specialty,
+                is_primary=True,
+                years_experience=5,
+            )
+        )
+
+        assignment = (
+            MedicalPractitionerAssignment.objects.create(
+                company=self.company_a,
+                practitioner=practitioner,
+                branch=self.branch_a,
+                department=self.department_a,
+                clinic=self.clinic_a,
+                is_primary=True,
+                working_hours={
+                    "sunday": [
+                        {
+                            "from": "09:00",
+                            "to": "17:00",
+                        }
+                    ]
+                },
+            )
+        )
+
+        self.assertTrue(specialty_link.is_primary)
+        self.assertTrue(assignment.is_primary)
+        self.assertEqual(
+            assignment.clinic_id,
+            self.clinic_a.id,
+        )
+
+    def test_assignment_rejects_foreign_branch(
+        self,
+    ) -> None:
+        practitioner = self._create_practitioner()
+
+        with self.assertRaises(ValidationError):
+            MedicalPractitionerAssignment.objects.create(
+                company=self.company_a,
+                practitioner=practitioner,
+                branch=self.branch_b,
+            )
+
+    def test_license_validates_company_and_dates(
+        self,
+    ) -> None:
+        practitioner = self._create_practitioner()
+
+        license_obj = (
+            MedicalPractitionerLicense.objects.create(
+                company=self.company_a,
+                practitioner=practitioner,
+                specialty=self.system_specialty,
+                license_number="SCFHS-10001",
+                license_type="Professional Registration",
+                issuing_authority="SCFHS",
+                status=MedicalLicenseStatus.ACTIVE,
+                issued_at=date(2025, 1, 1),
+                expires_at=date(2027, 1, 1),
+            )
+        )
+
+        self.assertEqual(
+            license_obj.practitioner_id,
+            practitioner.id,
+        )
+
+        with self.assertRaises(ValidationError):
+            MedicalPractitionerLicense.objects.create(
+                company=self.company_a,
+                practitioner=practitioner,
+                license_number="SCFHS-INVALID",
+                issuing_authority="SCFHS",
+                issued_at=date(2027, 1, 1),
+                expires_at=date(2026, 1, 1),
+            )
+
+    def test_one_active_primary_assignment_only(
+        self,
+    ) -> None:
+        practitioner = self._create_practitioner()
+
+        MedicalPractitionerAssignment.objects.create(
+            company=self.company_a,
+            practitioner=practitioner,
+            branch=self.branch_a,
+            department=self.department_a,
+            clinic=self.clinic_a,
+            is_primary=True,
+        )
+
+        with self.assertRaises(ValidationError):
+            MedicalPractitionerAssignment.objects.create(
+                company=self.company_a,
+                practitioner=practitioner,
+                branch=self.branch_a,
+                is_primary=True,
+            )
+
+    def test_roles_receive_practitioner_permissions(
+        self,
+    ) -> None:
+        admin_permissions = COMPANY_ROLE_PERMISSIONS[
+            CompanyRole.ADMIN
+        ]
+
+        self.assertIn(
+            "company.medical.practitioners.create",
+            admin_permissions,
+        )
+        self.assertIn(
+            "company.medical.practitioners.licenses.update",
+            admin_permissions,
+        )
+# End Phase 10.2-B - Healthcare Practitioners Tests
