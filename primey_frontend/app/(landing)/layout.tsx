@@ -1,6 +1,6 @@
 /* ============================================================
    primey_frontend/app/(landing)/layout.tsx
-   Mhamcloud — Landing Layout
+   Marilyn Clinics — Landing Layout
    ------------------------------------------------------------
    Approved landing layout wrapper.
    Preserves Navbar locale initialization.

@@ -1,10 +1,10 @@
 /* ============================================================
    📂 primey_frontend/app/(landing)/contact/page.tsx
-   🧠 Mhamcloud — Landing Contact Page
+   🧠 Marilyn Clinics — Landing Contact Page
    ------------------------------------------------------------
    ✅ Approved Premium contact page pattern
    ✅ Approved landing layout/style preserved
-   ✅ Content changed only for Mhamcloud
+   ✅ Content changed only for Marilyn Clinics
    ✅ ContactSection / FAQ / Newsletter / Footer preserved
    ✅ Arabic/English metadata and page content
    ✅ Images/social accounts kept temporarily until approved replacements
@@ -74,34 +74,34 @@ export async function generateMetadata(): Promise<Metadata> {
   const isArabic = lang === "ar";
 
   const title = isArabic
-    ? "تواصل مع Mhamcloud | استفسر عن الباقات والنظام"
-    : "Contact Mhamcloud | Ask About Plans and Platform";
+    ? "تواصل مع Marilyn Clinics | استفسر عن الباقات والنظام"
+    : "Contact Marilyn Clinics | Ask About Plans and Platform";
 
   const description = isArabic
-    ? "تواصل مع Mhamcloud للاستفسار عن الباقات، وحدات النظام، التسجيل، وتجهيز شركتك على المنصة."
-    : "Contact Mhamcloud to ask about plans, system modules, registration, and preparing your company on the platform.";
+    ? "تواصل مع Marilyn Clinics للاستفسار عن خيارات التشغيل والوحدات الطبية والتسجيل وتهيئة منشأتك على المنصة."
+    : "Contact Marilyn Clinics to ask about deployment options, medical modules, registration, and preparing your organization on the platform.";
 
   return {
     title,
     description,
     keywords: isArabic
       ? [
-          "تواصل Mhamcloud",
+          "تواصل Marilyn Clinics",
           "مهام السحابي",
           "استفسار نظام محاسبي",
-          "نظام ERP",
+          "نظام إدارة عيادات",
           "إدارة الفواتير",
           "إدارة المخزون",
-          "اشتراك Mhamcloud",
+          "اشتراك Marilyn Clinics",
         ]
       : [
-          "Contact Mhamcloud",
-          "Mhamcloud support",
-          "cloud accounting inquiry",
-          "ERP modules",
-          "business management platform",
-          "inventory and sales management",
-          "Mhamcloud subscription",
+          "Contact Marilyn Clinics",
+          "Marilyn Clinics support",
+          "clinic management inquiry",
+          "clinic management modules",
+          "medical organization management platform",
+          "appointments and patient management",
+          "Marilyn Clinics subscription",
         ],
     alternates: {
       canonical: "/contact",
@@ -114,14 +114,14 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       title,
       description,
-      siteName: "Mhamcloud",
+      siteName: "Marilyn Clinics",
       locale: isArabic ? "ar_SA" : "en_US",
       images: [
         {
           url: "/seo.jpg",
           width: 1200,
           height: 630,
-          alt: isArabic ? "تواصل مع Mhamcloud" : "Contact Mhamcloud",
+          alt: isArabic ? "تواصل مع Marilyn Clinics" : "Contact Marilyn Clinics",
         },
       ],
     },
@@ -139,14 +139,14 @@ export async function generateMetadata(): Promise<Metadata> {
 ========================================================= */
 const content = {
   ar: {
-    badge: "تواصل مع Mhamcloud",
+    badge: "تواصل مع Marilyn Clinics",
     title: "نساعدك تختار الباقة والوحدات الأنسب لشركتك",
     description:
       "لديك سؤال عن الباقات، الفواتير، المخزون، المبيعات، المشتريات، الموارد البشرية أو طريقة بدء استخدام النظام؟ أرسل استفسارك وسنساعدك في اختيار المسار المناسب.",
     primaryButton: "أرسل طلب تجربة",
     secondaryButton: "عرض الباقات",
     note:
-      "Mhamcloud منصة محاسبية وإدارية سحابية، وتختلف الوحدات والحدود حسب الباقة المفعلة من لوحة النظام.",
+      "Marilyn Clinics منصة سحابية لإدارة العيادات والمراكز الطبية، ويحدد نطاق الوحدات والمستخدمين حسب تهيئة المنشأة.",
     cards: [
       {
         title: "استفسار عن الباقات",
@@ -185,22 +185,22 @@ const content = {
     ],
   },
   en: {
-    badge: "Contact Mhamcloud",
+    badge: "Contact Marilyn Clinics",
     title: "We help you choose the right plan and modules",
     description:
-      "Have a question about plans, invoices, inventory, sales, purchases, HR, or how to start using the platform? Send your inquiry and we will help you choose the right path.",
+      "Have a question about patients, appointments, medical records, practitioners, billing, branches, or how to start? Send your request and we will help define the right setup path.",
     primaryButton: "Send Trial Request",
     secondaryButton: "View Plans",
     note:
-      "Mhamcloud is a cloud accounting and ERP platform. Available modules and limits depend on the active system plan.",
+      "Marilyn Clinics is a cloud clinic management platform. Available modules and users depend on the approved organization setup.",
     cards: [
       {
         title: "Ask About Plans",
         description:
-          "Understand monthly and annual plans and the available limits for your company needs.",
+          "Understand deployment options and the modules required for your medical organization.",
       },
       {
-        title: "Prepare Your Company",
+        title: "Prepare Your Medical Organization",
         description:
           "Ask how to start using the platform, set up users, permissions, and the right modules.",
       },

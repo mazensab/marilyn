@@ -7,14 +7,13 @@ import { useRouter } from "next/navigation";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
-  HeartPulse,
+  Building2,
   Languages,
   Menu,
   Stethoscope,
-  Syringe,
-  Smile,
-  Sparkles,
-  TestTube2,
+  CalendarDays,
+  CreditCard,
+  FileHeart,
   UsersRound,
 } from "lucide-react";
 
@@ -74,22 +73,22 @@ const landingRoutes: LandingRoute[] = [
   {
     href: "/#benefits",
     label: {
-      ar: "المزايا",
-      en: "Benefits",
+      ar: "لماذا Marilyn",
+      en: "Why Marilyn",
     },
   },
   {
     href: "/#features",
     label: {
-      ar: "الخدمات الصحية",
-      en: "Services",
+      ar: "المزايا",
+      en: "Features",
     },
   },
   {
     href: "/pricing",
     label: {
-      ar: "الاشتراكات",
-      en: "Subscriptions",
+      ar: "الباقات",
+      en: "Plans",
     },
   },
   {
@@ -110,76 +109,76 @@ const landingRoutes: LandingRoute[] = [
 
 const landingPrograms: LandingProgram[] = [
   {
-    href: "/#solutions",
+    href: "/#features",
     title: {
-      ar: "بطاقة الرعاية السنوية",
-      en: "Annual Care Card",
+      ar: "إدارة المرضى",
+      en: "Patient Management",
     },
     description: {
-      ar: "مزايا وخصومات طبية طوال العام للأفراد والعائلات.",
-      en: "Year-round healthcare benefits for individuals and families.",
+      ar: "ملفات مرضى منظمة وبيانات أساسية وتواصل موحد داخل المنشأة الطبية.",
+      en: "Organized patient profiles, essential information, and unified communication.",
     },
-    icon: HeartPulse,
-  },
-  {
-    href: "/#solutions",
-    title: {
-      ar: "برنامج الأسنان",
-      en: "Dental Program",
-    },
-    description: {
-      ar: "خصومات على الكشف، التنظيف، الحشوات وخدمات العناية بالفم.",
-      en: "Savings on consultations, cleaning, fillings, and oral care.",
-    },
-    icon: Smile,
-  },
-  {
-    href: "/#solutions",
-    title: {
-      ar: "الفحوصات والتحاليل",
-      en: "Checkups & Lab Tests",
-    },
-    description: {
-      ar: "مزايا على التحاليل، الفحوصات الدورية والخدمات التشخيصية.",
-      en: "Benefits on lab tests, routine checkups, and diagnostics.",
-    },
-    icon: TestTube2,
-  },
-  {
-    href: "/#solutions",
-    title: {
-      ar: "الجلدية والتجميل",
-      en: "Dermatology & Beauty",
-    },
-    description: {
-      ar: "عروض ومزايا على العناية بالبشرة والخدمات التجميلية المختارة.",
-      en: "Selected benefits for skincare and beauty services.",
-    },
-    icon: Sparkles,
+    icon: UsersRound,
   },
   {
     href: "/#features",
     title: {
-      ar: "العيادات والاستشارات",
-      en: "Clinics & Consultations",
+      ar: "المواعيد والجداول",
+      en: "Appointments & Scheduling",
     },
     description: {
-      ar: "استفد من مزايا طبية لدى عيادات ومراكز مشاركة.",
-      en: "Use healthcare benefits through participating clinics.",
+      ar: "تنظيم مواعيد المرضى وجداول الأطباء والانتظار من مكان واحد.",
+      en: "Manage patient appointments, practitioner schedules, and waiting lists.",
+    },
+    icon: CalendarDays,
+  },
+  {
+    href: "/#features",
+    title: {
+      ar: "السجل الطبي الموحد",
+      en: "Unified Medical Records",
+    },
+    description: {
+      ar: "توثيق الزيارات والتشخيصات والوصفات والمرفقات وفق الصلاحيات.",
+      en: "Document visits, diagnoses, prescriptions, and attachments with controlled access.",
+    },
+    icon: FileHeart,
+  },
+  {
+    href: "/#features",
+    title: {
+      ar: "الأطباء والممارسون",
+      en: "Practitioners & Clinics",
+    },
+    description: {
+      ar: "إدارة الأطباء والممارسين والعيادات والتخصصات والجداول المرتبطة بهم.",
+      en: "Manage practitioners, clinics, specialties, and their connected schedules.",
     },
     icon: Stethoscope,
   },
   {
     href: "/#features",
     title: {
-      ar: "النساء والولادة",
-      en: "Maternity Care",
+      ar: "الفوترة والمدفوعات",
+      en: "Billing & Payments",
     },
     description: {
-      ar: "خيارات وبرامج مساندة للمتابعة والولادة حسب الباقات المتاحة.",
-      en: "Supportive options for maternity care based on available programs.",
+      ar: "ربط الخدمات الطبية بالفواتير والتحصيل والمدفوعات والتقارير المالية.",
+      en: "Connect medical services with billing, collections, payments, and financial reporting.",
     },
-    icon: Syringe,
+    icon: CreditCard,
+  },
+  {
+    href: "/#features",
+    title: {
+      ar: "الفروع والتقارير",
+      en: "Branches & Reports",
+    },
+    description: {
+      ar: "متابعة الفروع والصلاحيات ومؤشرات الأداء من لوحة مركزية موحدة.",
+      en: "Track branches, permissions, and performance indicators from one central workspace.",
+    },
+    icon: Building2,
   },
 ];
 
@@ -220,7 +219,7 @@ export const Navbar = ({ initialLocale = "ar" }: NavbarProps) => {
     try {
       const savedLocale =
         typeof window !== "undefined"
-          ? window.localStorage.getItem("primey-locale")
+          ? window.localStorage.getItem("marilyn-locale") || window.localStorage.getItem("Mhamcloud-locale") || window.localStorage.getItem("primey-locale")
           : null;
 
       const cookieLocale =
@@ -238,6 +237,7 @@ export const Navbar = ({ initialLocale = "ar" }: NavbarProps) => {
       setLocale(nextLocale);
 
       if (typeof window !== "undefined") {
+        window.localStorage.setItem("marilyn-locale", nextLocale);
         window.localStorage.setItem("primey-locale", nextLocale);
       }
 
@@ -255,12 +255,12 @@ export const Navbar = ({ initialLocale = "ar" }: NavbarProps) => {
   const ArrowIcon = isArabic ? ChevronLeftIcon : ChevronRightIcon;
 
   const text = {
-    logoAlt: isArabic ? "Mhamcloud" : "Mhamcloud",
-    programs: isArabic ? "البرامج والبطاقات" : "Cards & Programs",
+    logoAlt: isArabic ? "Marilyn Clinics" : "Marilyn Clinics",
+    programs: isArabic ? "حلول المنصة" : "Platform Solutions",
     login: isArabic ? "تسجيل الدخول" : "Log in",
-    register: isArabic ? "اشترك الآن" : "Join Now",
+    register: isArabic ? "ابدأ الآن" : "Get Started",
     switchLanguage: isArabic ? "التبديل إلى الإنجليزية" : "Switch to Arabic",
-    mobileMenu: isArabic ? "قائمة Mhamcloud" : "Mhamcloud Menu",
+    mobileMenu: isArabic ? "قائمة Marilyn Clinics" : "Marilyn Clinics Menu",
   };
 
   const toggleLanguage = () => {
@@ -269,6 +269,7 @@ export const Navbar = ({ initialLocale = "ar" }: NavbarProps) => {
       setLocale(nextLocale);
 
       if (typeof window !== "undefined") {
+        window.localStorage.setItem("marilyn-locale", nextLocale);
         window.localStorage.setItem("primey-locale", nextLocale);
         window.dispatchEvent(new Event("primey-locale-changed"));
       }

@@ -1,12 +1,12 @@
 /* ============================================================
    📂 primey_frontend/app/(landing)/page.tsx
-   🧠 Mhamcloud — Landing Home Page
+   🧠 Marilyn Clinics — Landing Home Page
    ------------------------------------------------------------
    ✅ Approved Premium landing pattern
    ✅ Approved landing layout/style preserved
-   ✅ Content changed only for Mhamcloud
+   ✅ Marilyn Clinics medical platform content
    ✅ Arabic/English metadata and structured data
-   ✅ Images/social accounts kept temporarily until approved replacements
+   ✅ Approved SEO image preserved and unapproved social links removed
    ✅ No localhost / no fake data
    ✅ No className/design/section-order changes
 ============================================================ */
@@ -69,46 +69,46 @@ export async function generateMetadata(): Promise<Metadata> {
   const isArabic = lang === "ar";
 
   const title = isArabic
-    ? "Mhamcloud | نظام محاسبي وإداري سحابي"
-    : "Mhamcloud | Cloud Accounting and ERP Platform";
+    ? "Marilyn Clinics | منصة إدارة العيادات والمراكز الطبية"
+    : "Marilyn Clinics | Clinic Management Platform";
 
   const description = isArabic
-    ? "Mhamcloud نظام محاسبي وإداري سحابي يساعد الشركات على إدارة الفواتير المبيعات المشتريات المخزون الخزينة المدفوعات التقارير والعمليات اليومية من منصة واحدة."
-    : "Mhamcloud is a cloud accounting and ERP platform that helps businesses manage invoices, sales, purchases, inventory, treasury, payments, reports, and daily operations from one place.";
+    ? "Marilyn Clinics منصة سحابية متكاملة لإدارة المرضى والمواعيد والسجلات الطبية والأطباء والفوترة والمدفوعات والفروع والتقارير من مكان واحد."
+    : "Marilyn Clinics is an integrated cloud platform for managing patients, appointments, medical records, practitioners, billing, payments, branches, and clinic reporting from one place.";
 
   const imageAlt = isArabic
-    ? "Mhamcloud نظام محاسبي وإداري سحابي"
-    : "Mhamcloud  accounting and ERP platform";
+    ? "Marilyn Clinics منصة إدارة العيادات والمراكز الطبية"
+    : "Marilyn Clinics clinic management platform";
 
   return {
     title,
     description,
     keywords: isArabic
       ? [
-          "Mhamcloud",
-          " مهام السحابي",
-          "نظام محاسبي سحابي",
-          "ERP سعودي",
-          "فواتير إلكترونية",
-          "إدارة المخزون",
-          "إدارة المبيعات",
-          "إدارة المشتريات",
-          "الخزينة والمدفوعات",
-          "تقارير مالية",
-          "ضريبة القيمة المضافة",
+          "Marilyn Clinics",
+          "نظام إدارة عيادات",
+          "برنامج إدارة عيادات",
+          "إدارة المرضى",
+          "إدارة المواعيد الطبية",
+          "السجل الطبي الإلكتروني",
+          "إدارة الأطباء والممارسين",
+          "فوترة العيادات",
+          "مدفوعات العيادات",
+          "إدارة فروع العيادات",
+          "تقارير العيادات",
         ]
       : [
-          "Mhamcloud",
-          "cloud accounting",
-          "ERP platform",
-          "Saudi ERP",
-          "invoice management",
-          "inventory management",
-          "sales management",
-          "purchase management",
-          "treasury and payments",
-          "financial reports",
-          "VAT accounting",
+          "Marilyn Clinics",
+          "clinic management system",
+          "medical practice management",
+          "patient management",
+          "appointment scheduling",
+          "electronic medical records",
+          "practitioner management",
+          "clinic billing",
+          "clinic payments",
+          "multi-branch clinic management",
+          "clinic reports",
         ],
     alternates: {
       canonical: "/",
@@ -121,7 +121,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       title,
       description,
-      siteName: "Mhamcloud",
+      siteName: "Marilyn Clinics",
       locale: isArabic ? "ar_SA" : "en_US",
       images: [
         {
@@ -149,20 +149,16 @@ function buildStructuredData(lang: AppLang) {
 
   return {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "Mhamcloud",
+    "@type": "SoftwareApplication",
+    name: "Marilyn Clinics",
     url: "/",
     logo: "/hero logo.png",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    inLanguage: isArabic ? "ar-SA" : "en",
     description: isArabic
-      ? "Mhamcloud منصة محاسبية وإدارية سحابية تساعد الشركات على تنظيم الفواتير والمخزون والمبيعات والمشتريات والتقارير."
-      : "Mhamcloud is a cloud accounting and ERP platform for invoices, inventory, sales, purchases, treasury, and reports.",
-    sameAs: [
-      "https://www.facebook.com/mhamcloud",
-      "https://www.instagram.com/mhamcloud",
-      "https://twitter.com/mhamcloud",
-      "https://www.youtube.com/@mhamcloud",
-      "https://in.linkedin.com/company/mhamcloud",
-    ],
+      ? "Marilyn Clinics منصة سحابية متكاملة لإدارة العيادات والمراكز الطبية والمرضى والمواعيد والسجلات الطبية والفوترة والتقارير."
+      : "Marilyn Clinics is an integrated cloud platform for clinic management, patients, appointments, medical records, billing, branches, and reporting.",
   };
 }
 
@@ -190,13 +186,13 @@ export default async function Home() {
       {/* القطاعات والأنشطة */}
       <SponsorsSection />
 
-      {/* لماذا Mhamcloud */}
+      {/* لماذا Marilyn Clinics */}
       <BenefitsSection />
 
       {/* وحدات النظام والمزايا */}
       <FeaturesSection />
 
-      {/* حلول Mhamcloud */}
+      {/* حلول Marilyn Clinics */}
       <ServicesSection />
 
       {/* الباقات والاشتراكات */}

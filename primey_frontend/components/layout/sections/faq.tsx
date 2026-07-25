@@ -50,73 +50,73 @@ async function getPageLang(): Promise<AppLang> {
 const faqContent: Record<AppLang, FAQContent> = {
   ar: {
     subTitle: "الأسئلة الشائعة",
-    title: "كل ما تحتاج معرفته قبل الاشتراك",
+    title: "ما تحتاج معرفته قبل بدء التشغيل",
     items: [
       {
-        question: "هل Mhamcloud تأمين طبي؟",
+        question: "ما هي Marilyn Clinics؟",
         answer:
-          "لا، Mhamcloud ليست تأمينًا طبيًا ولا تغني عن التأمين الصحي. هي بطاقة وبرامج مزايا وخصومات طبية تساعدك على الاستفادة من عروض وأسعار مخفضة لدى مزودي خدمة مشاركين حسب الشروط المتاحة.",
+          "منصة سحابية لإدارة العيادات والمراكز الطبية تربط المرضى والمواعيد والسجلات الطبية والممارسين والفوترة والفروع والتقارير.",
       },
       {
-        question: "كيف أستفيد من بطاقة Mhamcloud؟",
+        question: "هل تدعم المنصة أكثر من فرع؟",
         answer:
-          "بعد الاشتراك وتفعيل البطاقة أو البرنامج، يمكنك استخدام بيانات عضويتك لدى مقدم الخدمة المشارك للاستفادة من الخصم أو الميزة المتاحة حسب نوع الخدمة وشروط العرض.",
+          "نعم، صممت لإدارة عدة فروع وأقسام وعيادات مع صلاحيات وتقارير حسب المنشأة والفرع.",
       },
       {
-        question: "هل الخصومات ثابتة على جميع الخدمات؟",
+        question: "كيف تتم حماية بيانات المنشأة؟",
         answer:
-          "تختلف الخصومات والمزايا حسب مقدم الخدمة، نوع الخدمة، المدينة، البرنامج المختار، والعرض المتاح وقت الاستخدام. لذلك ننصح دائمًا بمراجعة تفاصيل الميزة قبل زيارة مقدم الخدمة.",
+          "تعتمد المنصة على فصل بيانات المنشآت وصلاحيات حسب الدور وسياق الفرع، مع تتبع الإجراءات الحساسة.",
       },
       {
-        question: "هل البطاقة مناسبة للأفراد والعائلات؟",
+        question: "هل يمكن ربط الفوترة بالمواعيد والزيارات؟",
         answer:
-          "نعم، Mhamcloud توفر خيارات مناسبة للأفراد والعائلات حسب نوع البطاقة أو البرنامج. بعض الخيارات قد تكون فردية، وبعضها قد يدعم أكثر من مستفيد وفق شروط الاشتراك.",
+          "نعم، تهدف الوحدات المترابطة إلى ربط الخدمات والزيارات بالفواتير والمدفوعات والخزينة والتقارير.",
       },
       {
-        question: "ما نوع الخدمات التي يمكن أن تشملها المزايا؟",
+        question: "هل تدعم العربية والإنجليزية؟",
         answer:
-          "يمكن أن تشمل المزايا الكشف والاستشارات، التحاليل، الأشعة، الأسنان، الجلدية، التجميل، النساء والولادة، الفحوصات الدورية، وبعض الخدمات الصحية المختارة حسب الشبكة والبرنامج.",
+          "نعم، الواجهة تدعم العربية والإنجليزية واتجاهي RTL وLTR مع تجربة مناسبة للمنشآت في السعودية.",
       },
       {
-        question: "كيف أعرف المراكز أو مقدمي الخدمة المشاركين؟",
+        question: "كيف أبدأ؟",
         answer:
-          "يمكنك معرفة الشبكة الطبية والمراكز المشاركة من خلال قنوات Mhamcloud المعتمدة، أو عبر التواصل معنا قبل الاشتراك للتأكد من توفر الخدمة أو العرض المناسب في مدينتك.",
+          "أرسل طلبك من صفحة البدء، ثم تحدد احتياجات المنشأة والفروع والمستخدمين والوحدات المطلوبة قبل التهيئة.",
       },
     ],
   },
   en: {
     subTitle: "FAQS",
-    title: "Everything You Need to Know Before Joining",
+    title: "What to know before getting started",
     items: [
       {
-        question: "Is Mhamcloud medical insurance?",
+        question: "What is Marilyn Clinics?",
         answer:
-          "No. Mhamcloud is not medical insurance and does not replace health insurance. It is a healthcare benefits and discount card that helps you access selected offers and reduced prices through participating providers, subject to available terms.",
+          "A cloud platform for clinics and medical centers that connects patients, appointments, medical records, practitioners, billing, branches, and reporting.",
       },
       {
-        question: "How do I use my Mhamcloud card?",
+        question: "Does it support multiple branches?",
         answer:
-          "After subscribing and activating your card or program, you can use your membership details at a participating provider to access the available discount or benefit according to the service type and offer terms.",
+          "Yes. It is designed for multiple branches, departments, and clinics with role- and branch-based permissions and reporting.",
       },
       {
-        question: "Are discounts fixed across all services?",
+        question: "How is organization data protected?",
         answer:
-          "Discounts and benefits may vary depending on the provider, service type, city, selected program, and available offer at the time of use. We recommend checking the benefit details before visiting the provider.",
+          "The platform uses organization data isolation, role-based access, branch context, and traceable sensitive actions.",
       },
       {
-        question: "Is the card suitable for individuals and families?",
+        question: "Can billing connect to appointments and visits?",
         answer:
-          "Yes. Mhamcloud offers options for individuals and families depending on the card or program type. Some options may be individual, while others may support more than one beneficiary according to subscription terms.",
+          "Yes. Connected modules are designed to link services and visits with invoices, payments, treasury, and reporting.",
       },
       {
-        question: "What services can the benefits include?",
+        question: "Does the platform support Arabic and English?",
         answer:
-          "Benefits may include consultations, lab tests, scans, dental care, dermatology, beauty services, maternity, routine checkups, and selected healthcare services depending on the network and program.",
+          "Yes. The interface supports Arabic and English, RTL and LTR, and workflows suitable for Saudi medical organizations.",
       },
       {
-        question: "How can I know the participating providers?",
+        question: "How do we get started?",
         answer:
-          "You can check the healthcare network and participating providers through Mhamcloud’s approved channels, or contact us before subscribing to confirm the right service or offer in your city.",
+          "Submit a request through the registration page, then define branches, users, required modules, and setup needs.",
       },
     ],
   },

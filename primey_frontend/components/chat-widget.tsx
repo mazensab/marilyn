@@ -1,9 +1,9 @@
 "use client";
 /* ============================================================
    📂 primey_frontend/components/chat-widget.tsx
-   💬 Mhamcloud — Landing Floating WhatsApp Chat Widget V2.0
+   💬 Marilyn Clinics — Landing Floating WhatsApp Chat Widget V2.0
    ------------------------------------------------------------
-   ✅ Replaces Mhamcloud copy with Mhamcloud / Mham Cloud
+   ✅ Marilyn Clinics landing support content
    ✅ Floating landing support widget
    ✅ Connects to system WhatsApp number via wa.me
    ✅ Uses sonner toast
@@ -55,16 +55,16 @@ type WidgetCopy = {
 const SYSTEM_WHATSAPP_NUMBER = (
   process.env.NEXT_PUBLIC_SYSTEM_WHATSAPP_NUMBER ||
   process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
-  "966505263775"
+  ""
 ).replace(/\D/g, "");
 const copy: Record<AppLocale, WidgetCopy> = {
   ar: {
-    assistantName: "مساعد Mham Cloud",
-    badge: "Mhamcloud Support",
-    title: "دعم Mhamcloud",
+    assistantName: "مساعد Marilyn Clinics",
+    badge: "Marilyn Clinics Support",
+    title: "دعم Marilyn Clinics",
     subtitle: "تواصل معنا عبر واتساب النظام",
     greeting:
-      "مرحبًا 👋 يسعدنا مساعدتك في الاشتراك، الباقات، الدخول، أو أي استفسار عن نظام Mhamcloud.",
+      "مرحبًا 👋 يسعدنا مساعدتك في الاشتراك، الباقات، تسجيل الدخول، أو أي استفسار عن منصة Marilyn Clinics لإدارة العيادات.",
     helper:
       "اكتب رسالتك أو اختر أحد الاختصارات، وسيتم فتح واتساب برسالة جاهزة لفريق الدعم.",
     inputPlaceholder: "اكتب استفسارك هنا...",
@@ -72,41 +72,41 @@ const copy: Record<AppLocale, WidgetCopy> = {
     contact: "تواصل معنا",
     close: "إغلاق",
     open: "فتح المحادثة",
-    emptyToast: "سيتم فتح واتساب برسالة افتراضية لفريق Mhamcloud.",
+    emptyToast: "سيتم فتح واتساب برسالة افتراضية لفريق Marilyn Clinics.",
     openToast: "جاري فتح واتساب للتواصل مع فريق الدعم.",
     quickTitle: "اختصارات سريعة",
     defaultMessage:
-      "مرحبًا فريق Mham Cloud، أحتاج مساعدة بخصوص Mhamcloud.",
+      "مرحبًا فريق Marilyn Clinics، أحتاج مساعدة بخصوص Marilyn Clinics.",
     quickReplies: [
       {
         label: "أريد الاشتراك",
         message:
-          "مرحبًا فريق Mham Cloud، أريد الاشتراك في Mhamcloud ومعرفة الباقات المناسبة.",
+          "مرحبًا فريق Marilyn Clinics، أريد الاشتراك في Marilyn Clinics ومعرفة الباقات المناسبة.",
       },
       {
         label: "أحتاج دعم الدخول",
         message:
-          "مرحبًا فريق Mham Cloud، أحتاج مساعدة في تسجيل الدخول إلى Mhamcloud.",
+          "مرحبًا فريق Marilyn Clinics، أحتاج مساعدة في تسجيل الدخول إلى Marilyn Clinics.",
       },
       {
         label: "أريد عرض الباقات",
         message:
-          "مرحبًا فريق Mham Cloud، أريد معرفة باقات Mhamcloud والأسعار.",
+          "مرحبًا فريق Marilyn Clinics، أريد معرفة باقات Marilyn Clinics والأسعار.",
       },
       {
         label: "لدي استفسار تقني",
         message:
-          "مرحبًا فريق Mham Cloud، لدي استفسار تقني بخصوص Mhamcloud.",
+          "مرحبًا فريق Marilyn Clinics، لدي استفسار تقني بخصوص Marilyn Clinics.",
       },
     ],
   },
   en: {
-    assistantName: "Mham Cloud Assistant",
-    badge: "Mhamcloud Support",
-    title: "Mhamcloud Support",
+    assistantName: "Marilyn Clinics Assistant",
+    badge: "Marilyn Clinics Support",
+    title: "Marilyn Clinics Support",
     subtitle: "Chat with the system WhatsApp support line",
     greeting:
-      "Hello 👋 We can help with subscriptions, plans, login, or any Mhamcloud question.",
+      "Hello 👋 We can help with subscriptions, plans, login, or questions about the Marilyn Clinics clinic management platform.",
     helper:
       "Write your message or choose a shortcut. WhatsApp will open with a ready message for our support team.",
     inputPlaceholder: "Write your question here...",
@@ -114,31 +114,31 @@ const copy: Record<AppLocale, WidgetCopy> = {
     contact: "Contact us",
     close: "Close",
     open: "Open chat",
-    emptyToast: "WhatsApp will open with a default Mhamcloud support message.",
+    emptyToast: "WhatsApp will open with a default Marilyn Clinics support message.",
     openToast: "Opening WhatsApp to contact support.",
     quickTitle: "Quick shortcuts",
     defaultMessage:
-      "Hello Mham Cloud team, I need help with Mhamcloud.",
+      "Hello Marilyn Clinics team, I need help with Marilyn Clinics.",
     quickReplies: [
       {
         label: "I want to subscribe",
         message:
-          "Hello Mham Cloud team, I want to subscribe to Mhamcloud and learn about the right plans.",
+          "Hello Marilyn Clinics team, I want to subscribe to Marilyn Clinics and learn about the right plans.",
       },
       {
         label: "Login support",
         message:
-          "Hello Mham Cloud team, I need help logging in to Mhamcloud.",
+          "Hello Marilyn Clinics team, I need help logging in to Marilyn Clinics.",
       },
       {
         label: "Show plans",
         message:
-          "Hello Mham Cloud team, I want to learn about Mhamcloud plans and pricing.",
+          "Hello Marilyn Clinics team, I want to learn about Marilyn Clinics plans and pricing.",
       },
       {
         label: "Technical question",
         message:
-          "Hello Mham Cloud team, I have a technical question about Mhamcloud.",
+          "Hello Marilyn Clinics team, I have a technical question about Marilyn Clinics.",
       },
     ],
   },
@@ -156,7 +156,10 @@ function normalizeLocale(value?: string | null): AppLocale {
 }
 function readLocale(): AppLocale {
   if (typeof window === "undefined") return "ar";
-  const savedLocale = window.localStorage.getItem("primey-locale");
+  const savedLocale =
+    window.localStorage.getItem("marilyn-locale") ||
+    window.localStorage.getItem("Mhamcloud-locale") ||
+    window.localStorage.getItem("primey-locale");
   const cookieLocale =
     typeof document !== "undefined"
       ? document.cookie
@@ -167,7 +170,8 @@ function readLocale(): AppLocale {
   return normalizeLocale(savedLocale || cookieLocale || "ar");
 }
 function buildWhatsAppUrl(phoneNumber: string, message: string) {
-  const safeNumber = phoneNumber.replace(/\D/g, "") || "966505263775";
+  const safeNumber = phoneNumber.replace(/\D/g, "");
+  if (!safeNumber) return "";
   return `https://wa.me/${safeNumber}?text=${encodeURIComponent(message)}`;
 }
 export function ChatWidget() {
@@ -184,6 +188,7 @@ export function ChatWidget() {
       window.removeEventListener("storage", syncLocale);
     };
   }, []);
+  if (!SYSTEM_WHATSAPP_NUMBER) return null;
   const isArabic = locale === "ar";
   const t = copy[locale];
   const finalMessage = message.trim() || t.defaultMessage;

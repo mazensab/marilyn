@@ -47,60 +47,80 @@ async function getPageLang(): Promise<AppLang> {
 ========================================================= */
 const content: Record<AppLang, ServicesContent> = {
   ar: {
-    subTitle: "البرامج والبطاقات",
-    title: "اختر الرعاية التي تناسب احتياجك",
+    subTitle: "حلول المنصة",
+    title: "وحدات مترابطة حسب رحلة العمل الطبية",
     description:
-      "سواء كنت تبحث عن بطاقة رعاية صحية طوال العام أو برنامج طبي محدد، تمنحك Mhamcloud خيارات مرنة تساعدك على الاستفادة من خصومات ومزايا مختارة لدى مزودي خدمة مشاركين.",
-    proLabel: "مميز",
+      "ابدأ بالوحدات الأساسية ثم وسّع التشغيل حسب الفروع والتخصصات واحتياج المنشأة.",
+    proLabel: "متكامل",
     items: [
       {
-        title: "بطاقة الرعاية السنوية",
+        title: "إدارة المرضى والاستقبال",
         description:
-          "بطاقة مناسبة للأفراد والعائلات تمنحك مزايا وخصومات طبية طوال العام على مجموعة من الخدمات الصحية لدى الشبكة المشاركة.",
+          "تسجيل المرضى وتنظيم بياناتهم ومتابعة حالتهم منذ التواصل الأول.",
       },
       {
-        title: "برنامج الأسنان",
+        title: "المواعيد وتشغيل العيادات",
         description:
-          "استفد من خصومات مختارة على الكشف، تنظيف الأسنان، الحشوات، التقويم وبعض خدمات العناية بالفم حسب مقدم الخدمة والعرض المتاح.",
+          "جداول مرنة للممارسين والعيادات مع الحضور والانتظار وإعادة الجدولة.",
       },
       {
-        title: "برنامج الجلدية والتجميل",
+        title: "السجل الطبي والزيارات",
         description:
-          "خيارات ومزايا على خدمات الجلدية، العناية بالبشرة، الجلسات التجميلية، والبرامج المختارة لدى مزودي خدمة معتمدين.",
+          "توثيق الزيارات والملاحظات والخطط العلاجية داخل سجل موحد.",
       },
       {
-        title: "برنامج الفحوصات والتحاليل",
+        title: "الفوترة والتحصيل",
         description:
-          "باقات ومزايا للفحوصات الدورية، التحاليل الطبية، الأشعة والخدمات التشخيصية لمتابعة صحتك بتكلفة أوضح.",
+          "ربط الخدمات بالفواتير والمدفوعات والخزينة والتقارير المالية.",
+      },
+      {
+        title: "الفروع والإدارة المركزية",
+        description:
+          "إدارة الفروع والأقسام والصلاحيات ومتابعة الأداء من مركز واحد.",
+      },
+      {
+        title: "التقارير والتواصل",
+        description:
+          "لوحات متابعة وإشعارات وواتساب لدعم التشغيل واتخاذ القرار.",
       },
     ],
   },
   en: {
-    subTitle: "Cards & Programs",
-    title: "Choose the care that fits your needs",
+    subTitle: "Platform Solutions",
+    title: "Connected modules for the complete clinical workflow",
     description:
-      "Whether you need an annual healthcare card or a specific medical program, Mhamcloud gives you flexible options to access selected benefits and discounts through participating providers.",
-    proLabel: "Popular",
+      "Start with core modules and expand based on branches, specialties, and organization needs.",
+    proLabel: "Integrated",
     items: [
       {
-        title: "Annual Care Card",
+        title: "Patients and reception",
         description:
-          "A flexible card for individuals and families that gives you year-round medical benefits and selected discounts across participating healthcare providers.",
+          "Register patients, organize their information, and follow their journey from first contact.",
       },
       {
-        title: "Dental Program",
+        title: "Appointments and clinic operations",
         description:
-          "Enjoy selected discounts on dental consultations, cleaning, fillings, orthodontics, and other oral care services depending on the provider and available offer.",
+          "Flexible practitioner and clinic schedules with attendance, waiting, and rescheduling.",
       },
       {
-        title: "Dermatology & Beauty Program",
+        title: "Medical records and visits",
         description:
-          "Access benefits on dermatology, skincare, beauty sessions, and selected cosmetic services through approved healthcare providers.",
+          "Document visits, clinical notes, and care plans in one connected record.",
       },
       {
-        title: "Checkups & Lab Tests Program",
+        title: "Billing and collection",
         description:
-          "Packages and benefits for routine checkups, lab tests, scans, and diagnostic services to help you follow up on your health with clearer costs.",
+          "Connect services to invoices, payments, treasury, and financial reporting.",
+      },
+      {
+        title: "Branches and central administration",
+        description:
+          "Manage branches, departments, permissions, and performance centrally.",
+      },
+      {
+        title: "Reporting and communication",
+        description:
+          "Dashboards, notifications, and WhatsApp workflows that support daily operations.",
       },
     ],
   },

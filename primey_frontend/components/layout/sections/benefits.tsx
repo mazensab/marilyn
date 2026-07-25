@@ -46,58 +46,78 @@ async function getPageLang(): Promise<AppLang> {
 ========================================================= */
 const benefitsContent: Record<AppLang, BenefitsContent> = {
   ar: {
-    subTitle: "لماذا Mhamcloud؟",
-    title: "مزايا صحية تساعدك أنت وعائلتك على التوفير",
+    subTitle: "لماذا Marilyn Clinics؟",
+    title: "تشغيل طبي موحّد من أول موعد حتى التحصيل",
     description:
-      "Mhamcloud تمنحك طريقة أسهل للاستفادة من خدمات طبية متنوعة بخصومات مختارة، عبر بطاقة وبرامج رعاية مصممة لتجعل الوصول إلى الرعاية الصحية أوضح وأقرب وأقل تكلفة.",
+      "تجمع Marilyn Clinics العمليات الطبية والإدارية والمالية في منصة واحدة تساعد المنشأة على خدمة المريض بكفاءة ومتابعة الأداء بوضوح.",
     items: [
       {
-        title: "وفّر في كل زيارة",
+        title: "رحلة مريض مترابطة",
         description:
-          "استفد من خصومات مختارة على الكشف، التحاليل، الأشعة، الأسنان، الجلدية، التجميل، الولادة وخدمات طبية أخرى حسب مقدم الخدمة والعرض المتاح.",
+          "ملف موحّد يربط بيانات المريض والمواعيد والزيارات والمدفوعات دون تكرار أو تشتت.",
       },
       {
-        title: "بطاقة سهلة الاستخدام",
+        title: "تشغيل يومي أسرع",
         description:
-          "اشترك في البطاقة أو البرنامج المناسب، ثم استخدم بيانات عضويتك لدى مزودي الخدمة المشاركين للاستفادة من المزايا المتاحة بكل سهولة.",
+          "تنظيم الجداول وقوائم الانتظار والعيادات والممارسين مع رؤية واضحة لحالة كل موعد.",
       },
       {
-        title: "شبكة طبية مختارة",
+        title: "تحكم وصلاحيات",
         description:
-          "نوفر لك وصولًا إلى مجموعة من العيادات والمراكز والمستشفيات ومقدمي الخدمات الصحية المشاركين لتلبية احتياجاتك واحتياجات عائلتك.",
+          "صلاحيات حسب الدور والفرع مع فصل بيانات المنشأة وتتبع الإجراءات المهمة.",
       },
       {
-        title: "خيارات تناسب احتياجك",
+        title: "إدارة مالية متكاملة",
         description:
-          "سواء كنت تبحث عن بطاقة رعاية سنوية أو برنامج طبي محدد للأسنان أو الفحوصات أو التجميل أو الولادة، ستجد خيارات مرنة تساعدك على اختيار الأنسب.",
+          "فواتير ومدفوعات وخزينة وتقارير مالية مرتبطة بالخدمات والزيارات.",
+      },
+      {
+        title: "إدارة متعددة الفروع",
+        description:
+          "متابعة الفروع والأقسام والعيادات من إدارة مركزية مع تقارير موحدة.",
+      },
+      {
+        title: "جاهزية للنمو",
+        description:
+          "بنية قابلة للتوسع لإضافة التخصصات والمستخدمين والخدمات دون تعطيل التشغيل.",
       },
     ],
   },
   en: {
-    subTitle: "Why Mhamcloud?",
-    title: "Healthcare benefits that help you and your family save",
+    subTitle: "Why Marilyn Clinics?",
+    title: "Connected clinical operations from appointment to collection",
     description:
-      "Mhamcloud gives you an easier way to access a wide range of healthcare services with selected discounts through care cards and programs designed to make healthcare clearer, closer, and more affordable.",
+      "Marilyn Clinics brings clinical, administrative, and financial workflows into one platform so medical organizations can serve patients efficiently and monitor performance clearly.",
     items: [
       {
-        title: "Save on Every Visit",
+        title: "Connected patient journey",
         description:
-          "Enjoy selected discounts on consultations, lab tests, scans, dental care, dermatology, beauty, maternity, and other healthcare services depending on the provider and available offer.",
+          "A unified record links patient data, appointments, visits, and payments without duplication.",
       },
       {
-        title: "Easy-to-Use Card",
+        title: "Faster daily operations",
         description:
-          "Subscribe to the card or program that fits your needs, then use your membership details at participating providers to access available benefits with ease.",
+          "Organize schedules, waiting lists, clinics, and practitioners with clear appointment status.",
       },
       {
-        title: "Selected Healthcare Network",
+        title: "Roles and access control",
         description:
-          "Get access to a network of participating clinics, medical centers, hospitals, and healthcare providers that support your needs and your family’s needs.",
+          "Role- and branch-based access with organization isolation and traceable actions.",
       },
       {
-        title: "Options That Fit Your Needs",
+        title: "Integrated finance",
         description:
-          "Whether you need an annual care card or a specific healthcare program for dental care, checkups, beauty, or maternity, Mhamcloud offers flexible options to choose from.",
+          "Billing, payments, treasury, and financial reports connected to services and visits.",
+      },
+      {
+        title: "Multi-branch management",
+        description:
+          "Manage branches, departments, and clinics centrally with unified reporting.",
+      },
+      {
+        title: "Built to scale",
+        description:
+          "Expand specialties, users, and services without disrupting daily operations.",
       },
     ],
   },

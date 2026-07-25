@@ -52,78 +52,98 @@ function getCurrentLang(): AppLang {
 ========================================================= */
 const content: Record<AppLang, FeaturesContent> = {
   ar: {
-    subTitle: "مزايا البطاقة",
-    title: "خدمات صحية متنوعة بخصومات أقرب لك",
+    subTitle: "مزايا المنصة",
+    title: "كل ما تحتاجه المنشأة الطبية في مساحة عمل واحدة",
     description:
-      "تمنحك Mhamcloud مزايا مختارة على مجموعة واسعة من الخدمات الطبية اليومية والمتخصصة، لتجعل الوصول إلى الرعاية الصحية أسهل وأوضح لك ولعائلتك.",
+      "وحدات مترابطة لإدارة المرضى والمواعيد والسجلات الطبية والممارسين والفوترة والفروع والتقارير.",
     items: [
       {
-        title: "الكشف والاستشارات",
+        title: "إدارة المرضى",
         description:
-          "استفد من خصومات على الكشف والاستشارات الطبية لدى عيادات ومراكز مختارة في تخصصات متعددة حسب الشبكة المتاحة.",
+          "ملفات مرضى منظمة مع بيانات التواصل والحالة والزيارات والرصيد المرتبط.",
       },
       {
-        title: "التحاليل والمختبرات",
+        title: "المواعيد والجداول",
         description:
-          "احصل على مزايا وخصومات على التحاليل الطبية والفحوصات المخبرية الأساسية والدورية لدى مزودي خدمة مشاركين.",
+          "جدولة العيادات والممارسين وإدارة قوائم الانتظار وحالة الحضور.",
       },
       {
-        title: "الأشعة والفحوصات",
+        title: "السجل الطبي الموحد",
         description:
-          "استفد من عروض مختارة على خدمات الأشعة والفحوصات التشخيصية، بما يساعدك على متابعة صحتك بتكلفة أوضح.",
+          "تاريخ طبي وزيارات وملاحظات وخطط علاج مرتبطة بالمريض وصلاحيات الوصول.",
       },
       {
-        title: "الأسنان والعناية بالفم",
+        title: "الأطباء والممارسون",
         description:
-          "خصومات على الكشف، التنظيف، الحشوات، التقويم وبعض خدمات الأسنان الأخرى حسب مقدم الخدمة والعرض المتاح.",
+          "إدارة التخصصات والجداول والعيادات والارتباط بالفروع والأقسام.",
       },
       {
-        title: "الجلدية والتجميل",
+        title: "الفوترة والمدفوعات",
         description:
-          "مزايا على خدمات الجلدية، العناية بالبشرة، الجلسات التجميلية، والإجراءات المختارة لدى مزودي خدمة معتمدين.",
+          "إصدار الفواتير وتسجيل المدفوعات وربطها بالخزينة والحسابات.",
       },
       {
-        title: "الولادة والبرامج الصحية",
+        title: "الفروع والصلاحيات",
         description:
-          "برامج وخيارات مساندة للمتابعة، الفحوصات، الولادة، والخدمات الصحية المتخصصة حسب الباقات المتاحة.",
+          "تشغيل متعدد الفروع مع أدوار واضحة وفصل آمن للبيانات.",
+      },
+      {
+        title: "التقارير التشغيلية",
+        description:
+          "مؤشرات عن المواعيد والمرضى والتحصيل والأداء حسب الفرع والفترة.",
+      },
+      {
+        title: "التواصل والإشعارات",
+        description:
+          "رسائل وتنبيهات وواتساب مرتبطة بسياق المنشأة وسير العمل.",
       },
     ],
   },
   en: {
-    subTitle: "Card Benefits",
-    title: "Healthcare services with savings closer to you",
+    subTitle: "Platform Features",
+    title: "Everything a medical organization needs in one workspace",
     description:
-      "Mhamcloud gives you selected benefits across everyday and specialized healthcare services, making access to care easier and clearer for you and your family.",
+      "Connected modules for patients, appointments, medical records, practitioners, billing, branches, and reporting.",
     items: [
       {
-        title: "Consultations & Checkups",
+        title: "Patient management",
         description:
-          "Enjoy selected discounts on medical consultations and checkups at participating clinics and centers across multiple specialties.",
+          "Organized patient profiles with contact details, visits, status, and linked balances.",
       },
       {
-        title: "Lab Tests",
+        title: "Appointments and schedules",
         description:
-          "Get benefits on medical lab tests, routine screenings, and essential diagnostics through participating healthcare providers.",
+          "Schedule clinics and practitioners while managing waiting lists and attendance status.",
       },
       {
-        title: "Scans & Diagnostics",
+        title: "Unified medical records",
         description:
-          "Access selected offers on scans and diagnostic services to help you follow up on your health with clearer costs.",
+          "Medical history, visits, notes, and care plans with controlled access.",
       },
       {
-        title: "Dental Care",
+        title: "Practitioners and specialties",
         description:
-          "Save on dental consultations, cleaning, fillings, orthodontics, and selected dental services depending on the provider and available offer.",
+          "Manage specialties, schedules, clinics, branches, and departments.",
       },
       {
-        title: "Dermatology & Beauty",
+        title: "Billing and payments",
         description:
-          "Enjoy benefits on dermatology, skincare, beauty sessions, and selected procedures through approved healthcare providers.",
+          "Issue invoices, record payments, and connect collections to treasury and accounting.",
       },
       {
-        title: "Maternity & Care Programs",
+        title: "Branches and permissions",
         description:
-          "Explore supportive programs for follow-ups, tests, maternity, and specialized healthcare needs depending on available packages.",
+          "Multi-branch operations with clear roles and secure data isolation.",
+      },
+      {
+        title: "Operational reporting",
+        description:
+          "Track appointments, patients, collections, and branch performance over time.",
+      },
+      {
+        title: "Communication and alerts",
+        description:
+          "Notifications and WhatsApp workflows connected to organization operations.",
       },
     ],
   },

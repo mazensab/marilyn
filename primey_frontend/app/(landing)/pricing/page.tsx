@@ -1,6 +1,6 @@
 /* ============================================================
    📂 primey_frontend/app/(landing)/pricing/page.tsx
-   🧠 Mhamcloud — Landing Pricing Page
+   🧠 Marilyn Clinics — Landing Pricing Page
    ------------------------------------------------------------
    ✅ Approved Premium pricing page wrapper
    ✅ Same landing layout pattern preserved
@@ -51,12 +51,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const isArabic = lang === "ar";
 
   const title = isArabic
-    ? "باقات Mhamcloud | خطط الاشتراك"
-    : "Mhamcloud Pricing | Subscription Plans";
+    ? "باقات Marilyn Clinics | خطط الاشتراك"
+    : "Marilyn Clinics Pricing | Subscription Plans";
 
   const description = isArabic
-    ? "استعرض باقات Mhamcloud المناسبة للشركات مع وحدات المحاسبة المبيعات المشتريات المخزون الخزينة والتقارير."
-    : "Explore Mhamcloud subscription plans for businesses, including accounting, sales, purchases, inventory, treasury, and reporting modules.";
+    ? "استعرض خيارات تشغيل Marilyn Clinics للعيادات والمراكز الطبية، بما يشمل المرضى والمواعيد والسجل الطبي والممارسين والفوترة والفروع والتقارير."
+    : "Explore Marilyn Clinics deployment options for clinics and medical centers, including patients, appointments, medical records, practitioners, billing, branches, and reporting.";
 
   return {
     title,
@@ -72,14 +72,14 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       title,
       description,
-      siteName: "Mhamcloud",
+      siteName: "Marilyn Clinics",
       locale: isArabic ? "ar_SA" : "en_US",
       images: [
         {
           url: "/seo.jpg",
           width: 1200,
           height: 630,
-          alt: isArabic ? "باقات Mhamcloud" : "Mhamcloud pricing plans",
+          alt: isArabic ? "باقات Marilyn Clinics" : "Marilyn Clinics pricing plans",
         },
       ],
     },

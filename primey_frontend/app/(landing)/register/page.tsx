@@ -136,8 +136,8 @@ const programOptions: ProgramOption[] = [
       en: "Starter Plan",
     },
     description: {
-      ar: "مناسبة للبدء بالمحاسبة الأساسية وإدارة الأعمال اليومية.",
-      en: "Suitable for starting with core accounting and business management.",
+      ar: "مناسبة للبدء بإدارة المرضى والمواعيد والتشغيل اليومي.",
+      en: "Suitable for starting with patient management, appointments, and daily clinic operations.",
     },
   },
   {
@@ -156,32 +156,32 @@ const programOptions: ProgramOption[] = [
     value: "sales_invoicing",
     icon: BadgeCheck,
     title: {
-      ar: "المبيعات والفوترة",
-      en: "Sales & Invoicing",
+      ar: "إدارة المرضى",
+      en: "Patient Management",
     },
     description: {
-      ar: "إدارة العملاء وعروض الأسعار والفواتير وضريبة القيمة المضافة وسير عمل المبيعات.",
-      en: "Manage quotations, invoices, customers, VAT, and sales workflow.",
+      ar: "إدارة ملفات المرضى وبيانات التواصل والحالة والزيارات المرتبطة.",
+      en: "Manage patient profiles, contact details, status, and connected visits.",
     },
   },
   {
     value: "inventory_operations",
     icon: ShieldCheck,
     title: {
-      ar: "المخزون والعمليات",
-      en: "Inventory Operations",
+      ar: "المواعيد والجداول",
+      en: "Appointments & Scheduling",
     },
     description: {
-      ar: "إدارة المنتجات والمستودعات وحركات المخزون والرقابة التشغيلية.",
-      en: "Manage products, warehouses, stock movements, and inventory control.",
+      ar: "إدارة جداول العيادات والممارسين والحضور والانتظار وإعادة الجدولة.",
+      en: "Manage clinic and practitioner schedules, attendance, waiting, and rescheduling.",
     },
   },
   {
     value: "treasury_payments",
     icon: Sparkles,
     title: {
-      ar: "الخزينة والمدفوعات",
-      en: "Treasury & Payments",
+      ar: "الفوترة والمدفوعات",
+      en: "Billing & Payments",
     },
     description: {
       ar: "متابعة النقد والبنوك ومدفوعات العملاء والموردين والتحويلات.",
@@ -193,11 +193,11 @@ const programOptions: ProgramOption[] = [
     icon: HeartPulse,
     title: {
       ar: "التقارير والإدارة",
-      en: "Reports & Management",
+      en: "Reporting & Administration",
     },
     description: {
-      ar: "متابعة أداء الشركة من خلال التقارير ولوحات المعلومات.",
-      en: "Use dashboards and reports to follow company performance and operations.",
+      ar: "متابعة أداء المنشأة والفروع والمواعيد والتحصيل عبر التقارير ولوحات المعلومات.",
+      en: "Use dashboards and reports to follow organization, branch, appointment, and collection performance.",
     },
   },
 ];
@@ -207,15 +207,15 @@ const programOptions: ProgramOption[] = [
 ========================================================= */
 const content: Record<AppLocale, Content> = {
   ar: {
-    badge: "طلب تجربة Mhamcloud",
+    badge: "طلب تهيئة Marilyn Clinics",
     title: "ابدأ رحلتك مع نظام محاسبي وإداري سحابي",
     description:
-      "املأ بياناتك واختر الباقة أو الوحدات المناسبة لشركتك، وسيتواصل معك فريق Mhamcloud لتوضيح إمكانيات المنصة وخطوات التفعيل.",
+      "املأ بياناتك وحدد الفروع والمستخدمين والوحدات المطلوبة، ليتم توضيح نطاق تهيئة Marilyn Clinics وخطوات التشغيل.",
     primaryNote:
-      "Mhamcloud منصة محاسبية وإدارية سحابية لاستخدام الشركات وإدارة العمليات اليومية.",
+      "Marilyn Clinics منصة سحابية لإدارة العيادات والمراكز الطبية والعمليات اليومية.",
     formTitle: "بيانات طلب التجربة",
     formDescription:
-      "أدخل بياناتك الأساسية وسنساعدك في اختيار الخيار الأنسب لشركتك.",
+      "أدخل بياناتك الأساسية وسنساعدك في تحديد نطاق التهيئة الأنسب لمنشأتك الطبية.",
     fullName: "الاسم الكامل",
     fullNamePlaceholder: "مثال: مازن العتيبي",
     phone: "رقم الجوال",
@@ -224,11 +224,11 @@ const content: Record<AppLocale, Content> = {
     emailPlaceholder: "name@example.com",
     city: "المدينة",
     cityPlaceholder: "مثال: الرياض",
-    program: "الباقة أو الوحدات المطلوبة",
+    program: "نطاق التشغيل والوحدات المطلوبة",
     contactPreference: "طريقة التواصل المفضلة",
     message: "ملاحظات إضافية",
     messagePlaceholder:
-      "اكتب أي تفاصيل مهمة مثل نشاط الشركة، عدد المستخدمين، الفروع، أو الوحدات التي تحتاجها...",
+      "اكتب نوع المنشأة والتخصصات وعدد المستخدمين والفروع والوحدات المطلوبة...",
     submit: "إرسال طلب التجربة",
     submitting: "جارٍ إرسال الطلب...",
     backHome: "العودة للرئيسية",
@@ -237,15 +237,15 @@ const content: Record<AppLocale, Content> = {
     nextStepsTitle: "ماذا يحدث بعد إرسال الطلب؟",
     disclaimerTitle: "تنبيه مهم",
     disclaimerText:
-      "الوحدات والحدود وشروط الاشتراك تختلف حسب الباقة وإعدادات الشركة. سيتم توضيح التفاصيل قبل التفعيل.",
-    sideTitle: "Mhamcloud تجعل اختيار النظام أوضح",
+      "يختلف نطاق الوحدات والمستخدمين حسب تهيئة المنشأة، ويتم توضيح التفاصيل قبل التشغيل.",
+    sideTitle: "Marilyn Clinics تجعل تهيئة المنشأة أوضح",
     sideDescription:
-      "بدل استخدام أدوات متفرقة، اختر منصة محاسبية وإدارية تساعد شركتك على إدارة العمليات اليومية من مكان واحد.",
+      "بدل استخدام أدوات متفرقة، استخدم منصة تربط المرضى والمواعيد والسجل الطبي والفوترة والفروع في مكان واحد.",
     steps: [
       {
         title: "نراجع طلبك",
         description:
-          "نراجع الباقة والوحدات التي تناسب احتياج شركتك.",
+          "نراجع الفروع والمستخدمين والوحدات التي تناسب احتياج منشأتك.",
       },
       {
         title: "نوضح إمكانيات النظام",
@@ -255,7 +255,7 @@ const content: Record<AppLocale, Content> = {
       {
         title: "تبدأ استخدام النظام",
         description:
-          "بعد التفعيل، يمكن لشركتك استخدام Mhamcloud حسب المستخدمين والوحدات المفعلة.",
+          "بعد التهيئة، تبدأ منشأتك باستخدام Marilyn Clinics حسب الفروع والمستخدمين والوحدات المعتمدة.",
       },
     ],
     contactPreferences: {
@@ -268,21 +268,21 @@ const content: Record<AppLocale, Content> = {
       phone: "اكتب رقم جوال صحيح",
       email: "اكتب بريدًا إلكترونيًا صحيحًا",
       city: "اكتب المدينة",
-      program: "اختر الباقة أو الوحدات",
+      program: "اختر نطاق التشغيل والوحدات",
       submitError: "تعذر إرسال طلب التجربة",
       submitSuccess: "تم إرسال طلب التجربة بنجاح",
     },
   },
   en: {
-    badge: "Mhamcloud Subscription Request",
-    title: "Start your journey with cloud accounting and business management",
+    badge: "Marilyn Clinics Setup Request",
+    title: "Start your clinic management journey",
     description:
-      "Fill in your details and choose the plan or modules that fit your business needs. The Mhamcloud team will contact you with platform details, setup steps, and subscription options.",
+      "Fill in your details and select the branches, users, and modules you need. The Marilyn Clinics team will clarify the platform scope and setup steps.",
     primaryNote:
-      "Mhamcloud is a cloud accounting and ERP platform for business subscriptions and company operations.",
-    formTitle: "Company Request Details",
+      "Marilyn Clinics is a cloud clinic management platform for medical organization operations.",
+    formTitle: "Medical Organization Request Details",
     formDescription:
-      "Enter your basic information and we will help you choose the best option for your company.",
+      "Enter your basic information and we will help define the right setup for your medical organization.",
     fullName: "Full Name",
     fullNamePlaceholder: "Example: Mazen Alotaibi",
     phone: "Mobile Number",
@@ -295,7 +295,7 @@ const content: Record<AppLocale, Content> = {
     contactPreference: "Preferred Contact Method",
     message: "Additional Notes",
     messagePlaceholder:
-      "Write any important details such as your company activity, number of users, branches, or the modules you need...",
+      "Add the organization type, specialties, number of users, branches, and required modules...",
     submit: "Send Trial Request",
     submitting: "Sending request...",
     backHome: "Back Home",
@@ -304,15 +304,15 @@ const content: Record<AppLocale, Content> = {
     nextStepsTitle: "What happens after submitting?",
     disclaimerTitle: "Important Notice",
     disclaimerText:
-      "Available modules, limits, and subscription terms may vary by plan and company setup. Details will be clarified before activation.",
-    sideTitle: "Mhamcloud makes choosing business software clearer",
+      "Available modules and users depend on the approved organization setup. Details are clarified before activation.",
+    sideTitle: "Marilyn Clinics makes clinic setup clearer",
     sideDescription:
-      "Instead of using disconnected tools, choose a cloud accounting and ERP platform that helps your company manage daily operations from one place.",
+      "Replace disconnected tools with one platform for patients, appointments, medical records, billing, branches, and daily operations.",
     steps: [
       {
         title: "We review your request",
         description:
-          "We review the plan and modules that fit your company needs.",
+          "We review the branches, users, and modules that fit your organization needs.",
       },
       {
         title: "We explain the platform",
@@ -322,7 +322,7 @@ const content: Record<AppLocale, Content> = {
       {
         title: "You start using the platform",
         description:
-          "After activation, your company can start using Mhamcloud with the configured users and modules.",
+          "After setup, your organization can start using Marilyn Clinics with the approved branches, users, and modules.",
       },
     ],
     contactPreferences: {
@@ -498,7 +498,7 @@ export default function RegisterPage() {
               selectedProgram?.title[locale] || form.program,
             contact_preference: form.contactPreference,
             message: form.message.trim(),
-            source: "Mhamcloud_landing_register",
+            source: "marilyn_landing_register",
           }),
         }
       );
@@ -555,11 +555,11 @@ export default function RegisterPage() {
           <Link
             href="/"
             className="inline-flex w-fit items-center transition hover:opacity-80"
-            aria-label="Mhamcloud"
+            aria-label="Marilyn Clinics"
           >
             <Image
               src="/hero logo.png"
-              alt="Mhamcloud"
+              alt="Marilyn Clinics"
               width={1200}
               height={420}
               priority
@@ -634,7 +634,7 @@ export default function RegisterPage() {
                 <div className="relative min-h-[320px] overflow-hidden">
                   <Image
                     src="/hero.png"
-                    alt="Mhamcloud platform"
+                    alt="Marilyn Clinics platform"
                     fill
                     priority
                     unoptimized
@@ -645,7 +645,7 @@ export default function RegisterPage() {
                   <div className="absolute bottom-0 p-6">
                     <Badge className="mb-3 rounded-full">
                       <HeartPulse className="size-4" />
-                      Mhamcloud
+                      Marilyn Clinics
                     </Badge>
 
                     <h2

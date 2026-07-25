@@ -47,28 +47,28 @@ async function getPageLang(): Promise<AppLang> {
 ========================================================= */
 const content: Record<AppLang, HeroContent> = {
   ar: {
-    badgeNew: "Mhamcloud",
-    badgeText: "بطاقة وبرامج رعاية صحية بخصومات مختارة",
-    title: "رعاية صحية أذكى وخصومات طبية أقرب لك",
+    badgeNew: "Marilyn Clinics",
+    badgeText: "منصة متكاملة لإدارة العيادات والمراكز الطبية",
+    title: "إدارة متكاملة لعيادتك من المريض إلى التحصيل",
     description:
-      "استمتع بمزايا وخصومات طبية على الكشف، التحاليل، الأشعة، الأسنان، الجلدية، التجميل، الولادة وخدمات صحية متنوعة لدى شبكة مختارة من مزودي الخدمة.",
-    primaryButton: "اشترك الآن",
-    secondaryButton: "استعرض المزايا",
-    benefits: ["اشتراك سهل", "خصومات طبية", "دعم عبر واتساب"],
-    imageAlt: "بطاقة Mhamcloud ومزايا الرعاية الصحية",
-    heroLogoAlt: "شعار Mhamcloud الرئيسي",
+      "نظّم المرضى والمواعيد والسجلات الطبية والأطباء والفوترة والمدفوعات والفروع من منصة واحدة آمنة ومهيأة للمنشآت الطبية.",
+    primaryButton: "ابدأ الآن",
+    secondaryButton: "استعرض المنصة",
+    benefits: ["سجل طبي موحد", "مواعيد وجداول", "فوترة ومدفوعات"],
+    imageAlt: "واجهة منصة Marilyn Clinics لإدارة العيادات",
+    heroLogoAlt: "شعار Marilyn Clinics الرئيسي",
   },
   en: {
-    badgeNew: "Mhamcloud",
-    badgeText: "Healthcare cards and programs with selected discounts",
-    title: "Smarter healthcare with medical savings closer to you",
+    badgeNew: "Marilyn Clinics",
+    badgeText: "An integrated platform for clinics and medical centers",
+    title: "Manage your clinic from patient care to collection",
     description:
-      "Enjoy medical benefits and selected discounts on consultations, lab tests, scans, dental care, dermatology, beauty, maternity and other healthcare services through a trusted provider network.",
-    primaryButton: "Join Now",
-    secondaryButton: "Explore Benefits",
-    benefits: ["Easy subscription", "Medical discounts", "WhatsApp support"],
-    imageAlt: "Mhamcloud card and healthcare benefits",
-    heroLogoAlt: "Mhamcloud main hero logo",
+      "Manage patients, appointments, medical records, practitioners, billing, payments, and branches through one secure platform built for medical organizations.",
+    primaryButton: "Get Started",
+    secondaryButton: "Explore Platform",
+    benefits: ["Unified medical records", "Appointments and schedules", "Billing and payments"],
+    imageAlt: "Marilyn Clinics management platform interface",
+    heroLogoAlt: "Marilyn Clinics main logo",
   },
 };
 
@@ -98,7 +98,7 @@ export const HeroSection = async () => {
             </Badge>
 
             {/* =========================================================
-                🖼️ شعار Mhamcloud الرئيسي
+                🖼️ شعار Marilyn Clinics الرئيسي
             ========================================================= */}
             <div className="mx-auto flex max-w-(--breakpoint-md) justify-center">
               <h1 className="sr-only">{t.title}</h1>
@@ -147,7 +147,7 @@ export const HeroSection = async () => {
               </Button>
 
               <Button asChild variant="outline" className="h-12 px-10 text-base">
-                <Link href="#benefits">{t.secondaryButton}</Link>
+                <Link href="#features">{t.secondaryButton}</Link>
               </Button>
             </div>
 
