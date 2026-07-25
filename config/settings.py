@@ -117,6 +117,7 @@ Mhamcloud_APPS = [
     "documents",
     "integrations",
     "business_controls",
+    "medical.apps.MedicalConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + Mhamcloud_APPS

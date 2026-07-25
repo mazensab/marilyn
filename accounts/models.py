@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # 📂 accounts/models.py
 # 🧠 Mhamcloud | Accounts Models V3.2
 # ------------------------------------------------------------
@@ -1616,3 +1616,56 @@ class CompanyMembership(models.Model):
                 "updated_at",
             ]
         )
+
+# ============================================================
+# Phase 10.2-A - Marilyn Medical Structure Permissions
+# ============================================================
+
+MEDICAL_STRUCTURE_VIEW_PERMISSIONS = [
+    "company.medical.view",
+    "company.medical.structure.view",
+    "company.medical.departments.view",
+    "company.medical.specialties.view",
+    "company.medical.clinics.view",
+]
+
+MEDICAL_STRUCTURE_MANAGE_PERMISSIONS = [
+    *MEDICAL_STRUCTURE_VIEW_PERMISSIONS,
+    "company.medical.departments.create",
+    "company.medical.departments.update",
+    "company.medical.departments.status",
+    "company.medical.specialties.create",
+    "company.medical.specialties.update",
+    "company.medical.specialties.status",
+    "company.medical.clinics.create",
+    "company.medical.clinics.update",
+    "company.medical.clinics.status",
+]
+
+
+def _extend_company_role_permissions(role, permissions):
+    if role is None:
+        return
+
+    role_permissions = COMPANY_ROLE_PERMISSIONS.setdefault(role, [])
+
+    for permission in permissions:
+        if permission not in role_permissions:
+            role_permissions.append(permission)
+
+
+for _role_name in ("ADMIN", "MANAGER"):
+    _extend_company_role_permissions(
+        getattr(CompanyRole, _role_name, None),
+        MEDICAL_STRUCTURE_MANAGE_PERMISSIONS,
+    )
+
+
+for _role_name in ("HR", "ACCOUNTANT", "CASHIER", "EMPLOYEE", "VIEWER"):
+    _extend_company_role_permissions(
+        getattr(CompanyRole, _role_name, None),
+        MEDICAL_STRUCTURE_VIEW_PERMISSIONS,
+    )
+
+# End Phase 10.2-A - Marilyn Medical Structure Permissions
+# ============================================================
