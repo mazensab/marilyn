@@ -20,6 +20,11 @@ from .practitioner_relations import (
     practitioner_specialty_collection,
     practitioner_specialty_detail,
 )
+from .practitioner_licenses import (
+    practitioner_license_collection,
+    practitioner_license_detail,
+    practitioner_license_status,
+)
 
 app_name = "company_medical"
 
@@ -145,4 +150,33 @@ path(
     name="practitioner-assignments-detail",
 ),
 # PHASE 10.2-C2-B1 PRACTITIONER RELATIONS END
+
+    # PHASE 10.2-C2-B2 PRACTITIONER LICENSES START
+    path(
+        (
+            "practitioners/"
+            "<int:practitioner_id>/licenses/"
+        ),
+        practitioner_license_collection,
+        name="practitioner-licenses-list-create",
+    ),
+    path(
+        (
+            "practitioners/"
+            "<int:practitioner_id>/licenses/"
+            "<int:license_id>/"
+        ),
+        practitioner_license_detail,
+        name="practitioner-licenses-detail",
+    ),
+    path(
+        (
+            "practitioners/"
+            "<int:practitioner_id>/licenses/"
+            "<int:license_id>/status/"
+        ),
+        practitioner_license_status,
+        name="practitioner-licenses-status",
+    ),
+    # PHASE 10.2-C2-B2 PRACTITIONER LICENSES END
 ]
