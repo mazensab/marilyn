@@ -24,6 +24,12 @@ from django.db import transaction
 from django.db.models import Count, Sum
 from django.utils import timezone
 
+from medical.models import (
+    MedicalPatient,
+    MedicalPatientGender,
+    MedicalPatientIdentifierType,
+)
+
 from .models import (
     MONEY_ZERO,
     ClinicAppointment,
@@ -303,6 +309,74 @@ def create_restaurant_kitchen_order(*, company, data: dict[str, Any]) -> Restaur
     return order
 
 
+
+def _legacy_medical_gender(value: Any) -> str:
+    normalized = normalize_text(value).upper()
+    return {
+        "M": MedicalPatientGender.MALE,
+        "MALE": MedicalPatientGender.MALE,
+        "F": MedicalPatientGender.FEMALE,
+        "FEMALE": MedicalPatientGender.FEMALE,
+    }.get(normalized, MedicalPatientGender.UNSPECIFIED)
+
+
+def _ensure_medical_patient(patient: ClinicPatient) -> MedicalPatient:
+    existing = MedicalPatient.objects.filter(
+        legacy_patient_id=patient.id,
+    ).first()
+    if existing is not None:
+        return existing
+
+    base_number = patient.patient_number
+    patient_number = base_number
+    sequence = 0
+
+    while MedicalPatient.objects.filter(
+        company_id=patient.company_id,
+        patient_number=patient_number,
+    ).exists():
+        sequence += 1
+        suffix = f"-L{patient.id}"
+        if sequence > 1:
+            suffix = f"{suffix}-{sequence}"
+        patient_number = f"{base_number}{suffix}"
+
+    identifier_number = patient.national_id
+    extra_data = dict(patient.extra_data or {})
+
+    if (
+        identifier_number
+        and MedicalPatient.objects.filter(
+            company_id=patient.company_id,
+            identifier_number=identifier_number,
+        ).exists()
+    ):
+        extra_data["legacy_national_id"] = identifier_number
+        identifier_number = ""
+
+    medical_patient = MedicalPatient(
+        company_id=patient.company_id,
+        legacy_patient=patient,
+        patient_number=patient_number,
+        identifier_type=(
+            MedicalPatientIdentifierType.NATIONAL_ID
+            if identifier_number
+            else MedicalPatientIdentifierType.UNSPECIFIED
+        ),
+        identifier_number=identifier_number,
+        full_name=patient.full_name,
+        date_of_birth=patient.date_of_birth,
+        gender=_legacy_medical_gender(patient.gender),
+        mobile=patient.mobile,
+        email=patient.email,
+        registered_at=patient.created_at or timezone.now(),
+        notes=patient.notes,
+        extra_data=extra_data,
+    )
+    medical_patient.save()
+    return medical_patient
+
+
 def clinic_patient_payload(obj: ClinicPatient) -> dict[str, Any]:
     return {
         "id": obj.id,
@@ -343,6 +417,7 @@ def clinic_appointment_payload(obj: ClinicAppointment) -> dict[str, Any]:
         "company_id": obj.company_id,
         "patient_id": obj.patient_id,
         "patient_name": obj.patient.full_name,
+        "medical_patient_id": obj.medical_patient_id,
         "service_id": obj.service_id,
         "service_name": obj.service.name,
         "appointment_number": obj.appointment_number,
@@ -371,6 +446,7 @@ def create_clinic_patient(*, company, data: dict[str, Any]) -> ClinicPatient:
     )
     obj.full_clean()
     obj.save()
+    _ensure_medical_patient(obj)
     return obj
 
 
@@ -400,6 +476,7 @@ def create_clinic_appointment(*, company, data: dict[str, Any]) -> ClinicAppoint
     patient = ClinicPatient.objects.filter(company=company, id=data.get("patient_id")).first()
     if patient is None:
         raise ValidationError("Patient was not found for this company.")
+    medical_patient = _ensure_medical_patient(patient)
     service = ClinicService.objects.filter(company=company, id=data.get("service_id")).first()
     if service is None:
         raise ValidationError("Service was not found for this company.")
@@ -407,6 +484,7 @@ def create_clinic_appointment(*, company, data: dict[str, Any]) -> ClinicAppoint
     obj = ClinicAppointment(
         company=company,
         patient=patient,
+        medical_patient=medical_patient,
         service=service,
         appointment_number=normalize_code(data.get("appointment_number")) or _next_number(ClinicAppointment, company, "appointment_number", "APT"),
         appointment_at=normalize_datetime(data.get("appointment_at"), default_now=True),

@@ -125,6 +125,92 @@ class ActivityBackendsPhase253Tests(TestCase):
         self.assertEqual(ClinicAppointment.objects.count(), 1)
         self.assertEqual(str(appointment.price_snapshot), "150.00")
 
+    def test_legacy_patient_creation_creates_medical_patient(self):
+        from medical.models import MedicalPatient
+
+        patient = create_clinic_patient(
+            company=self.company,
+            data={
+                "patient_number": "LEGACY-100",
+                "full_name": "Legacy Patient",
+                "mobile": "0501111111",
+                "national_id": "1234567890",
+                "gender": "FEMALE",
+            },
+        )
+
+        medical_patient = MedicalPatient.objects.get(
+            legacy_patient=patient,
+        )
+
+        self.assertEqual(
+            medical_patient.company_id,
+            self.company.id,
+        )
+        self.assertEqual(
+            medical_patient.patient_number,
+            "LEGACY-100",
+        )
+        self.assertEqual(
+            medical_patient.identifier_number,
+            "1234567890",
+        )
+        self.assertEqual(
+            medical_patient.full_name,
+            "Legacy Patient",
+        )
+
+    def test_legacy_appointment_links_medical_patient(self):
+        from medical.models import MedicalPatient
+        from .services import clinic_appointment_payload
+
+        patient = create_clinic_patient(
+            company=self.company,
+            data={
+                "patient_number": "LEGACY-200",
+                "full_name": "Appointment Patient",
+                "mobile": "0502222222",
+            },
+        )
+        service = create_clinic_service(
+            company=self.company,
+            data={
+                "code": "COMPAT",
+                "name": "Compatibility Service",
+                "price": "75.00",
+            },
+        )
+
+        appointment = create_clinic_appointment(
+            company=self.company,
+            data={
+                "patient_id": patient.id,
+                "service_id": service.id,
+                "appointment_at": timezone.now().isoformat(),
+            },
+        )
+
+        medical_patient = MedicalPatient.objects.get(
+            legacy_patient=patient,
+        )
+        payload = clinic_appointment_payload(appointment)
+
+        self.assertEqual(
+            MedicalPatient.objects.filter(
+                legacy_patient=patient,
+            ).count(),
+            1,
+        )
+        self.assertEqual(
+            appointment.medical_patient_id,
+            medical_patient.id,
+        )
+        self.assertEqual(payload["patient_id"], patient.id)
+        self.assertEqual(
+            payload["medical_patient_id"],
+            medical_patient.id,
+        )
+
     def test_project_cost_rollup(self):
         project = create_project(
             company=self.company,

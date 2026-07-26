@@ -539,6 +539,14 @@ class ClinicAppointment(models.Model):
         related_name="appointments",
         db_index=True,
     )
+    medical_patient = models.ForeignKey(
+        "medical.MedicalPatient",
+        on_delete=models.PROTECT,
+        related_name="legacy_clinic_appointments",
+        blank=True,
+        null=True,
+        db_index=True,
+    )
     service = models.ForeignKey(
         ClinicService,
         on_delete=models.PROTECT,
@@ -570,6 +578,7 @@ class ClinicAppointment(models.Model):
         ]
         indexes = [
             models.Index(fields=["company", "patient"]),
+            models.Index(fields=["company", "medical_patient"]),
             models.Index(fields=["company", "service"]),
             models.Index(fields=["company", "status"]),
             models.Index(fields=["company", "appointment_at"]),
@@ -588,6 +597,23 @@ class ClinicAppointment(models.Model):
             raise ValidationError({"appointment_number": "Appointment number is required."})
         if self.patient_id and self.company_id and self.patient.company_id != self.company_id:
             raise ValidationError({"patient": "Patient must belong to the same company."})
+        if (
+            self.medical_patient_id
+            and self.company_id
+            and self.medical_patient.company_id != self.company_id
+        ):
+            raise ValidationError(
+                {"medical_patient": "Medical patient must belong to the same company."}
+            )
+        if (
+            self.patient_id
+            and self.medical_patient_id
+            and self.medical_patient.legacy_patient_id
+            and self.medical_patient.legacy_patient_id != self.patient_id
+        ):
+            raise ValidationError(
+                {"medical_patient": "Medical patient does not match the legacy patient."}
+            )
         if self.service_id and self.company_id and self.service.company_id != self.company_id:
             raise ValidationError({"service": "Service must belong to the same company."})
         if self.service_id and self.price_snapshot == MONEY_ZERO:

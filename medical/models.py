@@ -1833,3 +1833,375 @@ class MedicalPractitionerLicense(MedicalAuditModel):
         self.full_clean()
         return super().save(*args, **kwargs)
 # End Phase 10.2-B - Healthcare Practitioners Models
+# PHASE 10.4-A4 MEDICAL PATIENT FOUNDATION
+
+from django.db.models import Q as _patient_Q
+from django.utils import timezone as _patient_timezone
+
+
+class MedicalPatientStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    INACTIVE = "INACTIVE", "Inactive"
+    DECEASED = "DECEASED", "Deceased"
+    BLOCKED = "BLOCKED", "Blocked"
+
+
+class MedicalPatientGender(models.TextChoices):
+    MALE = "MALE", "Male"
+    FEMALE = "FEMALE", "Female"
+    OTHER = "OTHER", "Other"
+    UNSPECIFIED = "UNSPECIFIED", "Unspecified"
+
+
+class MedicalPatientIdentifierType(models.TextChoices):
+    NATIONAL_ID = "NATIONAL_ID", "National ID"
+    IQAMA = "IQAMA", "Iqama"
+    PASSPORT = "PASSPORT", "Passport"
+    OTHER = "OTHER", "Other"
+    UNSPECIFIED = "UNSPECIFIED", "Unspecified"
+
+
+class MedicalPatient(models.Model):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="medical_patients",
+        db_index=True,
+    )
+
+    legacy_patient = models.OneToOneField(
+        "activity_backends.ClinicPatient",
+        on_delete=models.SET_NULL,
+        related_name="medical_patient",
+        null=True,
+        blank=True,
+    )
+
+    registration_branch = models.ForeignKey(
+        "companies.Branch",
+        on_delete=models.PROTECT,
+        related_name="registered_medical_patients",
+        null=True,
+        blank=True,
+    )
+
+    patient_number = models.CharField(
+        max_length=80,
+        db_index=True,
+    )
+
+    identifier_type = models.CharField(
+        max_length=20,
+        choices=MedicalPatientIdentifierType.choices,
+        default=MedicalPatientIdentifierType.UNSPECIFIED,
+        db_index=True,
+    )
+
+    identifier_number = models.CharField(
+        max_length=80,
+        blank=True,
+        default="",
+        db_index=True,
+    )
+
+    full_name = models.CharField(
+        max_length=220,
+        db_index=True,
+    )
+
+    full_name_ar = models.CharField(
+        max_length=220,
+        blank=True,
+        default="",
+    )
+
+    full_name_en = models.CharField(
+        max_length=220,
+        blank=True,
+        default="",
+    )
+
+    date_of_birth = models.DateField(
+        null=True,
+        blank=True,
+    )
+
+    gender = models.CharField(
+        max_length=20,
+        choices=MedicalPatientGender.choices,
+        default=MedicalPatientGender.UNSPECIFIED,
+        db_index=True,
+    )
+
+    nationality = models.CharField(
+        max_length=100,
+        blank=True,
+        default="",
+    )
+
+    mobile = models.CharField(
+        max_length=50,
+        blank=True,
+        default="",
+        db_index=True,
+    )
+
+    email = models.EmailField(
+        blank=True,
+        default="",
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=MedicalPatientStatus.choices,
+        default=MedicalPatientStatus.ACTIVE,
+        db_index=True,
+    )
+
+    registered_at = models.DateTimeField(
+        default=_patient_timezone.now,
+        db_index=True,
+    )
+
+    notes = models.TextField(
+        blank=True,
+        default="",
+    )
+
+    extra_data = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    created_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        related_name="created_medical_patient_records",
+        null=True,
+        blank=True,
+    )
+
+    updated_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        related_name="updated_medical_patient_records",
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    class Meta:
+        ordering = [
+            "company_id",
+            "full_name",
+            "id",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "patient_number",
+                ],
+                name="medical_patient_number_company_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "identifier_number",
+                ],
+                condition=~_patient_Q(
+                    identifier_number=""
+                ),
+                name="medical_patient_identifier_company_uniq",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "status",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "mobile",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "full_name",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "registration_branch",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "registered_at",
+                ],
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return (
+            f"{self.patient_number} - "
+            f"{self.full_name}"
+        )
+
+    @property
+    def display_name(self) -> str:
+        return (
+            self.full_name_ar
+            or self.full_name_en
+            or self.full_name
+        )
+
+    def clean(self) -> None:
+        super().clean()
+
+        self.patient_number = (
+            self.patient_number or ""
+        ).strip().upper()
+
+        self.identifier_number = (
+            self.identifier_number or ""
+        ).strip().upper()
+
+        self.full_name = (
+            self.full_name or ""
+        ).strip()
+
+        self.full_name_ar = (
+            self.full_name_ar or ""
+        ).strip()
+
+        self.full_name_en = (
+            self.full_name_en or ""
+        ).strip()
+
+        self.nationality = (
+            self.nationality or ""
+        ).strip()
+
+        self.mobile = (
+            self.mobile or ""
+        ).strip()
+
+        self.email = (
+            self.email or ""
+        ).strip().lower()
+
+        if not self.patient_number:
+            raise ValidationError(
+                {
+                    "patient_number": (
+                        "Patient number is required."
+                    )
+                }
+            )
+
+        if not self.full_name:
+            self.full_name = (
+                self.full_name_ar
+                or self.full_name_en
+            )
+
+        if not self.full_name:
+            raise ValidationError(
+                {
+                    "full_name": (
+                        "Patient full name is required."
+                    )
+                }
+            )
+
+        if (
+            self.date_of_birth
+            and self.date_of_birth
+            > _patient_timezone.localdate()
+        ):
+            raise ValidationError(
+                {
+                    "date_of_birth": (
+                        "Date of birth cannot "
+                        "be in the future."
+                    )
+                }
+            )
+
+        if (
+            self.registration_branch_id
+            and self.company_id
+            and self.registration_branch.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "registration_branch": (
+                        "Registration branch must "
+                        "belong to the same company."
+                    )
+                }
+            )
+
+        if (
+            self.legacy_patient_id
+            and self.company_id
+            and self.legacy_patient.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "legacy_patient": (
+                        "Legacy patient must belong "
+                        "to the same company."
+                    )
+                }
+            )
+
+        if self.company_id:
+            settings = MedicalSettings.objects.filter(
+                company_id=self.company_id
+            ).first()
+
+            if (
+                settings
+                and settings.require_patient_identifier
+                and not self.identifier_number
+            ):
+                raise ValidationError(
+                    {
+                        "identifier_number": (
+                            "Patient identifier is "
+                            "required by company settings."
+                        )
+                    }
+                )
+
+        if not self.identifier_number:
+            self.identifier_type = (
+                MedicalPatientIdentifierType.UNSPECIFIED
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+# END PHASE 10.4-A4 MEDICAL PATIENT FOUNDATION

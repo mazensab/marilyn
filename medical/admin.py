@@ -265,3 +265,38 @@ class MedicalPractitionerLicenseAdmin(admin.ModelAdmin):
         "specialty",
     )
 # End Phase 10.2-B - Healthcare Practitioners Admin
+
+from .models import MedicalPatient
+
+
+@admin.register(MedicalPatient)
+class MedicalPatientAdmin(CompanyScopedAdmin):
+    list_display = (
+        "patient_number",
+        "full_name",
+        "company",
+        "registration_branch",
+        "mobile",
+        "identifier_type",
+        "identifier_number",
+        "status",
+        "created_at",
+    )
+    list_filter = (
+        "status",
+        "gender",
+        "identifier_type",
+        "company",
+        "registration_branch",
+    )
+    search_fields = (
+        "patient_number",
+        "full_name",
+        "full_name_ar",
+        "full_name_en",
+        "mobile",
+        "email",
+        "identifier_number",
+    )
+    ordering = ("-created_at",)
+    readonly_fields = ("created_at", "updated_at")
