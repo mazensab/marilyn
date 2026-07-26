@@ -9,6 +9,11 @@ from .views import (
     medical_summary,
 )
 
+from .practitioners import (
+    practitioner_collection,
+    practitioner_detail,
+    practitioner_status,
+)
 
 app_name = "company_medical"
 
@@ -76,4 +81,25 @@ urlpatterns = [
         {"resource": "clinics"},
         name="clinics-status",
     ),
+
+# PHASE 10.2-C2-A PRACTITIONER ROUTES START
+path(
+    "practitioners/",
+    practitioner_collection,
+    name="practitioners-list-create",
+),
+path(
+    "practitioners/<int:practitioner_id>/",
+    practitioner_detail,
+    name="practitioners-detail",
+),
+path(
+    (
+        "practitioners/"
+        "<int:practitioner_id>/status/"
+    ),
+    practitioner_status,
+    name="practitioners-status",
+),
+# PHASE 10.2-C2-A PRACTITIONER ROUTES END
 ]
