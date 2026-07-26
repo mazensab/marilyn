@@ -1,4 +1,4 @@
-﻿from datetime import timedelta
+from datetime import timedelta
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -159,4 +159,3 @@ class MedicalPatientFoundationTests(TestCase):
 
         with self.assertRaises(ValidationError):
             patient.full_clean()
-
