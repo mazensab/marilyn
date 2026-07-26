@@ -82,4 +82,5 @@ path("business-controls/", include("api.company.business_controls.urls")),
     path("hr/", include("api.company.hr.urls")),
     path("reports/", include("api.company.reports.urls")),
     path("documents/", include("api.company.documents.urls")),
+    path("medical/", include("api.company.medical.urls")),
 ]
