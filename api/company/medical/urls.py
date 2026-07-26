@@ -14,6 +14,12 @@ from .practitioners import (
     practitioner_detail,
     practitioner_status,
 )
+from .practitioner_relations import (
+    practitioner_assignment_collection,
+    practitioner_assignment_detail,
+    practitioner_specialty_collection,
+    practitioner_specialty_detail,
+)
 
 app_name = "company_medical"
 
@@ -102,4 +108,41 @@ path(
     name="practitioners-status",
 ),
 # PHASE 10.2-C2-A PRACTITIONER ROUTES END
+
+# PHASE 10.2-C2-B1 PRACTITIONER RELATIONS START
+path(
+    (
+        "practitioners/"
+        "<int:practitioner_id>/specialties/"
+    ),
+    practitioner_specialty_collection,
+    name="practitioner-specialties-list-create",
+),
+path(
+    (
+        "practitioners/"
+        "<int:practitioner_id>/specialties/"
+        "<int:specialty_assignment_id>/"
+    ),
+    practitioner_specialty_detail,
+    name="practitioner-specialties-detail",
+),
+path(
+    (
+        "practitioners/"
+        "<int:practitioner_id>/assignments/"
+    ),
+    practitioner_assignment_collection,
+    name="practitioner-assignments-list-create",
+),
+path(
+    (
+        "practitioners/"
+        "<int:practitioner_id>/assignments/"
+        "<int:assignment_id>/"
+    ),
+    practitioner_assignment_detail,
+    name="practitioner-assignments-detail",
+),
+# PHASE 10.2-C2-B1 PRACTITIONER RELATIONS END
 ]
