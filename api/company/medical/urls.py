@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from django.urls import path
 
+from .patients import (
+    patient_collection,
+    patient_detail,
+    patient_status,
+)
+
 from .views import (
     medical_collection,
     medical_detail,
@@ -179,4 +185,21 @@ path(
         name="practitioner-licenses-status",
     ),
     # PHASE 10.2-C2-B2 PRACTITIONER LICENSES END
+
+    # PHASE 10.5-A1 PATIENT API
+    path(
+        "patients/",
+        patient_collection,
+        name="patients-list-create",
+    ),
+    path(
+        "patients/<int:patient_id>/",
+        patient_detail,
+        name="patients-detail",
+    ),
+    path(
+        "patients/<int:patient_id>/status/",
+        patient_status,
+        name="patients-status",
+    ),
 ]
