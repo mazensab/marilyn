@@ -2765,3 +2765,415 @@ class MedicalEncounter(models.Model):
 
 
 # END PHASE 10.7-A1 MEDICAL ENCOUNTER FOUNDATION
+
+# PHASE 10.8-A MEDICAL DIAGNOSIS AND PROCEDURE FOUNDATION
+class MedicalDiagnosis(models.Model):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="medical_diagnoses",
+        db_index=True,
+    )
+    encounter = models.ForeignKey(
+        MedicalEncounter,
+        on_delete=models.CASCADE,
+        related_name="diagnoses",
+    )
+    patient = models.ForeignKey(
+        MedicalPatient,
+        on_delete=models.PROTECT,
+        related_name="diagnoses",
+    )
+    practitioner = models.ForeignKey(
+        MedicalPractitioner,
+        on_delete=models.PROTECT,
+        related_name="diagnoses",
+        null=True,
+        blank=True,
+    )
+    diagnosis_code = models.CharField(
+        max_length=80,
+        blank=True,
+        default="",
+        db_index=True,
+    )
+    diagnosis_name = models.CharField(
+        max_length=255,
+        db_index=True,
+    )
+    is_primary = models.BooleanField(
+        default=False,
+        db_index=True,
+    )
+    diagnosed_at = models.DateTimeField(
+        default=_patient_timezone.now,
+        db_index=True,
+    )
+    notes = models.TextField(
+        blank=True,
+        default="",
+    )
+    extra_data = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="created_medical_diagnoses",
+        null=True,
+        blank=True,
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="updated_medical_diagnoses",
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+    class Meta:
+        ordering = [
+            "company_id",
+            "encounter_id",
+            "-is_primary",
+            "diagnosed_at",
+            "id",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["encounter"],
+                condition=models.Q(is_primary=True),
+                name="medical_primary_diagnosis_encounter_uniq",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["company", "diagnosed_at"],
+            ),
+            models.Index(
+                fields=["patient", "diagnosed_at"],
+            ),
+            models.Index(
+                fields=["encounter", "is_primary"],
+            ),
+            models.Index(
+                fields=["company", "diagnosis_code"],
+            ),
+        ]
+    def __str__(self) -> str:
+        return (
+            f"{self.diagnosis_code or '-'} - "
+            f"{self.diagnosis_name}"
+        )
+    def clean(self):
+        super().clean()
+        errors = {}
+        related = [
+            (
+                "encounter",
+                self.encounter if self.encounter_id else None,
+            ),
+            (
+                "patient",
+                self.patient if self.patient_id else None,
+            ),
+            (
+                "practitioner",
+                self.practitioner
+                if self.practitioner_id
+                else None,
+            ),
+        ]
+        for field_name, obj in related:
+            if (
+                obj
+                and self.company_id
+                and obj.company_id != self.company_id
+            ):
+                errors[field_name] = (
+                    "Related record must belong to the same company."
+                )
+        if (
+            self.encounter_id
+            and self.patient_id
+            and self.encounter.patient_id != self.patient_id
+        ):
+            errors["patient"] = (
+                "Patient must match the selected encounter."
+            )
+        if not (self.diagnosis_name or "").strip():
+            errors["diagnosis_name"] = (
+                "Diagnosis name is required."
+            )
+        if errors:
+            raise ValidationError(errors)
+    def save(self, *args, **kwargs):
+        self.diagnosis_code = (
+            self.diagnosis_code or ""
+        ).strip().upper()
+        self.diagnosis_name = (
+            self.diagnosis_name or ""
+        ).strip()
+        self.notes = (self.notes or "").strip()
+        if self.extra_data is None:
+            self.extra_data = {}
+        self.full_clean()
+        return super().save(*args, **kwargs)
+class MedicalProcedureStatus(models.TextChoices):
+    PLANNED = "PLANNED", "Planned"
+    IN_PROGRESS = "IN_PROGRESS", "In progress"
+    COMPLETED = "COMPLETED", "Completed"
+    CANCELLED = "CANCELLED", "Cancelled"
+class MedicalProcedure(models.Model):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="medical_procedures",
+        db_index=True,
+    )
+    encounter = models.ForeignKey(
+        MedicalEncounter,
+        on_delete=models.CASCADE,
+        related_name="procedures",
+    )
+    patient = models.ForeignKey(
+        MedicalPatient,
+        on_delete=models.PROTECT,
+        related_name="procedures",
+    )
+    practitioner = models.ForeignKey(
+        MedicalPractitioner,
+        on_delete=models.PROTECT,
+        related_name="performed_medical_procedures",
+        null=True,
+        blank=True,
+    )
+    catalog_item = models.ForeignKey(
+        "catalog.CatalogItem",
+        on_delete=models.SET_NULL,
+        related_name="medical_procedures",
+        null=True,
+        blank=True,
+    )
+    procedure_code_snapshot = models.CharField(
+        max_length=80,
+        blank=True,
+        default="",
+        db_index=True,
+    )
+    procedure_name_snapshot = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        db_index=True,
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=MedicalProcedureStatus.choices,
+        default=MedicalProcedureStatus.PLANNED,
+        db_index=True,
+    )
+    quantity = models.DecimalField(
+        max_digits=12,
+        decimal_places=3,
+        default=1,
+    )
+    unit_price_snapshot = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    performed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    cancellation_reason = models.TextField(
+        blank=True,
+        default="",
+    )
+    notes = models.TextField(
+        blank=True,
+        default="",
+    )
+    extra_data = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="created_medical_procedures",
+        null=True,
+        blank=True,
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="updated_medical_procedures",
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+    class Meta:
+        ordering = [
+            "company_id",
+            "encounter_id",
+            "created_at",
+            "id",
+        ]
+        indexes = [
+            models.Index(
+                fields=["company", "status", "created_at"],
+            ),
+            models.Index(
+                fields=["patient", "performed_at"],
+            ),
+            models.Index(
+                fields=["encounter", "status"],
+            ),
+            models.Index(
+                fields=["company", "procedure_code_snapshot"],
+            ),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(quantity__gt=0),
+                name="medical_procedure_quantity_positive",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(unit_price_snapshot__isnull=True)
+                    | models.Q(unit_price_snapshot__gte=0)
+                ),
+                name="medical_procedure_price_nonnegative",
+            ),
+        ]
+    def __str__(self) -> str:
+        return (
+            f"{self.procedure_code_snapshot or '-'} - "
+            f"{self.procedure_name_snapshot}"
+        )
+    def clean(self):
+        super().clean()
+        errors = {}
+        related = [
+            (
+                "encounter",
+                self.encounter if self.encounter_id else None,
+            ),
+            (
+                "patient",
+                self.patient if self.patient_id else None,
+            ),
+            (
+                "practitioner",
+                self.practitioner
+                if self.practitioner_id
+                else None,
+            ),
+            (
+                "catalog_item",
+                self.catalog_item
+                if self.catalog_item_id
+                else None,
+            ),
+        ]
+        for field_name, obj in related:
+            if (
+                obj
+                and self.company_id
+                and obj.company_id != self.company_id
+            ):
+                errors[field_name] = (
+                    "Related record must belong to the same company."
+                )
+        if (
+            self.encounter_id
+            and self.patient_id
+            and self.encounter.patient_id != self.patient_id
+        ):
+            errors["patient"] = (
+                "Patient must match the selected encounter."
+            )
+        if (
+            self.catalog_item_id
+            and self.catalog_item.item_type != "SERVICE"
+        ):
+            errors["catalog_item"] = (
+                "Catalog item must be a service."
+            )
+        if self.quantity is not None and self.quantity <= 0:
+            errors["quantity"] = (
+                "Procedure quantity must be greater than zero."
+            )
+        if (
+            self.unit_price_snapshot is not None
+            and self.unit_price_snapshot < 0
+        ):
+            errors["unit_price_snapshot"] = (
+                "Procedure price cannot be negative."
+            )
+        if not (self.procedure_name_snapshot or "").strip():
+            errors["procedure_name_snapshot"] = (
+                "Procedure name is required."
+            )
+        if (
+            self.status == MedicalProcedureStatus.COMPLETED
+            and not self.performed_at
+        ):
+            errors["performed_at"] = (
+                "Performed time is required for a completed procedure."
+            )
+        if (
+            self.status == MedicalProcedureStatus.CANCELLED
+            and not (self.cancellation_reason or "").strip()
+        ):
+            errors["cancellation_reason"] = (
+                "Cancellation reason is required for a cancelled procedure."
+            )
+        if errors:
+            raise ValidationError(errors)
+    def save(self, *args, **kwargs):
+        self.procedure_code_snapshot = (
+            self.procedure_code_snapshot or ""
+        ).strip().upper()
+        self.procedure_name_snapshot = (
+            self.procedure_name_snapshot or ""
+        ).strip()
+        self.cancellation_reason = (
+            self.cancellation_reason or ""
+        ).strip()
+        self.notes = (self.notes or "").strip()
+        if self.catalog_item_id:
+            if not self.procedure_code_snapshot:
+                self.procedure_code_snapshot = (
+                    self.catalog_item.code or ""
+                ).strip().upper()
+            if not self.procedure_name_snapshot:
+                self.procedure_name_snapshot = (
+                    self.catalog_item.name or ""
+                ).strip()
+            if self.unit_price_snapshot is None:
+                self.unit_price_snapshot = (
+                    self.catalog_item.sale_price
+                )
+        if self.extra_data is None:
+            self.extra_data = {}
+        self.full_clean()
+        return super().save(*args, **kwargs)
+# END PHASE 10.8-A MEDICAL DIAGNOSIS AND PROCEDURE FOUNDATION

@@ -300,3 +300,83 @@ class MedicalPatientAdmin(CompanyScopedAdmin):
     )
     ordering = ("-created_at",)
     readonly_fields = ("created_at", "updated_at")
+
+# PHASE 10.8-A MEDICAL DIAGNOSIS AND PROCEDURE ADMIN
+from .models import (
+    MedicalDiagnosis,
+    MedicalProcedure,
+)
+@admin.register(MedicalDiagnosis)
+class MedicalDiagnosisAdmin(CompanyScopedAdmin):
+    list_display = (
+        "diagnosis_code",
+        "diagnosis_name",
+        "encounter",
+        "patient",
+        "practitioner",
+        "company",
+        "is_primary",
+        "diagnosed_at",
+    )
+    list_filter = (
+        "company",
+        "is_primary",
+        "diagnosed_at",
+    )
+    search_fields = (
+        "diagnosis_code",
+        "diagnosis_name",
+        "encounter__encounter_number",
+        "patient__patient_number",
+        "patient__full_name",
+    )
+    list_select_related = (
+        "company",
+        "encounter",
+        "patient",
+        "practitioner",
+    )
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+@admin.register(MedicalProcedure)
+class MedicalProcedureAdmin(CompanyScopedAdmin):
+    list_display = (
+        "procedure_code_snapshot",
+        "procedure_name_snapshot",
+        "encounter",
+        "patient",
+        "practitioner",
+        "company",
+        "status",
+        "quantity",
+        "unit_price_snapshot",
+        "performed_at",
+    )
+    list_filter = (
+        "company",
+        "status",
+        "performed_at",
+    )
+    search_fields = (
+        "procedure_code_snapshot",
+        "procedure_name_snapshot",
+        "encounter__encounter_number",
+        "patient__patient_number",
+        "patient__full_name",
+        "catalog_item__code",
+        "catalog_item__name",
+    )
+    list_select_related = (
+        "company",
+        "encounter",
+        "patient",
+        "practitioner",
+        "catalog_item",
+    )
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+# END PHASE 10.8-A MEDICAL DIAGNOSIS AND PROCEDURE ADMIN
