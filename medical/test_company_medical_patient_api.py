@@ -4,11 +4,15 @@ from typing import Any
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.urls import resolve
 from rest_framework.test import APIClient
 
 from accounts.models import CompanyMembership, CompanyRole
 from companies.models import Branch, Company
 from medical.models import MedicalPatient, MedicalPatientStatus
+
+from api.company.medical import patients
+
 
 User = get_user_model()
 
@@ -105,6 +109,85 @@ class CompanyMedicalPatientAPITests(TestCase):
         )
         self.client.force_authenticate(user=self.owner)
 
+    def test_routes_use_expected_callbacks(
+        self,
+    ) -> None:
+        collection = resolve(
+            "/api/company/medical/patients/"
+        )
+        detail = resolve(
+            "/api/company/medical/patients/1/"
+        )
+        status = resolve(
+            "/api/company/medical/patients/1/status/"
+        )
+        self.assertIs(
+            collection.func,
+            patients.patient_collection,
+        )
+        self.assertIs(
+            detail.func,
+            patients.patient_detail,
+        )
+        self.assertIs(
+            status.func,
+            patients.patient_status,
+        )
+        self.assertEqual(
+            collection.url_name,
+            "patients-list-create",
+        )
+        self.assertEqual(
+            detail.url_name,
+            "patients-detail",
+        )
+        self.assertEqual(
+            status.url_name,
+            "patients-status",
+        )
+    def test_permission_contracts_are_declared(
+        self,
+    ) -> None:
+        self.assertEqual(
+            patients.VIEW_PERMISSION,
+            "medical.view_medicalpatient",
+        )
+        self.assertEqual(
+            patients.CREATE_PERMISSION,
+            "medical.add_medicalpatient",
+        )
+        self.assertEqual(
+            patients.UPDATE_PERMISSION,
+            "medical.change_medicalpatient",
+        )
+        self.assertEqual(
+            patients.STATUS_PERMISSION,
+            patients.UPDATE_PERMISSION,
+        )
+        self.assertEqual(
+            (
+                patients.patient_collection
+                .required_company_permissions
+            ),
+            patients.ALL_PERMISSIONS,
+        )
+        self.assertEqual(
+            (
+                patients.patient_detail
+                .required_company_permissions
+            ),
+            [
+                patients.VIEW_PERMISSION,
+                patients.UPDATE_PERMISSION,
+            ],
+        )
+        self.assertEqual(
+            (
+                patients.patient_status
+                .required_company_permissions
+            ),
+            [patients.STATUS_PERMISSION],
+        )
     def test_list_is_company_scoped(self) -> None:
         response = self.client.get("/api/company/medical/patients/")
         self.assertEqual(response.status_code, 200, response.data)
