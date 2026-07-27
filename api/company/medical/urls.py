@@ -51,7 +51,39 @@ from .diagnoses import (
     diagnosis_detail,
     diagnosis_primary,
 )
+from .procedures import (
+    procedure_collection,
+    procedure_detail,
+    procedure_status,
+)
 urlpatterns = [
+    # PHASE 10.8-C COMPANY MEDICAL PROCEDURE API
+    path(
+        (
+            "encounters/"
+            "<int:encounter_id>/procedures/"
+        ),
+        procedure_collection,
+        name="company-medical-encounter-procedures",
+    ),
+    path(
+        (
+            "encounters/"
+            "<int:encounter_id>/procedures/"
+            "<int:procedure_id>/"
+        ),
+        procedure_detail,
+        name="company-medical-encounter-procedure-detail",
+    ),
+    path(
+        (
+            "encounters/"
+            "<int:encounter_id>/procedures/"
+            "<int:procedure_id>/status/"
+        ),
+        procedure_status,
+        name="company-medical-encounter-procedure-status",
+    ),
     # PHASE 10.8-B COMPANY MEDICAL DIAGNOSIS API
     path(
         (
