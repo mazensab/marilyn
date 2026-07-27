@@ -41,7 +41,28 @@ from .appointments import (
     appointment_status,
 )
 
+from .encounters import (
+    encounter_collection,
+    encounter_detail,
+    encounter_status,
+)
 urlpatterns = [
+    # PHASE 10.7-B COMPANY MEDICAL ENCOUNTER API
+    path(
+        "encounters/",
+        encounter_collection,
+        name="company-medical-encounters",
+    ),
+    path(
+        "encounters/<int:encounter_id>/",
+        encounter_detail,
+        name="company-medical-encounter-detail",
+    ),
+    path(
+        "encounters/<int:encounter_id>/status/",
+        encounter_status,
+        name="company-medical-encounter-status",
+    ),
     path(
         "appointments/",
         appointment_collection,
