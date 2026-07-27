@@ -61,8 +61,32 @@ from .referrals import (
     referral_detail,
     referral_status,
 )
+from .record_access import (
+    record_access_resource,
+    record_access_status,
+)
 
 urlpatterns = [
+    # PHASE 10.9-C COMPANY MEDICAL RECORD ACCESS API
+    path(
+        (
+            "referrals/"
+            "<int:referral_id>/record-access/"
+        ),
+        record_access_resource,
+        name="company-medical-referral-record-access",
+    ),
+    path(
+        (
+            "referrals/"
+            "<int:referral_id>/record-access/status/"
+        ),
+        record_access_status,
+        name=(
+            "company-medical-referral-"
+            "record-access-status"
+        ),
+    ),
     # PHASE 10.9-B COMPANY MEDICAL REFERRAL API
     path(
         "referrals/",
