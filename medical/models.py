@@ -2205,3 +2205,341 @@ class MedicalPatient(models.Model):
 
 
 # END PHASE 10.4-A4 MEDICAL PATIENT FOUNDATION
+
+# PHASE 10.6-A1A MEDICAL APPOINTMENT ENUMS
+
+
+class MedicalAppointmentStatus(models.TextChoices):
+    SCHEDULED = "SCHEDULED", "Scheduled"
+    CONFIRMED = "CONFIRMED", "Confirmed"
+    CHECKED_IN = "CHECKED_IN", "Checked in"
+    IN_PROGRESS = "IN_PROGRESS", "In progress"
+    COMPLETED = "COMPLETED", "Completed"
+    CANCELLED = "CANCELLED", "Cancelled"
+    NO_SHOW = "NO_SHOW", "No show"
+
+
+class MedicalAppointmentSource(models.TextChoices):
+    MANUAL = "MANUAL", "Manual"
+    PHONE = "PHONE", "Phone"
+    ONLINE = "ONLINE", "Online"
+    WHATSAPP = "WHATSAPP", "WhatsApp"
+    WALK_IN = "WALK_IN", "Walk in"
+    LEGACY = "LEGACY", "Legacy"
+
+
+# PHASE 10.6-A1B MEDICAL APPOINTMENT CORE
+class MedicalAppointment(models.Model):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="medical_appointments",
+        db_index=True,
+    )
+
+    legacy_appointment = models.OneToOneField(
+        "activity_backends.ClinicAppointment",
+        on_delete=models.SET_NULL,
+        related_name="medical_appointment",
+        null=True,
+        blank=True,
+    )
+
+    patient = models.ForeignKey(
+        MedicalPatient,
+        on_delete=models.PROTECT,
+        related_name="appointments",
+    )
+
+    practitioner = models.ForeignKey(
+        MedicalPractitioner,
+        on_delete=models.PROTECT,
+        related_name="appointments",
+        null=True,
+        blank=True,
+    )
+
+    branch = models.ForeignKey(
+        "companies.Branch",
+        on_delete=models.PROTECT,
+        related_name="medical_appointments",
+        null=True,
+        blank=True,
+    )
+
+    department = models.ForeignKey(
+        MedicalDepartment,
+        on_delete=models.PROTECT,
+        related_name="appointments",
+        null=True,
+        blank=True,
+    )
+
+    clinic = models.ForeignKey(
+        MedicalClinic,
+        on_delete=models.PROTECT,
+        related_name="appointments",
+        null=True,
+        blank=True,
+    )
+
+    appointment_number = models.CharField(
+        max_length=80,
+        db_index=True,
+    )
+
+    scheduled_start = models.DateTimeField(
+        db_index=True,
+    )
+
+    scheduled_end = models.DateTimeField(
+        db_index=True,
+    )
+
+    # PHASE 10.6-A1C MEDICAL APPOINTMENT OPERATIONS
+    status = models.CharField(
+        max_length=20,
+        choices=MedicalAppointmentStatus.choices,
+        default=MedicalAppointmentStatus.SCHEDULED,
+        db_index=True,
+    )
+
+    source = models.CharField(
+        max_length=20,
+        choices=MedicalAppointmentSource.choices,
+        default=MedicalAppointmentSource.MANUAL,
+        db_index=True,
+    )
+
+    reason = models.CharField(
+        max_length=300,
+        blank=True,
+        default="",
+    )
+
+    practitioner_name_snapshot = models.CharField(
+        max_length=220,
+        blank=True,
+        default="",
+    )
+
+    service_name_snapshot = models.CharField(
+        max_length=220,
+        blank=True,
+        default="",
+    )
+
+    price_snapshot = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+    )
+
+    notes = models.TextField(
+        blank=True,
+        default="",
+    )
+
+    cancellation_reason = models.TextField(
+        blank=True,
+        default="",
+    )
+
+    extra_data = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+
+    # PHASE 10.6-A1D MEDICAL APPOINTMENT LIFECYCLE
+    confirmed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    checked_in_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    started_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    cancelled_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    no_show_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    # PHASE 10.6-A1E MEDICAL APPOINTMENT AUDIT
+    created_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        related_name="created_medical_appointments",
+        null=True,
+        blank=True,
+    )
+
+    updated_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        related_name="updated_medical_appointments",
+        null=True,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    # PHASE 10.6-A1F MEDICAL APPOINTMENT META
+    class Meta:
+        ordering = [
+            "company_id",
+            "-scheduled_start",
+            "id",
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "appointment_number",
+                ],
+                name="medical_appointment_number_company_uniq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    scheduled_end__gt=models.F(
+                        "scheduled_start"
+                    )
+                ),
+                name="medical_appointment_end_after_start",
+            ),
+        ]
+
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "status",
+                    "scheduled_start",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "branch",
+                    "scheduled_start",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "practitioner",
+                    "scheduled_start",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "patient",
+                    "scheduled_start",
+                ],
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return (
+            f"{self.appointment_number} - "
+            f"{self.patient}"
+        )
+
+    # PHASE 10.6-A1G MEDICAL APPOINTMENT VALIDATION
+    def clean(self):
+        super().clean()
+        errors = {}
+
+        company_objects = [
+            ("patient", self.patient if self.patient_id else None),
+            ("practitioner", self.practitioner if self.practitioner_id else None),
+            ("branch", self.branch if self.branch_id else None),
+            ("department", self.department if self.department_id else None),
+            ("clinic", self.clinic if self.clinic_id else None),
+            ("legacy_appointment", self.legacy_appointment if self.legacy_appointment_id else None),
+        ]
+
+        for field_name, related_object in company_objects:
+            if (
+                related_object
+                and self.company_id
+                and related_object.company_id != self.company_id
+            ):
+                errors[field_name] = (
+                    "Related record must belong to the same company."
+                )
+
+        if (
+            self.clinic_id
+            and self.branch_id
+            and self.clinic.branch_id != self.branch_id
+        ):
+            errors["clinic"] = (
+                "Clinic must belong to the selected branch."
+            )
+
+        if (
+            self.clinic_id
+            and self.department_id
+            and self.clinic.department_id != self.department_id
+        ):
+            errors["clinic"] = (
+                "Clinic must belong to the selected department."
+            )
+
+        if (
+            self.scheduled_start
+            and self.scheduled_end
+            and self.scheduled_end <= self.scheduled_start
+        ):
+            errors["scheduled_end"] = (
+                "Scheduled end must be after scheduled start."
+            )
+
+        if (
+            self.price_snapshot is not None
+            and self.price_snapshot < 0
+        ):
+            errors["price_snapshot"] = (
+                "Price snapshot cannot be negative."
+            )
+
+        if errors:
+            raise ValidationError(errors)
+
+    # PHASE 10.6-A1H MEDICAL APPOINTMENT SAVE
+    def save(self, *args, **kwargs):
+        self.appointment_number = (self.appointment_number or "").strip()
+        self.reason = (self.reason or "").strip()
+        self.practitioner_name_snapshot = (self.practitioner_name_snapshot or "").strip()
+        self.service_name_snapshot = (self.service_name_snapshot or "").strip()
+        self.notes = (self.notes or "").strip()
+        self.cancellation_reason = (self.cancellation_reason or "").strip()
+        if self.extra_data is None:
+            self.extra_data = {}
+        self.full_clean()
+        return super().save(*args, **kwargs)
