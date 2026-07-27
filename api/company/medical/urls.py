@@ -35,7 +35,26 @@ from .practitioner_licenses import (
 app_name = "company_medical"
 
 
+from .appointments import (
+    appointment_collection,
+    appointment_detail,
+    appointment_status,
+)
+
 urlpatterns = [
+    path(
+        "appointments/",
+        appointment_collection,
+        name="company-medical-appointments",
+    ),    path(
+        "appointments/<int:appointment_id>/",
+        appointment_detail,
+        name="company-medical-appointment-detail",
+    ),    path(
+        "appointments/<int:appointment_id>/status/",
+        appointment_status,
+        name="company-medical-appointment-status",
+    ),
     path(
         "summary/",
         medical_summary,
