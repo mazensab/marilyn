@@ -46,7 +46,39 @@ from .encounters import (
     encounter_detail,
     encounter_status,
 )
+from .diagnoses import (
+    diagnosis_collection,
+    diagnosis_detail,
+    diagnosis_primary,
+)
 urlpatterns = [
+    # PHASE 10.8-B COMPANY MEDICAL DIAGNOSIS API
+    path(
+        (
+            "encounters/"
+            "<int:encounter_id>/diagnoses/"
+        ),
+        diagnosis_collection,
+        name="company-medical-encounter-diagnoses",
+    ),
+    path(
+        (
+            "encounters/"
+            "<int:encounter_id>/diagnoses/"
+            "<int:diagnosis_id>/"
+        ),
+        diagnosis_detail,
+        name="company-medical-encounter-diagnosis-detail",
+    ),
+    path(
+        (
+            "encounters/"
+            "<int:encounter_id>/diagnoses/"
+            "<int:diagnosis_id>/primary/"
+        ),
+        diagnosis_primary,
+        name="company-medical-encounter-diagnosis-primary",
+    ),
     # PHASE 10.7-B COMPANY MEDICAL ENCOUNTER API
     path(
         "encounters/",
