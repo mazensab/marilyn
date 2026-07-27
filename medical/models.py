@@ -3177,3 +3177,971 @@ class MedicalProcedure(models.Model):
         self.full_clean()
         return super().save(*args, **kwargs)
 # END PHASE 10.8-A MEDICAL DIAGNOSIS AND PROCEDURE FOUNDATION
+
+# PHASE 10.9-A MEDICAL REFERRAL AND RECORD ACCESS FOUNDATION
+class MedicalReferralPriority(models.TextChoices):
+    ROUTINE = "ROUTINE", "Routine"
+    URGENT = "URGENT", "Urgent"
+    EMERGENCY = "EMERGENCY", "Emergency"
+class MedicalReferralStatus(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    SENT = "SENT", "Sent"
+    ACCEPTED = "ACCEPTED", "Accepted"
+    IN_PROGRESS = "IN_PROGRESS", "In progress"
+    COMPLETED = "COMPLETED", "Completed"
+    REJECTED = "REJECTED", "Rejected"
+    CANCELLED = "CANCELLED", "Cancelled"
+    EXPIRED = "EXPIRED", "Expired"
+class MedicalRecordShareScope(models.TextChoices):
+    SUMMARY = "SUMMARY", "Patient summary"
+    SOURCE_ENCOUNTER = (
+        "SOURCE_ENCOUNTER",
+        "Source encounter",
+    )
+    FULL_RECORD = "FULL_RECORD", "Full medical record"
+    CUSTOM = "CUSTOM", "Custom sections"
+class MedicalRecordShareSection(models.TextChoices):
+    PATIENT_SUMMARY = (
+        "PATIENT_SUMMARY",
+        "Patient summary",
+    )
+    SOURCE_ENCOUNTER = (
+        "SOURCE_ENCOUNTER",
+        "Source encounter",
+    )
+    DIAGNOSES = "DIAGNOSES", "Diagnoses"
+    PROCEDURES = "PROCEDURES", "Procedures"
+    CLINICAL_NOTES = (
+        "CLINICAL_NOTES",
+        "Clinical notes",
+    )
+    TREATMENT_PLAN = (
+        "TREATMENT_PLAN",
+        "Treatment plan",
+    )
+    FOLLOW_UP_PLAN = (
+        "FOLLOW_UP_PLAN",
+        "Follow-up plan",
+    )
+class MedicalReferralAccessStatus(models.TextChoices):
+    PENDING = "PENDING", "Pending"
+    ACTIVE = "ACTIVE", "Active"
+    REJECTED = "REJECTED", "Rejected"
+    REVOKED = "REVOKED", "Revoked"
+    EXPIRED = "EXPIRED", "Expired"
+class MedicalReferral(models.Model):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="medical_referrals",
+        db_index=True,
+    )
+    source_encounter = models.ForeignKey(
+        MedicalEncounter,
+        on_delete=models.PROTECT,
+        related_name="outgoing_referrals",
+    )
+    patient = models.ForeignKey(
+        MedicalPatient,
+        on_delete=models.PROTECT,
+        related_name="medical_referrals",
+    )
+    referring_practitioner = models.ForeignKey(
+        MedicalPractitioner,
+        on_delete=models.PROTECT,
+        related_name="medical_referrals_sent",
+    )
+    receiving_practitioner = models.ForeignKey(
+        MedicalPractitioner,
+        on_delete=models.PROTECT,
+        related_name="medical_referrals_received",
+        null=True,
+        blank=True,
+    )
+    target_branch = models.ForeignKey(
+        "companies.Branch",
+        on_delete=models.PROTECT,
+        related_name="medical_referrals_received",
+        null=True,
+        blank=True,
+    )
+    target_department = models.ForeignKey(
+        MedicalDepartment,
+        on_delete=models.PROTECT,
+        related_name="medical_referrals_received",
+        null=True,
+        blank=True,
+    )
+    target_clinic = models.ForeignKey(
+        MedicalClinic,
+        on_delete=models.PROTECT,
+        related_name="medical_referrals_received",
+        null=True,
+        blank=True,
+    )
+    referral_number = models.CharField(
+        max_length=80,
+        db_index=True,
+    )
+    priority = models.CharField(
+        max_length=20,
+        choices=MedicalReferralPriority.choices,
+        default=MedicalReferralPriority.ROUTINE,
+        db_index=True,
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=MedicalReferralStatus.choices,
+        default=MedicalReferralStatus.DRAFT,
+        db_index=True,
+    )
+    referral_reason = models.TextField()
+    clinical_summary = models.TextField(
+        blank=True,
+        default="",
+    )
+    requested_service = models.TextField(
+        blank=True,
+        default="",
+    )
+    referred_at = models.DateTimeField(
+        default=_patient_timezone.now,
+        db_index=True,
+    )
+    sent_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    accepted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    rejected_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    started_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    cancelled_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    accepted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="accepted_medical_referrals",
+        null=True,
+        blank=True,
+    )
+    rejected_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="rejected_medical_referrals",
+        null=True,
+        blank=True,
+    )
+    completed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="completed_medical_referrals",
+        null=True,
+        blank=True,
+    )
+    cancelled_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="cancelled_medical_referrals",
+        null=True,
+        blank=True,
+    )
+    rejection_reason = models.TextField(
+        blank=True,
+        default="",
+    )
+    cancellation_reason = models.TextField(
+        blank=True,
+        default="",
+    )
+    notes = models.TextField(
+        blank=True,
+        default="",
+    )
+    extra_data = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="created_medical_referrals",
+        null=True,
+        blank=True,
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="updated_medical_referrals",
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+    class Meta:
+        ordering = [
+            "company_id",
+            "-referred_at",
+            "-id",
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "referral_number",
+                ],
+                name=(
+                    "medical_referral_number_company_uniq"
+                ),
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "status",
+                    "referred_at",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "patient",
+                    "referred_at",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "referring_practitioner",
+                    "referred_at",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "receiving_practitioner",
+                    "status",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "target_branch",
+                    "status",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "target_department",
+                    "status",
+                ],
+            ),
+        ]
+    def __str__(self) -> str:
+        return (
+            f"{self.referral_number} - "
+            f"{self.patient}"
+        )
+    @property
+    def is_terminal(self) -> bool:
+        return self.status in {
+            MedicalReferralStatus.COMPLETED,
+            MedicalReferralStatus.REJECTED,
+            MedicalReferralStatus.CANCELLED,
+            MedicalReferralStatus.EXPIRED,
+        }
+    @property
+    def allows_record_access(self) -> bool:
+        return self.status in {
+            MedicalReferralStatus.ACCEPTED,
+            MedicalReferralStatus.IN_PROGRESS,
+            MedicalReferralStatus.COMPLETED,
+        }
+    def clean(self):
+        super().clean()
+        errors = {}
+        related = [
+            (
+                "source_encounter",
+                self.source_encounter
+                if self.source_encounter_id
+                else None,
+            ),
+            (
+                "patient",
+                self.patient
+                if self.patient_id
+                else None,
+            ),
+            (
+                "referring_practitioner",
+                self.referring_practitioner
+                if self.referring_practitioner_id
+                else None,
+            ),
+            (
+                "receiving_practitioner",
+                self.receiving_practitioner
+                if self.receiving_practitioner_id
+                else None,
+            ),
+            (
+                "target_branch",
+                self.target_branch
+                if self.target_branch_id
+                else None,
+            ),
+            (
+                "target_department",
+                self.target_department
+                if self.target_department_id
+                else None,
+            ),
+            (
+                "target_clinic",
+                self.target_clinic
+                if self.target_clinic_id
+                else None,
+            ),
+        ]
+        for field_name, obj in related:
+            if (
+                obj
+                and self.company_id
+                and obj.company_id != self.company_id
+            ):
+                errors[field_name] = (
+                    "Related record must belong "
+                    "to the same company."
+                )
+        if (
+            self.source_encounter_id
+            and self.patient_id
+            and self.source_encounter.patient_id
+            != self.patient_id
+        ):
+            errors["patient"] = (
+                "Patient must match the source encounter."
+            )
+        if (
+            self.source_encounter_id
+            and self.source_encounter.practitioner_id
+            and self.referring_practitioner_id
+            and self.source_encounter.practitioner_id
+            != self.referring_practitioner_id
+        ):
+            errors["referring_practitioner"] = (
+                "Referring practitioner must match "
+                "the source encounter practitioner."
+            )
+        if not any(
+            [
+                self.receiving_practitioner_id,
+                self.target_branch_id,
+                self.target_department_id,
+                self.target_clinic_id,
+            ]
+        ):
+            errors["receiving_practitioner"] = (
+                "A receiving practitioner or target "
+                "medical location is required."
+            )
+        if (
+            self.target_clinic_id
+            and self.target_branch_id
+            and self.target_clinic.branch_id
+            != self.target_branch_id
+        ):
+            errors["target_clinic"] = (
+                "Target clinic must belong "
+                "to the selected branch."
+            )
+        if (
+            self.target_clinic_id
+            and self.target_department_id
+            and self.target_clinic.department_id
+            != self.target_department_id
+        ):
+            errors["target_clinic"] = (
+                "Target clinic must belong "
+                "to the selected department."
+            )
+        if not (self.referral_reason or "").strip():
+            errors["referral_reason"] = (
+                "Referral reason is required."
+            )
+        status_requires_sent = {
+            MedicalReferralStatus.SENT,
+            MedicalReferralStatus.ACCEPTED,
+            MedicalReferralStatus.IN_PROGRESS,
+            MedicalReferralStatus.COMPLETED,
+            MedicalReferralStatus.REJECTED,
+        }
+        if (
+            self.status in status_requires_sent
+            and not self.sent_at
+        ):
+            errors["sent_at"] = (
+                "Sent time is required "
+                "for the selected status."
+            )
+        if self.status in {
+            MedicalReferralStatus.ACCEPTED,
+            MedicalReferralStatus.IN_PROGRESS,
+            MedicalReferralStatus.COMPLETED,
+        }:
+            if not self.accepted_at:
+                errors["accepted_at"] = (
+                    "Accepted time is required "
+                    "for the selected status."
+                )
+            if not self.accepted_by_id:
+                errors["accepted_by"] = (
+                    "Accepted by is required "
+                    "for the selected status."
+                )
+        if (
+            self.status
+            == MedicalReferralStatus.IN_PROGRESS
+            and not self.started_at
+        ):
+            errors["started_at"] = (
+                "Started time is required "
+                "for an in-progress referral."
+            )
+        if self.status == MedicalReferralStatus.COMPLETED:
+            if not self.completed_at:
+                errors["completed_at"] = (
+                    "Completed time is required "
+                    "for a completed referral."
+                )
+            if not self.completed_by_id:
+                errors["completed_by"] = (
+                    "Completed by is required "
+                    "for a completed referral."
+                )
+        if self.status == MedicalReferralStatus.REJECTED:
+            if not self.rejected_at:
+                errors["rejected_at"] = (
+                    "Rejected time is required "
+                    "for a rejected referral."
+                )
+            if not self.rejected_by_id:
+                errors["rejected_by"] = (
+                    "Rejected by is required "
+                    "for a rejected referral."
+                )
+            if not (self.rejection_reason or "").strip():
+                errors["rejection_reason"] = (
+                    "Rejection reason is required "
+                    "for a rejected referral."
+                )
+        if self.status == MedicalReferralStatus.CANCELLED:
+            if not self.cancelled_at:
+                errors["cancelled_at"] = (
+                    "Cancelled time is required "
+                    "for a cancelled referral."
+                )
+            if not self.cancelled_by_id:
+                errors["cancelled_by"] = (
+                    "Cancelled by is required "
+                    "for a cancelled referral."
+                )
+            if not (
+                self.cancellation_reason or ""
+            ).strip():
+                errors["cancellation_reason"] = (
+                    "Cancellation reason is required "
+                    "for a cancelled referral."
+                )
+        if (
+            self.status == MedicalReferralStatus.EXPIRED
+            and not self.expires_at
+        ):
+            errors["expires_at"] = (
+                "Expiry time is required "
+                "for an expired referral."
+            )
+        if (
+            self.expires_at
+            and self.referred_at
+            and self.expires_at < self.referred_at
+        ):
+            errors["expires_at"] = (
+                "Expiry time cannot be before "
+                "the referral time."
+            )
+        event_fields = [
+            "sent_at",
+            "accepted_at",
+            "rejected_at",
+            "started_at",
+            "completed_at",
+            "cancelled_at",
+        ]
+        for field_name in event_fields:
+            value = getattr(self, field_name)
+            if (
+                value
+                and self.referred_at
+                and value < self.referred_at
+            ):
+                errors[field_name] = (
+                    "Referral event time cannot be "
+                    "before the referral time."
+                )
+        if errors:
+            raise ValidationError(errors)
+    def save(self, *args, **kwargs):
+        self.referral_number = (
+            self.referral_number or ""
+        ).strip().upper()
+        self.referral_reason = (
+            self.referral_reason or ""
+        ).strip()
+        self.clinical_summary = (
+            self.clinical_summary or ""
+        ).strip()
+        self.requested_service = (
+            self.requested_service or ""
+        ).strip()
+        self.rejection_reason = (
+            self.rejection_reason or ""
+        ).strip()
+        self.cancellation_reason = (
+            self.cancellation_reason or ""
+        ).strip()
+        self.notes = (self.notes or "").strip()
+        if self.extra_data is None:
+            self.extra_data = {}
+        self.full_clean()
+        return super().save(*args, **kwargs)
+class MedicalReferralRecordAccess(models.Model):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="medical_referral_record_accesses",
+        db_index=True,
+    )
+    referral = models.OneToOneField(
+        MedicalReferral,
+        on_delete=models.CASCADE,
+        related_name="record_access",
+    )
+    patient = models.ForeignKey(
+        MedicalPatient,
+        on_delete=models.PROTECT,
+        related_name="medical_referral_record_accesses",
+    )
+    receiving_practitioner = models.ForeignKey(
+        MedicalPractitioner,
+        on_delete=models.PROTECT,
+        related_name="medical_record_accesses",
+        null=True,
+        blank=True,
+    )
+    scope = models.CharField(
+        max_length=30,
+        choices=MedicalRecordShareScope.choices,
+        default=MedicalRecordShareScope.SUMMARY,
+        db_index=True,
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=MedicalReferralAccessStatus.choices,
+        default=MedicalReferralAccessStatus.PENDING,
+        db_index=True,
+    )
+    shared_sections = models.JSONField(
+        default=list,
+        blank=True,
+    )
+    access_starts_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    access_ends_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    granted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="granted_medical_record_accesses",
+        null=True,
+        blank=True,
+    )
+    granted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    accepted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="accepted_medical_record_accesses",
+        null=True,
+        blank=True,
+    )
+    accepted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    rejected_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="rejected_medical_record_accesses",
+        null=True,
+        blank=True,
+    )
+    rejected_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    rejection_reason = models.TextField(
+        blank=True,
+        default="",
+    )
+    revoked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="revoked_medical_record_accesses",
+        null=True,
+        blank=True,
+    )
+    revoked_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+    revocation_reason = models.TextField(
+        blank=True,
+        default="",
+    )
+    notes = models.TextField(
+        blank=True,
+        default="",
+    )
+    extra_data = models.JSONField(
+        default=dict,
+        blank=True,
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="created_medical_record_accesses",
+        null=True,
+        blank=True,
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="updated_medical_record_accesses",
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+    class Meta:
+        ordering = [
+            "company_id",
+            "-created_at",
+            "-id",
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "status",
+                    "access_starts_at",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "patient",
+                    "status",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "receiving_practitioner",
+                    "status",
+                ],
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "access_ends_at",
+                ],
+            ),
+        ]
+    def __str__(self) -> str:
+        return (
+            f"{self.referral.referral_number} - "
+            f"{self.status}"
+        )
+    def is_effective_at(self, moment=None) -> bool:
+        moment = moment or _patient_timezone.now()
+        if self.status != MedicalReferralAccessStatus.ACTIVE:
+            return False
+        if not self.referral.allows_record_access:
+            return False
+        if (
+            not self.access_starts_at
+            or self.access_starts_at > moment
+        ):
+            return False
+        if (
+            self.access_ends_at
+            and self.access_ends_at < moment
+        ):
+            return False
+        return True
+    @property
+    def is_effective(self) -> bool:
+        return self.is_effective_at()
+    def clean(self):
+        super().clean()
+        errors = {}
+        related = [
+            (
+                "referral",
+                self.referral
+                if self.referral_id
+                else None,
+            ),
+            (
+                "patient",
+                self.patient
+                if self.patient_id
+                else None,
+            ),
+            (
+                "receiving_practitioner",
+                self.receiving_practitioner
+                if self.receiving_practitioner_id
+                else None,
+            ),
+        ]
+        for field_name, obj in related:
+            if (
+                obj
+                and self.company_id
+                and obj.company_id != self.company_id
+            ):
+                errors[field_name] = (
+                    "Related record must belong "
+                    "to the same company."
+                )
+        if (
+            self.referral_id
+            and self.patient_id
+            and self.referral.patient_id
+            != self.patient_id
+        ):
+            errors["patient"] = (
+                "Patient must match the referral patient."
+            )
+        if (
+            self.referral_id
+            and self.referral.receiving_practitioner_id
+            and self.receiving_practitioner_id
+            and self.referral.receiving_practitioner_id
+            != self.receiving_practitioner_id
+        ):
+            errors["receiving_practitioner"] = (
+                "Receiving practitioner must match "
+                "the referral recipient."
+            )
+        if not isinstance(self.shared_sections, list):
+            errors["shared_sections"] = (
+                "Shared sections must be a list."
+            )
+        valid_sections = set(
+            MedicalRecordShareSection.values
+        )
+        if isinstance(self.shared_sections, list):
+            invalid_sections = [
+                section
+                for section in self.shared_sections
+                if section not in valid_sections
+            ]
+            if invalid_sections:
+                errors["shared_sections"] = (
+                    "One or more shared sections "
+                    "are invalid."
+                )
+        if (
+            self.scope == MedicalRecordShareScope.CUSTOM
+            and not self.shared_sections
+        ):
+            errors["shared_sections"] = (
+                "Custom record access requires "
+                "at least one shared section."
+            )
+        if (
+            self.access_starts_at
+            and self.access_ends_at
+            and self.access_ends_at
+            < self.access_starts_at
+        ):
+            errors["access_ends_at"] = (
+                "Access end time cannot be before "
+                "the access start time."
+            )
+        if self.status == MedicalReferralAccessStatus.ACTIVE:
+            if not self.receiving_practitioner_id:
+                errors["receiving_practitioner"] = (
+                    "Receiving practitioner is required "
+                    "for active access."
+                )
+            if not self.granted_by_id:
+                errors["granted_by"] = (
+                    "Granted by is required "
+                    "for active access."
+                )
+            if not self.granted_at:
+                errors["granted_at"] = (
+                    "Granted time is required "
+                    "for active access."
+                )
+            if not self.accepted_by_id:
+                errors["accepted_by"] = (
+                    "Accepted by is required "
+                    "for active access."
+                )
+            if not self.accepted_at:
+                errors["accepted_at"] = (
+                    "Accepted time is required "
+                    "for active access."
+                )
+            if not self.access_starts_at:
+                errors["access_starts_at"] = (
+                    "Access start time is required "
+                    "for active access."
+                )
+            if (
+                self.referral_id
+                and not self.referral.allows_record_access
+            ):
+                errors["referral"] = (
+                    "The referral status does not "
+                    "allow medical record access."
+                )
+        if (
+            self.status
+            == MedicalReferralAccessStatus.REJECTED
+        ):
+            if not self.rejected_by_id:
+                errors["rejected_by"] = (
+                    "Rejected by is required "
+                    "for rejected access."
+                )
+            if not self.rejected_at:
+                errors["rejected_at"] = (
+                    "Rejected time is required "
+                    "for rejected access."
+                )
+            if not (
+                self.rejection_reason or ""
+            ).strip():
+                errors["rejection_reason"] = (
+                    "Rejection reason is required "
+                    "for rejected access."
+                )
+        if (
+            self.status
+            == MedicalReferralAccessStatus.REVOKED
+        ):
+            if not self.revoked_by_id:
+                errors["revoked_by"] = (
+                    "Revoked by is required "
+                    "for revoked access."
+                )
+            if not self.revoked_at:
+                errors["revoked_at"] = (
+                    "Revoked time is required "
+                    "for revoked access."
+                )
+            if not (
+                self.revocation_reason or ""
+            ).strip():
+                errors["revocation_reason"] = (
+                    "Revocation reason is required "
+                    "for revoked access."
+                )
+        if (
+            self.status
+            == MedicalReferralAccessStatus.EXPIRED
+            and not self.access_ends_at
+        ):
+            errors["access_ends_at"] = (
+                "Access end time is required "
+                "for expired access."
+            )
+        if errors:
+            raise ValidationError(errors)
+    def save(self, *args, **kwargs):
+        if self.referral_id:
+            self.company = self.referral.company
+            self.patient = self.referral.patient
+            if (
+                not self.receiving_practitioner_id
+                and self.referral.receiving_practitioner_id
+            ):
+                self.receiving_practitioner = (
+                    self.referral.receiving_practitioner
+                )
+        normalized_sections = []
+        if isinstance(self.shared_sections, list):
+            for raw_section in self.shared_sections:
+                section = str(raw_section or "").strip().upper()
+                if (
+                    section
+                    and section not in normalized_sections
+                ):
+                    normalized_sections.append(section)
+        self.shared_sections = normalized_sections
+        self.rejection_reason = (
+            self.rejection_reason or ""
+        ).strip()
+        self.revocation_reason = (
+            self.revocation_reason or ""
+        ).strip()
+        self.notes = (self.notes or "").strip()
+        if self.extra_data is None:
+            self.extra_data = {}
+        self.full_clean()
+        return super().save(*args, **kwargs)
+# END PHASE 10.9-A MEDICAL REFERRAL AND RECORD ACCESS FOUNDATION

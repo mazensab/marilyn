@@ -380,3 +380,96 @@ class MedicalProcedureAdmin(CompanyScopedAdmin):
         "updated_at",
     )
 # END PHASE 10.8-A MEDICAL DIAGNOSIS AND PROCEDURE ADMIN
+
+# PHASE 10.9-A MEDICAL REFERRAL AND RECORD ACCESS ADMIN
+from .models import (
+    MedicalReferral,
+    MedicalReferralRecordAccess,
+)
+@admin.register(MedicalReferral)
+class MedicalReferralAdmin(CompanyScopedAdmin):
+    list_display = (
+        "referral_number",
+        "patient",
+        "referring_practitioner",
+        "receiving_practitioner",
+        "target_branch",
+        "target_department",
+        "priority",
+        "status",
+        "referred_at",
+        "company",
+    )
+    list_filter = (
+        "company",
+        "priority",
+        "status",
+        "target_branch",
+        "target_department",
+        "referred_at",
+    )
+    search_fields = (
+        "referral_number",
+        "patient__patient_number",
+        "patient__full_name",
+        "referring_practitioner__practitioner_number",
+        "receiving_practitioner__practitioner_number",
+        "referral_reason",
+        "requested_service",
+    )
+    list_select_related = (
+        "company",
+        "source_encounter",
+        "patient",
+        "referring_practitioner",
+        "receiving_practitioner",
+        "target_branch",
+        "target_department",
+        "target_clinic",
+    )
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+@admin.register(MedicalReferralRecordAccess)
+class MedicalReferralRecordAccessAdmin(
+    CompanyScopedAdmin
+):
+    list_display = (
+        "referral",
+        "patient",
+        "receiving_practitioner",
+        "scope",
+        "status",
+        "access_starts_at",
+        "access_ends_at",
+        "company",
+    )
+    list_filter = (
+        "company",
+        "scope",
+        "status",
+        "access_starts_at",
+        "access_ends_at",
+    )
+    search_fields = (
+        "referral__referral_number",
+        "patient__patient_number",
+        "patient__full_name",
+        "receiving_practitioner__practitioner_number",
+    )
+    list_select_related = (
+        "company",
+        "referral",
+        "patient",
+        "receiving_practitioner",
+        "granted_by",
+        "accepted_by",
+        "rejected_by",
+        "revoked_by",
+    )
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+# END PHASE 10.9-A MEDICAL REFERRAL AND RECORD ACCESS ADMIN
