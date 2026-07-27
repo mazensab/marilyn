@@ -66,7 +66,21 @@ from .record_access import (
     record_access_status,
 )
 
+from .patient_medical_file import patient_medical_file
+
 urlpatterns = [
+    # PHASE 10.10-A COMPANY PATIENT MEDICAL FILE API
+    path(
+        (
+            "patients/"
+            "<int:patient_id>/medical-file/"
+        ),
+        patient_medical_file,
+        name=(
+            "company-medical-"
+            "patient-medical-file"
+        ),
+    ),
     # PHASE 10.9-C COMPANY MEDICAL RECORD ACCESS API
     path(
         (
