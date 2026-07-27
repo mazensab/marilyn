@@ -1837,6 +1837,8 @@ class MedicalPractitionerLicense(MedicalAuditModel):
 
 from django.db.models import Q as _patient_Q
 from django.utils import timezone as _patient_timezone
+from catalog.models import CatalogItem
+from decimal import Decimal
 
 
 class MedicalPatientStatus(models.TextChoices):
@@ -4145,3 +4147,477 @@ class MedicalReferralRecordAccess(models.Model):
         self.full_clean()
         return super().save(*args, **kwargs)
 # END PHASE 10.9-A MEDICAL REFERRAL AND RECORD ACCESS FOUNDATION
+# ============================================================
+# PHASE 10.3-A2 — MEDICAL SERVICE OFFERING FOUNDATION
+# ============================================================
+class MedicalServiceOfferingStatus(
+    models.TextChoices
+):
+    ACTIVE = "ACTIVE", "Active"
+    INACTIVE = "INACTIVE", "Inactive"
+    ARCHIVED = "ARCHIVED", "Archived"
+class MedicalServiceOffering(
+    MedicalAuditModel
+):
+    """
+    Defines where and how a reusable CatalogItem
+    service is offered medically.
+    CatalogItem remains the source of truth for
+    service identity, default pricing, taxation,
+    billing, and accounting references.
+    """
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="medical_service_offerings",
+        db_index=True,
+    )
+    catalog_item = models.ForeignKey(
+        CatalogItem,
+        on_delete=models.PROTECT,
+        related_name="medical_service_offerings",
+        db_index=True,
+    )
+    branch = models.ForeignKey(
+        "companies.Branch",
+        on_delete=models.PROTECT,
+        related_name="medical_service_offerings",
+        db_index=True,
+    )
+    department = models.ForeignKey(
+        MedicalDepartment,
+        on_delete=models.PROTECT,
+        related_name="service_offerings",
+        db_index=True,
+    )
+    specialty = models.ForeignKey(
+        MedicalSpecialty,
+        on_delete=models.PROTECT,
+        related_name="service_offerings",
+        db_index=True,
+    )
+    clinic = models.ForeignKey(
+        MedicalClinic,
+        on_delete=models.PROTECT,
+        related_name="service_offerings",
+        db_index=True,
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=(
+            MedicalServiceOfferingStatus.choices
+        ),
+        default=(
+            MedicalServiceOfferingStatus.ACTIVE
+        ),
+        db_index=True,
+    )
+    duration_minutes = (
+        models.PositiveSmallIntegerField(
+            default=30,
+            help_text=(
+                "Clinical service duration in minutes."
+            ),
+        )
+    )
+    buffer_before_minutes = (
+        models.PositiveSmallIntegerField(
+            default=0,
+            help_text=(
+                "Preparation time reserved before "
+                "the appointment."
+            ),
+        )
+    )
+    buffer_after_minutes = (
+        models.PositiveSmallIntegerField(
+            default=0,
+            help_text=(
+                "Cleanup or recovery time reserved "
+                "after the appointment."
+            ),
+        )
+    )
+    sale_price_override = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        help_text=(
+            "Optional location-specific price. "
+            "CatalogItem.sale_price is used when empty."
+        ),
+    )
+    default_session_count = (
+        models.PositiveSmallIntegerField(
+            default=1,
+        )
+    )
+    online_booking_enabled = models.BooleanField(
+        default=False,
+        db_index=True,
+    )
+    requires_approval = models.BooleanField(
+        default=False,
+        db_index=True,
+    )
+    requires_preparation = models.BooleanField(
+        default=False,
+        db_index=True,
+    )
+    preparation_instructions = models.TextField(
+        blank=True,
+        default="",
+    )
+    class Meta:
+        verbose_name = "Medical Service Offering"
+        verbose_name_plural = (
+            "Medical Service Offerings"
+        )
+        ordering = [
+            "branch_id",
+            "department_id",
+            "clinic_id",
+            "catalog_item_id",
+            "id",
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "status",
+                ],
+                name="medical_off_company_status_idx",
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "catalog_item",
+                ],
+                name="medical_off_company_item_idx",
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "branch",
+                    "clinic",
+                    "status",
+                ],
+                name="medical_off_location_idx",
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "specialty",
+                    "status",
+                ],
+                name="medical_off_specialty_idx",
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "online_booking_enabled",
+                    "status",
+                ],
+                name="medical_off_online_idx",
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "catalog_item",
+                    "branch",
+                    "department",
+                    "specialty",
+                    "clinic",
+                ],
+                name=(
+                    "unique_medical_service_"
+                    "offering_scope"
+                ),
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    duration_minutes__gt=0
+                ),
+                name=(
+                    "medical_service_offering_"
+                    "duration_positive"
+                ),
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    default_session_count__gt=0
+                ),
+                name=(
+                    "medical_service_offering_"
+                    "sessions_positive"
+                ),
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(sale_price_override__isnull=True)
+                    | Q(
+                        sale_price_override__gte=(
+                            Decimal("0.00")
+                        )
+                    )
+                ),
+                name=(
+                    "medical_service_offering_"
+                    "price_nonnegative"
+                ),
+            ),
+        ]
+    def __str__(self) -> str:
+        return (
+            f"{self.catalog_item} — "
+            f"{self.branch} — "
+            f"{self.clinic}"
+        )
+    @property
+    def effective_sale_price(self):
+        if self.sale_price_override is not None:
+            return self.sale_price_override
+        return self.catalog_item.sale_price
+    @property
+    def total_slot_minutes(self) -> int:
+        return (
+            self.buffer_before_minutes
+            + self.duration_minutes
+            + self.buffer_after_minutes
+        )
+    @property
+    def is_active_offering(self) -> bool:
+        return (
+            self.status
+            == MedicalServiceOfferingStatus.ACTIVE
+            and self.catalog_item.status == "ACTIVE"
+            and self.catalog_item.is_sellable
+            and self.department.is_active
+            and self.clinic.is_active
+        )
+    def clean(self) -> None:
+        super().clean()
+        self.preparation_instructions = clean_text(
+            self.preparation_instructions
+        )
+        if self.duration_minutes < 1:
+            raise ValidationError(
+                {
+                    "duration_minutes": (
+                        "Service duration must be "
+                        "greater than zero."
+                    )
+                }
+            )
+        if self.default_session_count < 1:
+            raise ValidationError(
+                {
+                    "default_session_count": (
+                        "Default session count must be "
+                        "greater than zero."
+                    )
+                }
+            )
+        if (
+            self.sale_price_override is not None
+            and self.sale_price_override
+            < Decimal("0.00")
+        ):
+            raise ValidationError(
+                {
+                    "sale_price_override": (
+                        "Sale price override cannot "
+                        "be negative."
+                    )
+                }
+            )
+        if self.catalog_item_id:
+            if (
+                self.catalog_item.company_id
+                != self.company_id
+            ):
+                raise ValidationError(
+                    {
+                        "catalog_item": (
+                            "Catalog item must belong "
+                            "to the same company."
+                        )
+                    }
+                )
+            if not self.catalog_item.is_service:
+                raise ValidationError(
+                    {
+                        "catalog_item": (
+                            "Only CatalogItem services "
+                            "can be medically offered."
+                        )
+                    }
+                )
+            if (
+                self.status
+                == MedicalServiceOfferingStatus.ACTIVE
+                and (
+                    self.catalog_item.status
+                    != "ACTIVE"
+                    or not self.catalog_item.is_sellable
+                )
+            ):
+                raise ValidationError(
+                    {
+                        "catalog_item": (
+                            "An active medical offering "
+                            "requires an active, sellable "
+                            "catalog service."
+                        )
+                    }
+                )
+        if (
+            self.branch_id
+            and self.branch.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "branch": (
+                        "Branch must belong to the "
+                        "same company."
+                    )
+                }
+            )
+        if (
+            self.department_id
+            and self.department.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "department": (
+                        "Department must belong to the "
+                        "same company."
+                    )
+                }
+            )
+        if (
+            self.specialty_id
+            and self.specialty.company_id
+            not in {
+                None,
+                self.company_id,
+            }
+        ):
+            raise ValidationError(
+                {
+                    "specialty": (
+                        "Specialty must be system-wide "
+                        "or belong to the same company."
+                    )
+                }
+            )
+        if (
+            self.clinic_id
+            and self.clinic.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "clinic": (
+                        "Clinic must belong to the "
+                        "same company."
+                    )
+                }
+            )
+        if (
+            self.clinic_id
+            and self.branch_id
+            and self.clinic.branch_id
+            != self.branch_id
+        ):
+            raise ValidationError(
+                {
+                    "clinic": (
+                        "Clinic must belong to the "
+                        "selected branch."
+                    )
+                }
+            )
+        if (
+            self.clinic_id
+            and self.department_id
+            and self.clinic.department_id
+            != self.department_id
+        ):
+            raise ValidationError(
+                {
+                    "clinic": (
+                        "Clinic must belong to the "
+                        "selected department."
+                    )
+                }
+            )
+        relation_ids_ready = all(
+            [
+                self.company_id,
+                self.branch_id,
+                self.department_id,
+                self.specialty_id,
+                self.clinic_id,
+            ]
+        )
+        if not relation_ids_ready:
+            return
+        if not MedicalDepartmentBranch.objects.filter(
+            company_id=self.company_id,
+            department_id=self.department_id,
+            branch_id=self.branch_id,
+            is_active=True,
+        ).exists():
+            raise ValidationError(
+                {
+                    "department": (
+                        "Department is not active in "
+                        "the selected branch."
+                    )
+                }
+            )
+        if not (
+            MedicalDepartmentSpecialty.objects
+            .filter(
+                company_id=self.company_id,
+                department_id=self.department_id,
+                specialty_id=self.specialty_id,
+                is_active=True,
+            )
+            .exists()
+        ):
+            raise ValidationError(
+                {
+                    "specialty": (
+                        "Specialty is not active in "
+                        "the selected department."
+                    )
+                }
+            )
+        if not (
+            MedicalClinicSpecialty.objects
+            .filter(
+                company_id=self.company_id,
+                clinic_id=self.clinic_id,
+                specialty_id=self.specialty_id,
+                is_active=True,
+            )
+            .exists()
+        ):
+            raise ValidationError(
+                {
+                    "specialty": (
+                        "Specialty is not active in "
+                        "the selected clinic."
+                    )
+                }
+            )
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)

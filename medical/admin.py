@@ -473,3 +473,57 @@ class MedicalReferralRecordAccessAdmin(
         "updated_at",
     )
 # END PHASE 10.9-A MEDICAL REFERRAL AND RECORD ACCESS ADMIN
+# ============================================================
+# PHASE 10.3-A2 — MEDICAL SERVICE OFFERING ADMIN
+# ============================================================
+from .models import MedicalServiceOffering
+@admin.register(MedicalServiceOffering)
+class MedicalServiceOfferingAdmin(
+    CompanyScopedAdmin
+):
+    list_display = (
+        "catalog_item",
+        "company",
+        "branch",
+        "department",
+        "specialty",
+        "clinic",
+        "status",
+        "duration_minutes",
+        "sale_price_override",
+        "online_booking_enabled",
+    )
+    list_filter = (
+        "status",
+        "online_booking_enabled",
+        "requires_approval",
+        "requires_preparation",
+        "branch",
+        "department",
+        "specialty",
+    )
+    search_fields = (
+        "catalog_item__code",
+        "catalog_item__name",
+        "catalog_item__name_ar",
+        "catalog_item__name_en",
+        "branch__name",
+        "department__code",
+        "department__name_ar",
+        "department__name_en",
+        "clinic__code",
+        "clinic__name_ar",
+        "clinic__name_en",
+    )
+    list_select_related = (
+        "company",
+        "catalog_item",
+        "branch",
+        "department",
+        "specialty",
+        "clinic",
+    )
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
