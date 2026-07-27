@@ -2543,3 +2543,225 @@ class MedicalAppointment(models.Model):
             self.extra_data = {}
         self.full_clean()
         return super().save(*args, **kwargs)
+
+# PHASE 10.7-A1 MEDICAL ENCOUNTER FOUNDATION
+
+
+class MedicalEncounterStatus(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    OPEN = "OPEN", "Open"
+    IN_PROGRESS = "IN_PROGRESS", "In progress"
+    COMPLETED = "COMPLETED", "Completed"
+    CANCELLED = "CANCELLED", "Cancelled"
+
+
+class MedicalEncounterType(models.TextChoices):
+    CONSULTATION = "CONSULTATION", "Consultation"
+    FOLLOW_UP = "FOLLOW_UP", "Follow up"
+    PROCEDURE = "PROCEDURE", "Procedure"
+    EMERGENCY = "EMERGENCY", "Emergency"
+    OTHER = "OTHER", "Other"
+
+
+class MedicalEncounter(models.Model):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="medical_encounters",
+        db_index=True,
+    )
+    appointment = models.OneToOneField(
+        MedicalAppointment,
+        on_delete=models.SET_NULL,
+        related_name="encounter",
+        null=True,
+        blank=True,
+    )
+    patient = models.ForeignKey(
+        MedicalPatient,
+        on_delete=models.PROTECT,
+        related_name="encounters",
+    )
+    practitioner = models.ForeignKey(
+        MedicalPractitioner,
+        on_delete=models.PROTECT,
+        related_name="encounters",
+        null=True,
+        blank=True,
+    )
+    branch = models.ForeignKey(
+        "companies.Branch",
+        on_delete=models.PROTECT,
+        related_name="medical_encounters",
+        null=True,
+        blank=True,
+    )
+    department = models.ForeignKey(
+        MedicalDepartment,
+        on_delete=models.PROTECT,
+        related_name="encounters",
+        null=True,
+        blank=True,
+    )
+    clinic = models.ForeignKey(
+        MedicalClinic,
+        on_delete=models.PROTECT,
+        related_name="encounters",
+        null=True,
+        blank=True,
+    )
+    encounter_number = models.CharField(max_length=80, db_index=True)
+    encounter_type = models.CharField(
+        max_length=20,
+        choices=MedicalEncounterType.choices,
+        default=MedicalEncounterType.CONSULTATION,
+        db_index=True,
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=MedicalEncounterStatus.choices,
+        default=MedicalEncounterStatus.DRAFT,
+        db_index=True,
+    )
+    chief_complaint = models.TextField(blank=True, default="")
+    history_of_present_illness = models.TextField(blank=True, default="")
+    clinical_notes = models.TextField(blank=True, default="")
+    treatment_plan = models.TextField(blank=True, default="")
+    follow_up_plan = models.TextField(blank=True, default="")
+    opened_at = models.DateTimeField(
+        default=_patient_timezone.now,
+        db_index=True,
+    )
+    closed_at = models.DateTimeField(null=True, blank=True)
+    opened_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="opened_medical_encounters",
+        null=True,
+        blank=True,
+    )
+    closed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="closed_medical_encounters",
+        null=True,
+        blank=True,
+    )
+    notes = models.TextField(blank=True, default="")
+    extra_data = models.JSONField(default=dict, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="created_medical_encounters",
+        null=True,
+        blank=True,
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="updated_medical_encounters",
+        null=True,
+        blank=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["company_id", "-opened_at", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "encounter_number"],
+                name="medical_encounter_number_company_uniq",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(closed_at__isnull=True)
+                    | models.Q(closed_at__gte=models.F("opened_at"))
+                ),
+                name="medical_encounter_closed_after_opened",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["company", "status", "opened_at"]),
+            models.Index(fields=["patient", "opened_at"]),
+            models.Index(fields=["company", "practitioner", "opened_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.encounter_number} - {self.patient}"
+
+    def clean(self):
+        super().clean()
+        errors = {}
+        related = [
+            ("patient", self.patient if self.patient_id else None),
+            ("appointment", self.appointment if self.appointment_id else None),
+            ("practitioner", self.practitioner if self.practitioner_id else None),
+            ("branch", self.branch if self.branch_id else None),
+            ("department", self.department if self.department_id else None),
+            ("clinic", self.clinic if self.clinic_id else None),
+        ]
+        for field_name, obj in related:
+            if obj and self.company_id and obj.company_id != self.company_id:
+                errors[field_name] = (
+                    "Related record must belong to the same company."
+                )
+
+        if (
+            self.appointment_id
+            and self.patient_id
+            and self.appointment.patient_id != self.patient_id
+        ):
+            errors["appointment"] = (
+                "Appointment must belong to the selected patient."
+            )
+
+        if (
+            self.clinic_id
+            and self.branch_id
+            and self.clinic.branch_id != self.branch_id
+        ):
+            errors["clinic"] = "Clinic must belong to the selected branch."
+
+        if (
+            self.clinic_id
+            and self.department_id
+            and self.clinic.department_id != self.department_id
+        ):
+            errors["clinic"] = "Clinic must belong to the selected department."
+
+        if self.closed_at and self.opened_at and self.closed_at < self.opened_at:
+            errors["closed_at"] = "Closed time cannot be before opened time."
+
+        if (
+            self.status
+            in {
+                MedicalEncounterStatus.COMPLETED,
+                MedicalEncounterStatus.CANCELLED,
+            }
+            and not self.closed_at
+        ):
+            errors["closed_at"] = (
+                "Closed time is required for a completed or cancelled encounter."
+            )
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        self.encounter_number = (self.encounter_number or "").strip().upper()
+        self.chief_complaint = (self.chief_complaint or "").strip()
+        self.history_of_present_illness = (
+            self.history_of_present_illness or ""
+        ).strip()
+        self.clinical_notes = (self.clinical_notes or "").strip()
+        self.treatment_plan = (self.treatment_plan or "").strip()
+        self.follow_up_plan = (self.follow_up_plan or "").strip()
+        self.notes = (self.notes or "").strip()
+        if self.extra_data is None:
+            self.extra_data = {}
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+# END PHASE 10.7-A1 MEDICAL ENCOUNTER FOUNDATION
