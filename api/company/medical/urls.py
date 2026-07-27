@@ -56,7 +56,29 @@ from .procedures import (
     procedure_detail,
     procedure_status,
 )
+from .referrals import (
+    referral_collection,
+    referral_detail,
+    referral_status,
+)
+
 urlpatterns = [
+    # PHASE 10.9-B COMPANY MEDICAL REFERRAL API
+    path(
+        "referrals/",
+        referral_collection,
+        name="company-medical-referrals",
+    ),
+    path(
+        "referrals/<int:referral_id>/",
+        referral_detail,
+        name="company-medical-referral-detail",
+    ),
+    path(
+        "referrals/<int:referral_id>/status/",
+        referral_status,
+        name="company-medical-referral-status",
+    ),
     # PHASE 10.8-C COMPANY MEDICAL PROCEDURE API
     path(
         (
