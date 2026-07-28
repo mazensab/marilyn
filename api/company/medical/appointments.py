@@ -42,6 +42,7 @@ ALL_PERMISSIONS = [
 ]
 
 
+
 def appointment_queryset(company):
     return (
         MedicalAppointment.objects
@@ -49,6 +50,36 @@ def appointment_queryset(company):
         .select_related(
             "patient",
             "practitioner",
+            "practitioner_assignment",
+            (
+                "practitioner_assignment__"
+                "practitioner"
+            ),
+            (
+                "practitioner_assignment__"
+                "branch"
+            ),
+            (
+                "practitioner_assignment__"
+                "department"
+            ),
+            (
+                "practitioner_assignment__"
+                "clinic"
+            ),
+            "practitioner_service_assignment",
+            (
+                "practitioner_service_assignment__"
+                "practitioner_assignment"
+            ),
+            (
+                "practitioner_service_assignment__"
+                "service_offering"
+            ),
+            (
+                "practitioner_service_assignment__"
+                "service_offering__catalog_item"
+            ),
             "branch",
             "department",
             "clinic",
@@ -56,7 +87,10 @@ def appointment_queryset(company):
             "created_by",
             "updated_by",
         )
-        .order_by("-scheduled_start", "-id")
+        .order_by(
+            "-scheduled_start",
+            "-id",
+        )
     )
 
 
@@ -90,45 +124,141 @@ def related_object(obj) -> dict[str, Any] | None:
 def iso_value(value):
     return value.isoformat() if value is not None else None
 
+
 def serialize_appointment(
     appointment: MedicalAppointment,
 ) -> dict[str, Any]:
+    service_assignment = (
+        appointment.practitioner_service_assignment
+        if (
+            appointment
+            .practitioner_service_assignment_id
+        )
+        else None
+    )
+    service_offering = (
+        service_assignment.service_offering
+        if service_assignment is not None
+        else None
+    )
+    booking_mode = "MANUAL"
+    if service_assignment is not None:
+        booking_mode = "SERVICE_ASSIGNMENT"
+    elif appointment.practitioner_assignment_id:
+        booking_mode = "PRACTITIONER_ASSIGNMENT"
     return {
         "id": appointment.id,
         "company_id": appointment.company_id,
-        "appointment_number": appointment.appointment_number,
+        "appointment_number": (
+            appointment.appointment_number
+        ),
         "patient_id": appointment.patient_id,
-        "patient": related_object(appointment.patient),
-        "practitioner_id": appointment.practitioner_id,
-        "practitioner": related_object(appointment.practitioner),
+        "patient": related_object(
+            appointment.patient
+        ),
+        "practitioner_id": (
+            appointment.practitioner_id
+        ),
+        "practitioner": related_object(
+            appointment.practitioner
+        ),
+        "practitioner_assignment_id": (
+            appointment.practitioner_assignment_id
+        ),
+        "practitioner_assignment": (
+            related_object(
+                appointment.practitioner_assignment
+            )
+            if appointment.practitioner_assignment_id
+            else None
+        ),
+        "practitioner_service_assignment_id": (
+            appointment
+            .practitioner_service_assignment_id
+        ),
+        "practitioner_service_assignment": (
+            related_object(
+                service_assignment
+            )
+            if service_assignment is not None
+            else None
+        ),
+        "service_offering_id": (
+            service_offering.id
+            if service_offering is not None
+            else None
+        ),
+        "total_slot_minutes": (
+            appointment.total_slot_minutes
+        ),
+        "booking_mode": booking_mode,
         "branch_id": appointment.branch_id,
-        "branch": related_object(appointment.branch),
-        "department_id": appointment.department_id,
-        "department": related_object(appointment.department),
+        "branch": related_object(
+            appointment.branch
+        ),
+        "department_id": (
+            appointment.department_id
+        ),
+        "department": related_object(
+            appointment.department
+        ),
         "clinic_id": appointment.clinic_id,
-        "clinic": related_object(appointment.clinic),
-        "legacy_appointment_id": appointment.legacy_appointment_id,
-        "scheduled_start": iso_value(appointment.scheduled_start),
-        "scheduled_end": iso_value(appointment.scheduled_end),
+        "clinic": related_object(
+            appointment.clinic
+        ),
+        "legacy_appointment_id": (
+            appointment.legacy_appointment_id
+        ),
+        "scheduled_start": iso_value(
+            appointment.scheduled_start
+        ),
+        "scheduled_end": iso_value(
+            appointment.scheduled_end
+        ),
         "status": appointment.status,
         "source": appointment.source,
         "reason": appointment.reason,
         "practitioner_name_snapshot": (
-            appointment.practitioner_name_snapshot
+            appointment
+            .practitioner_name_snapshot
         ),
-        "service_name_snapshot": appointment.service_name_snapshot,
-        "price_snapshot": str(appointment.price_snapshot),
+        "service_name_snapshot": (
+            appointment.service_name_snapshot
+        ),
+        "price_snapshot": str(
+            appointment.price_snapshot
+        ),
         "notes": appointment.notes,
-        "cancellation_reason": appointment.cancellation_reason,
-        "extra_data": appointment.extra_data or {},
-        "confirmed_at": iso_value(appointment.confirmed_at),
-        "checked_in_at": iso_value(appointment.checked_in_at),
-        "started_at": iso_value(appointment.started_at),
-        "completed_at": iso_value(appointment.completed_at),
-        "cancelled_at": iso_value(appointment.cancelled_at),
-        "no_show_at": iso_value(appointment.no_show_at),
-        "created_at": iso_value(appointment.created_at),
-        "updated_at": iso_value(appointment.updated_at),
+        "cancellation_reason": (
+            appointment.cancellation_reason
+        ),
+        "extra_data": (
+            appointment.extra_data or {}
+        ),
+        "confirmed_at": iso_value(
+            appointment.confirmed_at
+        ),
+        "checked_in_at": iso_value(
+            appointment.checked_in_at
+        ),
+        "started_at": iso_value(
+            appointment.started_at
+        ),
+        "completed_at": iso_value(
+            appointment.completed_at
+        ),
+        "cancelled_at": iso_value(
+            appointment.cancelled_at
+        ),
+        "no_show_at": iso_value(
+            appointment.no_show_at
+        ),
+        "created_at": iso_value(
+            appointment.created_at
+        ),
+        "updated_at": iso_value(
+            appointment.updated_at
+        ),
     }
 
 def parse_datetime_value(value, field_name: str):
@@ -196,6 +326,7 @@ RELATED_MODELS = {
 }
 
 
+
 def apply_payload(
     *,
     appointment: MedicalAppointment | None,
@@ -204,33 +335,155 @@ def apply_payload(
     user,
     creating: bool,
 ) -> MedicalAppointment:
+    from django.apps import apps
     if creating:
-        appointment = MedicalAppointment(company=company)
+        appointment = MedicalAppointment(
+            company=company
+        )
     if appointment is None:
-        raise ValidationError({"appointment": "Appointment is required."})
-
+        raise ValidationError(
+            {
+                "appointment": (
+                    "Appointment is required."
+                )
+            }
+        )
     appointment.company = company
-
     if creating:
-        number = str(payload.get("appointment_number", "")).strip()
+        number = str(
+            payload.get(
+                "appointment_number",
+                "",
+            )
+        ).strip()
         appointment.appointment_number = (
-            number or next_appointment_number(company)
+            number
+            or next_appointment_number(company)
         )
     elif "appointment_number" in payload:
         appointment.appointment_number = str(
-            payload.get("appointment_number") or ""
+            payload.get(
+                "appointment_number",
+            )
+            or ""
         ).strip()
-
-    relation_fields = {
-        "patient": creating,
-        "practitioner": False,
-        "branch": False,
-        "department": False,
-        "clinic": False,
-    }
-    for field_name, required_on_create in relation_fields.items():
-        key = f"{field_name}_id"
-        if key in payload or (creating and required_on_create):
+    if (
+        "patient_id" in payload
+        or creating
+    ):
+        appointment.patient = company_object(
+            RELATED_MODELS["patient"],
+            company,
+            payload.get("patient_id"),
+            "patient_id",
+            required=creating,
+        )
+    assignment_model = apps.get_model(
+        "medical",
+        "MedicalPractitionerAssignment",
+    )
+    service_assignment_model = apps.get_model(
+        "medical",
+        (
+            "MedicalPractitioner"
+            "ServiceAssignment"
+        ),
+    )
+    assignment_key = (
+        "practitioner_assignment_id"
+    )
+    service_assignment_key = (
+        "practitioner_service_assignment_id"
+    )
+    assignment = (
+        appointment.practitioner_assignment
+        if appointment.practitioner_assignment_id
+        else None
+    )
+    service_assignment = (
+        appointment
+        .practitioner_service_assignment
+        if (
+            appointment
+            .practitioner_service_assignment_id
+        )
+        else None
+    )
+    if service_assignment_key in payload:
+        service_assignment = company_object(
+            service_assignment_model,
+            company,
+            payload.get(
+                service_assignment_key
+            ),
+            service_assignment_key,
+            required=False,
+        )
+        appointment.practitioner_service_assignment = (
+            service_assignment
+        )
+    if assignment_key in payload:
+        assignment = company_object(
+            assignment_model,
+            company,
+            payload.get(assignment_key),
+            assignment_key,
+            required=False,
+        )
+    if service_assignment is not None:
+        implied_assignment = (
+            service_assignment
+            .practitioner_assignment
+        )
+        if (
+            assignment_key in payload
+            and assignment is not None
+            and assignment.id
+            != implied_assignment.id
+        ):
+            raise ValidationError(
+                {
+                    assignment_key: (
+                        "Practitioner assignment "
+                        "must match the selected "
+                        "service assignment."
+                    )
+                }
+            )
+        assignment = implied_assignment
+        appointment.practitioner_assignment = (
+            implied_assignment
+        )
+        if (
+            creating
+            or service_assignment_key
+            in payload
+        ):
+            appointment.practitioner_name_snapshot = ""
+            appointment.service_name_snapshot = ""
+            appointment.price_snapshot = 0
+    elif assignment_key in payload:
+        appointment.practitioner_assignment = (
+            assignment
+        )
+    booking_controlled = bool(
+        appointment.practitioner_assignment_id
+        or (
+            appointment
+            .practitioner_service_assignment_id
+        )
+    )
+    relation_fields = (
+        "practitioner",
+        "branch",
+        "department",
+        "clinic",
+    )
+    if not booking_controlled:
+        for field_name in relation_fields:
+            key = f"{field_name}_id"
+            if key not in payload:
+                continue
             setattr(
                 appointment,
                 field_name,
@@ -239,22 +492,55 @@ def apply_payload(
                     company,
                     payload.get(key),
                     key,
-                    required=creating and required_on_create,
+                    required=False,
                 ),
             )
-
-    if creating and "scheduled_start" not in payload:
+    if (
+        creating
+        and "scheduled_start"
+        not in payload
+    ):
         raise ValidationError(
-            {"scheduled_start": "This field is required."}
+            {
+                "scheduled_start": (
+                    "This field is required."
+                )
+            }
         )
-    if creating and "scheduled_end" not in payload:
-        raise ValidationError(
-            {"scheduled_end": "This field is required."}
+    if "scheduled_start" in payload:
+        appointment.scheduled_start = (
+            parse_datetime_value(
+                payload.get(
+                    "scheduled_start"
+                ),
+                "scheduled_start",
+            )
         )
-
+    if service_assignment is None:
+        if (
+            creating
+            and "scheduled_end"
+            not in payload
+        ):
+            raise ValidationError(
+                {
+                    "scheduled_end": (
+                        "This field is required "
+                        "when no practitioner service "
+                        "assignment is selected."
+                    )
+                }
+            )
+        if "scheduled_end" in payload:
+            appointment.scheduled_end = (
+                parse_datetime_value(
+                    payload.get(
+                        "scheduled_end"
+                    ),
+                    "scheduled_end",
+                )
+            )
     for field_name in (
-        "scheduled_start",
-        "scheduled_end",
         "confirmed_at",
         "checked_in_at",
         "started_at",
@@ -266,15 +552,15 @@ def apply_payload(
             setattr(
                 appointment,
                 field_name,
-                parse_datetime_value(payload.get(field_name), field_name),
+                parse_datetime_value(
+                    payload.get(field_name),
+                    field_name,
+                ),
             )
-
     for field_name in (
         "status",
         "source",
         "reason",
-        "practitioner_name_snapshot",
-        "service_name_snapshot",
         "notes",
         "cancellation_reason",
     ):
@@ -282,25 +568,55 @@ def apply_payload(
             setattr(
                 appointment,
                 field_name,
-                str(payload.get(field_name) or "").strip(),
+                str(
+                    payload.get(field_name)
+                    or ""
+                ).strip(),
             )
-
-    if "price_snapshot" in payload:
-        appointment.price_snapshot = decimal_value(
-            payload.get("price_snapshot"),
-            "price_snapshot",
-        )
-
+    if not booking_controlled:
+        for field_name in (
+            "practitioner_name_snapshot",
+            "service_name_snapshot",
+        ):
+            if field_name in payload:
+                setattr(
+                    appointment,
+                    field_name,
+                    str(
+                        payload.get(field_name)
+                        or ""
+                    ).strip(),
+                )
+        if "price_snapshot" in payload:
+            appointment.price_snapshot = (
+                decimal_value(
+                    payload.get(
+                        "price_snapshot"
+                    ),
+                    "price_snapshot",
+                )
+            )
     if "extra_data" in payload:
-        extra_data = payload.get("extra_data")
-        if extra_data in (None, ""):
+        extra_data = payload.get(
+            "extra_data"
+        )
+        if extra_data in (
+            None,
+            "",
+        ):
             extra_data = {}
-        if not isinstance(extra_data, dict):
+        if not isinstance(
+            extra_data,
+            dict,
+        ):
             raise ValidationError(
-                {"extra_data": "Enter a valid object."}
+                {
+                    "extra_data": (
+                        "Enter a valid object."
+                    )
+                }
             )
         appointment.extra_data = extra_data
-
     if creating:
         appointment.created_by = user
     appointment.updated_by = user
@@ -312,83 +628,176 @@ def apply_payload(
 # PHASE 10.6-A2C APPOINTMENT COLLECTION
 @api_view(["GET", "POST"])
 @permission_classes([HasAnyCompanyPermission])
-def appointment_collection(request: Request) -> Response:
-    company, error = company_or_error(request)
+
+def appointment_collection(
+    request: Request,
+) -> Response:
+    company, error = company_or_error(
+        request
+    )
     if error:
         return error
-
     permission = (
         VIEW_PERMISSION
         if request.method == "GET"
         else CREATE_PERMISSION
     )
-    permission_error = ensure_permission(request, permission)
+    permission_error = ensure_permission(
+        request,
+        permission,
+    )
     if permission_error:
         return permission_error
-
     if request.method == "GET":
-        queryset = appointment_queryset(company)
-        search = str(request.query_params.get("search", "")).strip()
+        queryset = appointment_queryset(
+            company
+        )
+        search = str(
+            request.query_params.get(
+                "search",
+                "",
+            )
+        ).strip()
         if search:
             queryset = queryset.filter(
-                Q(appointment_number__icontains=search)
-                | Q(reason__icontains=search)
-                | Q(practitioner_name_snapshot__icontains=search)
-                | Q(service_name_snapshot__icontains=search)
-                | Q(notes__icontains=search)
+                Q(
+                    appointment_number__icontains=(
+                        search
+                    )
+                )
+                | Q(
+                    reason__icontains=search
+                )
+                | Q(
+                    practitioner_name_snapshot__icontains=(
+                        search
+                    )
+                )
+                | Q(
+                    service_name_snapshot__icontains=(
+                        search
+                    )
+                )
+                | Q(
+                    notes__icontains=search
+                )
             )
-
-        for field_name in ("status", "source"):
+        for field_name in (
+            "status",
+            "source",
+        ):
             value = str(
-                request.query_params.get(field_name, "")
+                request.query_params.get(
+                    field_name,
+                    "",
+                )
             ).strip()
             if value:
-                queryset = queryset.filter(**{field_name: value})
-
+                queryset = queryset.filter(
+                    **{
+                        field_name: value,
+                    }
+                )
         relation_filters = {
             "patient_id": "patient_id",
-            "practitioner_id": "practitioner_id",
+            "practitioner_id": (
+                "practitioner_id"
+            ),
+            "practitioner_assignment_id": (
+                "practitioner_assignment_id"
+            ),
+            (
+                "practitioner_service_"
+                "assignment_id"
+            ): (
+                "practitioner_service_"
+                "assignment_id"
+            ),
             "branch_id": "branch_id",
-            "department_id": "department_id",
+            "department_id": (
+                "department_id"
+            ),
             "clinic_id": "clinic_id",
         }
-        for parameter, lookup in relation_filters.items():
+        for (
+            parameter,
+            lookup,
+        ) in relation_filters.items():
             value = str(
-                request.query_params.get(parameter, "")
+                request.query_params.get(
+                    parameter,
+                    "",
+                )
             ).strip()
-            if value:
-                try:
-                    value = int(value)
-                except (TypeError, ValueError):
-                    return Response(
-                        {
-                            "success": False,
-                            "message": f"{parameter} must be an integer.",
-                        },
-                        status=400,
-                    )
-                queryset = queryset.filter(**{lookup: value})
-
+            if not value:
+                continue
+            try:
+                value = int(value)
+            except (
+                TypeError,
+                ValueError,
+            ):
+                return Response(
+                    {
+                        "success": False,
+                        "message": (
+                            f"{parameter} "
+                            "must be an integer."
+                        ),
+                    },
+                    status=400,
+                )
+            queryset = queryset.filter(
+                **{
+                    lookup: value,
+                }
+            )
         date_filters = {
-            "scheduled_from": "scheduled_start__gte",
-            "scheduled_to": "scheduled_start__lte",
+            "scheduled_from": (
+                "scheduled_start__gte"
+            ),
+            "scheduled_to": (
+                "scheduled_start__lte"
+            ),
         }
-        for parameter, lookup in date_filters.items():
-            value = request.query_params.get(parameter)
-            if value not in (None, ""):
-                try:
-                    parsed = parse_datetime_value(value, parameter)
-                except ValidationError as exc:
-                    return Response(
-                        {
-                            "success": False,
-                            "message": "Appointment filters are invalid.",
-                            "errors": validation_payload(exc),
-                        },
-                        status=400,
-                    )
-                queryset = queryset.filter(**{lookup: parsed})
-
+        for (
+            parameter,
+            lookup,
+        ) in date_filters.items():
+            value = request.query_params.get(
+                parameter
+            )
+            if value in (
+                None,
+                "",
+            ):
+                continue
+            try:
+                parsed = parse_datetime_value(
+                    value,
+                    parameter,
+                )
+            except ValidationError as exc:
+                return Response(
+                    {
+                        "success": False,
+                        "message": (
+                            "Appointment filters "
+                            "are invalid."
+                        ),
+                        "errors": (
+                            validation_payload(
+                                exc
+                            )
+                        ),
+                    },
+                    status=400,
+                )
+            queryset = queryset.filter(
+                **{
+                    lookup: parsed,
+                }
+            )
         count = queryset.count()
         items = [
             serialize_appointment(item)
@@ -402,7 +811,6 @@ def appointment_collection(request: Request) -> Response:
                 "appointments": items,
             }
         )
-
     try:
         with transaction.atomic():
             appointment = apply_payload(
@@ -412,14 +820,22 @@ def appointment_collection(request: Request) -> Response:
                 user=request.user,
                 creating=True,
             )
-        appointment = appointment_queryset(company).get(
-            id=appointment.id
+        appointment = (
+            appointment_queryset(company)
+            .get(
+                id=appointment.id
+            )
         )
         return Response(
             {
                 "success": True,
-                "message": "Appointment created successfully.",
-                "item": serialize_appointment(appointment),
+                "message": (
+                    "Appointment created "
+                    "successfully."
+                ),
+                "item": serialize_appointment(
+                    appointment
+                ),
             },
             status=201,
         )
@@ -427,8 +843,12 @@ def appointment_collection(request: Request) -> Response:
         return Response(
             {
                 "success": False,
-                "message": "Appointment data is invalid.",
-                "errors": validation_payload(exc),
+                "message": (
+                    "Appointment data is invalid."
+                ),
+                "errors": validation_payload(
+                    exc
+                ),
             },
             status=400,
         )
@@ -437,7 +857,8 @@ def appointment_collection(request: Request) -> Response:
             {
                 "success": False,
                 "message": (
-                    "A conflicting appointment record already exists."
+                    "A conflicting appointment "
+                    "record already exists."
                 ),
             },
             status=400,
