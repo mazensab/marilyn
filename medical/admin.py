@@ -734,3 +734,55 @@ class MedicalPractitionerTimeOffAdmin(
         "practitioner_assignment__clinic",
     )
 # END PHASE 10.3-C PRACTITIONER AVAILABILITY ADMIN
+# PHASE 10.4-A MEDICAL APPOINTMENT ADMIN
+from .models import MedicalAppointment
+@admin.register(MedicalAppointment)
+class MedicalAppointmentAdmin(
+    CompanyScopedAdmin
+):
+    list_display = (
+        "appointment_number",
+        "patient",
+        "practitioner",
+        "practitioner_assignment",
+        "practitioner_service_assignment",
+        "branch",
+        "clinic",
+        "scheduled_start",
+        "scheduled_end",
+        "status",
+        "source",
+        "created_at",
+    )
+    list_filter = (
+        "company",
+        "status",
+        "source",
+        "branch",
+        "department",
+        "clinic",
+        "scheduled_start",
+    )
+    search_fields = (
+        "appointment_number",
+        "patient__patient_number",
+        "patient__full_name",
+        "practitioner__practitioner_number",
+        "practitioner__full_name_ar",
+        "practitioner__full_name_en",
+        "practitioner_name_snapshot",
+        "service_name_snapshot",
+        "reason",
+        "notes",
+    )
+    list_select_related = (
+        "company",
+        "patient",
+        "practitioner",
+        "practitioner_assignment",
+        "practitioner_service_assignment",
+        "branch",
+        "department",
+        "clinic",
+    )
+# END PHASE 10.4-A MEDICAL APPOINTMENT ADMIN

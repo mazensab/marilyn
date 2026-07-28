@@ -2212,6 +2212,8 @@ class MedicalPatient(models.Model):
 
 
 class MedicalAppointmentStatus(models.TextChoices):
+
+    DRAFT = "DRAFT", "Draft"
     SCHEDULED = "SCHEDULED", "Scheduled"
     CONFIRMED = "CONFIRMED", "Confirmed"
     CHECKED_IN = "CHECKED_IN", "Checked in"
@@ -2259,6 +2261,24 @@ class MedicalAppointment(models.Model):
         related_name="appointments",
         null=True,
         blank=True,
+    )
+
+    # PHASE 10.4-A APPOINTMENT BOOKING RELATIONS
+    practitioner_assignment = models.ForeignKey(
+        "medical.MedicalPractitionerAssignment",
+        on_delete=models.PROTECT,
+        related_name="medical_appointments",
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    practitioner_service_assignment = models.ForeignKey(
+        "medical.MedicalPractitionerServiceAssignment",
+        on_delete=models.PROTECT,
+        related_name="medical_appointments",
+        null=True,
+        blank=True,
+        db_index=True,
     )
 
     branch = models.ForeignKey(
@@ -2463,12 +2483,56 @@ class MedicalAppointment(models.Model):
                     "scheduled_start",
                 ],
             ),
+
+            models.Index(
+                fields=[
+                    "company",
+                    "practitioner_assignment",
+                    "scheduled_start",
+                ],
+                name="med_appt_assign_start",
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "practitioner_service_assignment",
+                    "scheduled_start",
+                ],
+                name="med_appt_service_start",
+            ),
         ]
 
     def __str__(self) -> str:
         return (
             f"{self.appointment_number} - "
             f"{self.patient}"
+        )
+
+    # PHASE 10.4-A APPOINTMENT BOOKING FOUNDATION
+    @property
+    def service_offering(self):
+        if not self.practitioner_service_assignment_id:
+            return None
+        return (
+            self.practitioner_service_assignment
+            .service_offering
+        )
+    @property
+    def total_slot_minutes(self):
+        if not self.practitioner_service_assignment_id:
+            return None
+        return (
+            self.practitioner_service_assignment
+            .total_slot_minutes
+        )
+    def full_clean(self, *args, **kwargs):
+        from .appointment_engine import (
+            apply_appointment_derivations,
+        )
+        apply_appointment_derivations(self)
+        return super().full_clean(
+            *args,
+            **kwargs,
         )
 
     # PHASE 10.6-A1G MEDICAL APPOINTMENT VALIDATION
@@ -2530,6 +2594,14 @@ class MedicalAppointment(models.Model):
                 "Price snapshot cannot be negative."
             )
 
+
+        from .appointment_engine import (
+            validate_appointment_booking,
+        )
+        validate_appointment_booking(
+            self,
+            errors,
+        )
         if errors:
             raise ValidationError(errors)
 
