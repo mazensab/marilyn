@@ -68,7 +68,38 @@ from .record_access import (
 
 from .patient_medical_file import patient_medical_file
 
+from .service_offerings import (
+    service_offering_collection,
+    service_offering_detail,
+    service_offering_status,
+)
 urlpatterns = [
+    # PHASE 10.3-A3 — COMPANY SERVICE OFFERINGS
+    path(
+        "service-offerings/",
+        service_offering_collection,
+        name="company-medical-service-offerings",
+    ),
+    path(
+        "service-offerings/<int:offering_id>/",
+        service_offering_detail,
+        name=(
+            "company-medical-"
+            "service-offering-detail"
+        ),
+    ),
+    path(
+        (
+            "service-offerings/"
+            "<int:offering_id>/status/"
+        ),
+        service_offering_status,
+        name=(
+            "company-medical-"
+            "service-offering-status"
+        ),
+    ),
+
     # PHASE 10.10-A COMPANY PATIENT MEDICAL FILE API
     path(
         (
