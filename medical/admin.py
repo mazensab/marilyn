@@ -527,3 +527,65 @@ class MedicalServiceOfferingAdmin(
         "created_at",
         "updated_at",
     )
+# PHASE 10.3-B2 PRACTITIONER SERVICE ASSIGNMENT ADMIN
+from .models import (
+    MedicalPractitionerServiceAssignment,
+)
+@admin.register(
+    MedicalPractitionerServiceAssignment
+)
+class MedicalPractitionerServiceAssignmentAdmin(
+    CompanyScopedAdmin
+):
+    list_display = (
+        "practitioner_assignment",
+        "service_offering",
+        "company",
+        "status",
+        "duration_override_minutes",
+        "online_booking_enabled",
+        "effective_from",
+        "effective_until",
+        "created_at",
+    )
+    list_filter = (
+        "company",
+        "status",
+        "online_booking_enabled",
+        "effective_from",
+        "effective_until",
+    )
+    search_fields = (
+        (
+            "practitioner_assignment__"
+            "practitioner__practitioner_number"
+        ),
+        (
+            "practitioner_assignment__"
+            "practitioner__full_name_ar"
+        ),
+        (
+            "practitioner_assignment__"
+            "practitioner__full_name_en"
+        ),
+        "service_offering__catalog_item__code",
+        "service_offering__catalog_item__name",
+        "service_offering__catalog_item__name_ar",
+        "service_offering__catalog_item__name_en",
+    )
+    list_select_related = (
+        "company",
+        "practitioner_assignment",
+        "practitioner_assignment__practitioner",
+        "service_offering",
+        "service_offering__catalog_item",
+        "service_offering__branch",
+        "service_offering__department",
+        "service_offering__specialty",
+        "service_offering__clinic",
+    )
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+# END PHASE 10.3-B2 PRACTITIONER SERVICE ASSIGNMENT ADMIN

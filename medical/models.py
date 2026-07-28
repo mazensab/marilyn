@@ -4621,3 +4621,387 @@ class MedicalServiceOffering(
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+# PHASE 10.3-B2 PRACTITIONER SERVICE ASSIGNMENT FOUNDATION
+from django.utils import timezone as medical_timezone
+class MedicalPractitionerServiceAssignmentStatus(
+    models.TextChoices
+):
+    ACTIVE = "ACTIVE", "Active"
+    INACTIVE = "INACTIVE", "Inactive"
+    ARCHIVED = "ARCHIVED", "Archived"
+class MedicalPractitionerServiceAssignment(
+    MedicalAuditModel
+):
+    """
+    Declares that a practitioner assignment is
+    qualified and enabled to deliver a specific
+    MedicalServiceOffering.
+    MedicalPractitionerAssignment remains the
+    source of truth for practitioner location.
+    MedicalServiceOffering remains the source of
+    truth for service, specialty, duration, price,
+    booking rules, and clinic scope.
+    """
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name=(
+            "medical_practitioner_service_assignments"
+        ),
+        db_index=True,
+    )
+    practitioner_assignment = models.ForeignKey(
+        MedicalPractitionerAssignment,
+        on_delete=models.CASCADE,
+        related_name="service_assignments",
+        db_index=True,
+    )
+    service_offering = models.ForeignKey(
+        MedicalServiceOffering,
+        on_delete=models.CASCADE,
+        related_name="practitioner_assignments",
+        db_index=True,
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=(
+            MedicalPractitionerServiceAssignmentStatus
+            .choices
+        ),
+        default=(
+            MedicalPractitionerServiceAssignmentStatus
+            .ACTIVE
+        ),
+        db_index=True,
+    )
+    duration_override_minutes = (
+        models.PositiveSmallIntegerField(
+            blank=True,
+            null=True,
+            help_text=(
+                "Optional practitioner-specific "
+                "clinical duration. Offering duration "
+                "is inherited when empty."
+            ),
+        )
+    )
+    online_booking_enabled = models.BooleanField(
+        blank=True,
+        null=True,
+        default=None,
+        help_text=(
+            "Optional practitioner-specific booking "
+            "override. Offering setting is inherited "
+            "when empty."
+        ),
+    )
+    effective_from = models.DateField(
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+    effective_until = models.DateField(
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+    class Meta:
+        verbose_name = (
+            "Medical Practitioner Service Assignment"
+        )
+        verbose_name_plural = (
+            "Medical Practitioner Service Assignments"
+        )
+        ordering = [
+            "company_id",
+            "practitioner_assignment_id",
+            "service_offering_id",
+            "id",
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "status",
+                ],
+                name="med_psa_company_status",
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "practitioner_assignment",
+                    "status",
+                ],
+                name="med_psa_practitioner",
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "service_offering",
+                    "status",
+                ],
+                name="med_psa_offering_status",
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "effective_from",
+                    "effective_until",
+                ],
+                name="med_psa_effective_dates",
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "practitioner_assignment",
+                    "service_offering",
+                ],
+                name="med_psa_scope_uniq",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Q(
+                        duration_override_minutes__isnull=True
+                    )
+                    | Q(
+                        duration_override_minutes__gt=0
+                    )
+                ),
+                name="med_psa_duration_pos",
+            ),
+        ]
+    def __str__(self) -> str:
+        return (
+            f"{self.practitioner_assignment.practitioner}"
+            f" — {self.service_offering}"
+        )
+    @property
+    def practitioner(self):
+        return (
+            self.practitioner_assignment.practitioner
+        )
+    @property
+    def practitioner_id(self):
+        return (
+            self.practitioner_assignment
+            .practitioner_id
+        )
+    @property
+    def effective_duration_minutes(self) -> int:
+        if self.duration_override_minutes is not None:
+            return self.duration_override_minutes
+        return self.service_offering.duration_minutes
+    @property
+    def effective_online_booking_enabled(
+        self,
+    ) -> bool:
+        if self.online_booking_enabled is not None:
+            return self.online_booking_enabled
+        return (
+            self.service_offering
+            .online_booking_enabled
+        )
+    @property
+    def total_slot_minutes(self) -> int:
+        return (
+            self.service_offering
+            .buffer_before_minutes
+            + self.effective_duration_minutes
+            + self.service_offering
+            .buffer_after_minutes
+        )
+    @property
+    def is_active_service_assignment(
+        self,
+    ) -> bool:
+        if (
+            self.status
+            != (
+                MedicalPractitionerServiceAssignmentStatus
+                .ACTIVE
+            )
+        ):
+            return False
+        assignment = self.practitioner_assignment
+        offering = self.service_offering
+        today = medical_timezone.localdate()
+        if not assignment.is_active:
+            return False
+        if not offering.is_active_offering:
+            return False
+        if (
+            self.effective_from
+            and today < self.effective_from
+        ):
+            return False
+        if (
+            self.effective_until
+            and today > self.effective_until
+        ):
+            return False
+        return (
+            MedicalPractitionerSpecialty.objects
+            .filter(
+                company_id=self.company_id,
+                practitioner_id=(
+                    assignment.practitioner_id
+                ),
+                specialty_id=offering.specialty_id,
+                is_active=True,
+            )
+            .exists()
+        )
+    def clean(self) -> None:
+        super().clean()
+        self.notes = clean_text(self.notes)
+        if (
+            self.duration_override_minutes
+            is not None
+            and self.duration_override_minutes < 1
+        ):
+            raise ValidationError(
+                {
+                    "duration_override_minutes": (
+                        "Duration override must be "
+                        "greater than zero."
+                    )
+                }
+            )
+        if (
+            self.effective_from
+            and self.effective_until
+            and (
+                self.effective_until
+                < self.effective_from
+            )
+        ):
+            raise ValidationError(
+                {
+                    "effective_until": (
+                        "Effective-until date cannot "
+                        "precede effective-from date."
+                    )
+                }
+            )
+        if not (
+            self.company_id
+            and self.practitioner_assignment_id
+            and self.service_offering_id
+        ):
+            return
+        assignment = self.practitioner_assignment
+        offering = self.service_offering
+        if assignment.company_id != self.company_id:
+            raise ValidationError(
+                {
+                    "practitioner_assignment": (
+                        "Practitioner assignment must "
+                        "belong to the same company."
+                    )
+                }
+            )
+        if offering.company_id != self.company_id:
+            raise ValidationError(
+                {
+                    "service_offering": (
+                        "Service offering must belong "
+                        "to the same company."
+                    )
+                }
+            )
+        if (
+            assignment.branch_id
+            != offering.branch_id
+        ):
+            raise ValidationError(
+                {
+                    "service_offering": (
+                        "Service offering branch must "
+                        "match practitioner assignment."
+                    )
+                }
+            )
+        if (
+            assignment.department_id
+            != offering.department_id
+        ):
+            raise ValidationError(
+                {
+                    "service_offering": (
+                        "Service offering department "
+                        "must match practitioner "
+                        "assignment."
+                    )
+                }
+            )
+        if (
+            assignment.clinic_id
+            != offering.clinic_id
+        ):
+            raise ValidationError(
+                {
+                    "service_offering": (
+                        "Service offering clinic must "
+                        "match practitioner assignment."
+                    )
+                }
+            )
+        if (
+            self.status
+            != (
+                MedicalPractitionerServiceAssignmentStatus
+                .ACTIVE
+            )
+        ):
+            return
+        if not assignment.is_active:
+            raise ValidationError(
+                {
+                    "practitioner_assignment": (
+                        "An active service assignment "
+                        "requires an active practitioner "
+                        "location assignment."
+                    )
+                }
+            )
+        if not offering.is_active_offering:
+            raise ValidationError(
+                {
+                    "service_offering": (
+                        "An active practitioner service "
+                        "assignment requires an active "
+                        "medical service offering."
+                    )
+                }
+            )
+        specialty_exists = (
+            MedicalPractitionerSpecialty.objects
+            .filter(
+                company_id=self.company_id,
+                practitioner_id=(
+                    assignment.practitioner_id
+                ),
+                specialty_id=offering.specialty_id,
+                is_active=True,
+            )
+            .exists()
+        )
+        if not specialty_exists:
+            raise ValidationError(
+                {
+                    "service_offering": (
+                        "Practitioner must have an "
+                        "active assignment to the "
+                        "service specialty."
+                    )
+                }
+            )
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(
+            *args,
+            **kwargs,
+        )
+# END PHASE 10.3-B2 PRACTITIONER SERVICE ASSIGNMENT FOUNDATION
