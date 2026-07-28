@@ -589,3 +589,148 @@ class MedicalPractitionerServiceAssignmentAdmin(
         "updated_at",
     )
 # END PHASE 10.3-B2 PRACTITIONER SERVICE ASSIGNMENT ADMIN
+# PHASE 10.3-C PRACTITIONER AVAILABILITY ADMIN
+from .models import (
+    MedicalPractitionerScheduleBreak,
+    MedicalPractitionerTimeOff,
+    MedicalPractitionerWeeklySchedule,
+)
+@admin.register(
+    MedicalPractitionerWeeklySchedule
+)
+class MedicalPractitionerWeeklyScheduleAdmin(
+    CompanyScopedAdmin
+):
+    list_display = (
+        "practitioner_assignment",
+        "company",
+        "weekday",
+        "start_time",
+        "end_time",
+        "slot_interval_minutes",
+        "effective_from",
+        "effective_until",
+        "is_active",
+    )
+    list_filter = (
+        "company",
+        "weekday",
+        "is_active",
+        "effective_from",
+        "effective_until",
+    )
+    search_fields = (
+        (
+            "practitioner_assignment__"
+            "practitioner__practitioner_number"
+        ),
+        (
+            "practitioner_assignment__"
+            "practitioner__full_name_ar"
+        ),
+        (
+            "practitioner_assignment__"
+            "practitioner__full_name_en"
+        ),
+        "notes",
+    )
+    list_select_related = (
+        "company",
+        "practitioner_assignment",
+        "practitioner_assignment__practitioner",
+        "practitioner_assignment__branch",
+        "practitioner_assignment__department",
+        "practitioner_assignment__clinic",
+    )
+@admin.register(
+    MedicalPractitionerScheduleBreak
+)
+class MedicalPractitionerScheduleBreakAdmin(
+    CompanyScopedAdmin
+):
+    list_display = (
+        "weekly_schedule",
+        "company",
+        "start_time",
+        "end_time",
+        "is_active",
+    )
+    list_filter = (
+        "company",
+        "is_active",
+    )
+    search_fields = (
+        (
+            "weekly_schedule__"
+            "practitioner_assignment__"
+            "practitioner__practitioner_number"
+        ),
+        (
+            "weekly_schedule__"
+            "practitioner_assignment__"
+            "practitioner__full_name_ar"
+        ),
+        (
+            "weekly_schedule__"
+            "practitioner_assignment__"
+            "practitioner__full_name_en"
+        ),
+        "notes",
+    )
+    list_select_related = (
+        "company",
+        "weekly_schedule",
+        (
+            "weekly_schedule__"
+            "practitioner_assignment"
+        ),
+        (
+            "weekly_schedule__"
+            "practitioner_assignment__practitioner"
+        ),
+    )
+@admin.register(
+    MedicalPractitionerTimeOff
+)
+class MedicalPractitionerTimeOffAdmin(
+    CompanyScopedAdmin
+):
+    list_display = (
+        "practitioner_assignment",
+        "company",
+        "starts_at",
+        "ends_at",
+        "status",
+        "reason",
+    )
+    list_filter = (
+        "company",
+        "status",
+        "starts_at",
+        "ends_at",
+    )
+    search_fields = (
+        (
+            "practitioner_assignment__"
+            "practitioner__practitioner_number"
+        ),
+        (
+            "practitioner_assignment__"
+            "practitioner__full_name_ar"
+        ),
+        (
+            "practitioner_assignment__"
+            "practitioner__full_name_en"
+        ),
+        "reason",
+        "notes",
+    )
+    list_select_related = (
+        "company",
+        "practitioner_assignment",
+        "practitioner_assignment__practitioner",
+        "practitioner_assignment__branch",
+        "practitioner_assignment__department",
+        "practitioner_assignment__clinic",
+    )
+# END PHASE 10.3-C PRACTITIONER AVAILABILITY ADMIN

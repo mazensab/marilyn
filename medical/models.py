@@ -5005,3 +5005,509 @@ class MedicalPractitionerServiceAssignment(
             **kwargs,
         )
 # END PHASE 10.3-B2 PRACTITIONER SERVICE ASSIGNMENT FOUNDATION
+# PHASE 10.3-C PRACTITIONER SCHEDULE AND TIME OFF FOUNDATION
+from django.utils import timezone as practitioner_schedule_timezone
+class MedicalWeekday(models.IntegerChoices):
+    MONDAY = 0, "Monday"
+    TUESDAY = 1, "Tuesday"
+    WEDNESDAY = 2, "Wednesday"
+    THURSDAY = 3, "Thursday"
+    FRIDAY = 4, "Friday"
+    SATURDAY = 5, "Saturday"
+    SUNDAY = 6, "Sunday"
+class MedicalPractitionerWeeklySchedule(
+    MedicalAuditModel
+):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name=(
+            "medical_practitioner_weekly_schedules"
+        ),
+        db_index=True,
+    )
+    practitioner_assignment = models.ForeignKey(
+        MedicalPractitionerAssignment,
+        on_delete=models.CASCADE,
+        related_name="weekly_schedules",
+        db_index=True,
+    )
+    weekday = models.PositiveSmallIntegerField(
+        choices=MedicalWeekday.choices,
+        db_index=True,
+    )
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    slot_interval_minutes = (
+        models.PositiveSmallIntegerField(
+            default=15,
+            help_text=(
+                "Minimum interval between generated "
+                "appointment starting times."
+            ),
+        )
+    )
+    effective_from = models.DateField(
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+    effective_until = models.DateField(
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+    is_active = models.BooleanField(
+        default=True,
+        db_index=True,
+    )
+    class Meta:
+        verbose_name = (
+            "Medical Practitioner Weekly Schedule"
+        )
+        verbose_name_plural = (
+            "Medical Practitioner Weekly Schedules"
+        )
+        ordering = [
+            "practitioner_assignment_id",
+            "weekday",
+            "start_time",
+            "id",
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "is_active",
+                ],
+                name="med_pws_company_active",
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "practitioner_assignment",
+                    "weekday",
+                ],
+                name="med_pws_assignment_day",
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "effective_from",
+                    "effective_until",
+                ],
+                name="med_pws_effective_dates",
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "practitioner_assignment",
+                    "weekday",
+                    "start_time",
+                    "end_time",
+                ],
+                name="med_pws_unique_shift",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    slot_interval_minutes__gt=0
+                ),
+                name="med_pws_interval_positive",
+            ),
+        ]
+    def __str__(self) -> str:
+        return (
+            f"{self.practitioner_assignment} — "
+            f"{self.get_weekday_display()} — "
+            f"{self.start_time}-{self.end_time}"
+        )
+    @property
+    def practitioner(self):
+        return (
+            self.practitioner_assignment.practitioner
+        )
+    @property
+    def practitioner_id(self):
+        return (
+            self.practitioner_assignment
+            .practitioner_id
+        )
+    def applies_on(self, value) -> bool:
+        if not self.is_active:
+            return False
+        if value.weekday() != self.weekday:
+            return False
+        if (
+            self.effective_from
+            and value < self.effective_from
+        ):
+            return False
+        if (
+            self.effective_until
+            and value > self.effective_until
+        ):
+            return False
+        return self.practitioner_assignment.is_active
+    def clean(self) -> None:
+        super().clean()
+        self.notes = clean_text(self.notes)
+        if self.weekday not in MedicalWeekday.values:
+            raise ValidationError(
+                {
+                    "weekday": (
+                        "Provide a valid weekday."
+                    )
+                }
+            )
+        if (
+            self.start_time
+            and self.end_time
+            and self.end_time <= self.start_time
+        ):
+            raise ValidationError(
+                {
+                    "end_time": (
+                        "End time must be after "
+                        "start time."
+                    )
+                }
+            )
+        if self.slot_interval_minutes < 1:
+            raise ValidationError(
+                {
+                    "slot_interval_minutes": (
+                        "Slot interval must be "
+                        "greater than zero."
+                    )
+                }
+            )
+        if (
+            self.effective_from
+            and self.effective_until
+            and self.effective_until
+            < self.effective_from
+        ):
+            raise ValidationError(
+                {
+                    "effective_until": (
+                        "Effective-until date cannot "
+                        "precede effective-from date."
+                    )
+                }
+            )
+        if not (
+            self.company_id
+            and self.practitioner_assignment_id
+        ):
+            return
+        if (
+            self.practitioner_assignment.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "practitioner_assignment": (
+                        "Practitioner assignment must "
+                        "belong to the same company."
+                    )
+                }
+            )
+        if (
+            self.is_active
+            and not (
+                self.practitioner_assignment
+                .is_active
+            )
+        ):
+            raise ValidationError(
+                {
+                    "practitioner_assignment": (
+                        "An active weekly schedule "
+                        "requires an active practitioner "
+                        "assignment."
+                    )
+                }
+            )
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(
+            *args,
+            **kwargs,
+        )
+class MedicalPractitionerScheduleBreak(
+    MedicalAuditModel
+):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name=(
+            "medical_practitioner_schedule_breaks"
+        ),
+        db_index=True,
+    )
+    weekly_schedule = models.ForeignKey(
+        MedicalPractitionerWeeklySchedule,
+        on_delete=models.CASCADE,
+        related_name="schedule_breaks",
+        db_index=True,
+    )
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    is_active = models.BooleanField(
+        default=True,
+        db_index=True,
+    )
+    class Meta:
+        verbose_name = (
+            "Medical Practitioner Schedule Break"
+        )
+        verbose_name_plural = (
+            "Medical Practitioner Schedule Breaks"
+        )
+        ordering = [
+            "weekly_schedule_id",
+            "start_time",
+            "id",
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "weekly_schedule",
+                    "is_active",
+                ],
+                name="med_psb_schedule_active",
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "company",
+                    "weekly_schedule",
+                    "start_time",
+                    "end_time",
+                ],
+                name="med_psb_unique_window",
+            ),
+        ]
+    def __str__(self) -> str:
+        return (
+            f"{self.weekly_schedule} — "
+            f"{self.start_time}-{self.end_time}"
+        )
+    @property
+    def practitioner_assignment(self):
+        return (
+            self.weekly_schedule
+            .practitioner_assignment
+        )
+    @property
+    def practitioner_id(self):
+        return (
+            self.weekly_schedule
+            .practitioner_id
+        )
+    def clean(self) -> None:
+        super().clean()
+        self.notes = clean_text(self.notes)
+        if (
+            self.start_time
+            and self.end_time
+            and self.end_time <= self.start_time
+        ):
+            raise ValidationError(
+                {
+                    "end_time": (
+                        "Break end time must be after "
+                        "break start time."
+                    )
+                }
+            )
+        if not (
+            self.company_id
+            and self.weekly_schedule_id
+        ):
+            return
+        schedule = self.weekly_schedule
+        if schedule.company_id != self.company_id:
+            raise ValidationError(
+                {
+                    "weekly_schedule": (
+                        "Weekly schedule must belong "
+                        "to the same company."
+                    )
+                }
+            )
+        if (
+            self.start_time < schedule.start_time
+            or self.end_time > schedule.end_time
+        ):
+            raise ValidationError(
+                {
+                    "end_time": (
+                        "Schedule break must remain "
+                        "inside the weekly schedule."
+                    )
+                }
+            )
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(
+            *args,
+            **kwargs,
+        )
+class MedicalPractitionerTimeOffStatus(
+    models.TextChoices
+):
+    APPROVED = "APPROVED", "Approved"
+    CANCELLED = "CANCELLED", "Cancelled"
+class MedicalPractitionerTimeOff(
+    MedicalAuditModel
+):
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name=(
+            "medical_practitioner_time_offs"
+        ),
+        db_index=True,
+    )
+    practitioner_assignment = models.ForeignKey(
+        MedicalPractitionerAssignment,
+        on_delete=models.CASCADE,
+        related_name="time_off_periods",
+        db_index=True,
+    )
+    starts_at = models.DateTimeField(
+        db_index=True,
+    )
+    ends_at = models.DateTimeField(
+        db_index=True,
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=(
+            MedicalPractitionerTimeOffStatus
+            .choices
+        ),
+        default=(
+            MedicalPractitionerTimeOffStatus
+            .APPROVED
+        ),
+        db_index=True,
+    )
+    reason = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+    )
+    class Meta:
+        verbose_name = (
+            "Medical Practitioner Time Off"
+        )
+        verbose_name_plural = (
+            "Medical Practitioner Time Offs"
+        )
+        ordering = [
+            "starts_at",
+            "practitioner_assignment_id",
+            "id",
+        ]
+        indexes = [
+            models.Index(
+                fields=[
+                    "company",
+                    "practitioner_assignment",
+                    "starts_at",
+                    "ends_at",
+                ],
+                name="med_pto_assignment_dates",
+            ),
+            models.Index(
+                fields=[
+                    "company",
+                    "status",
+                    "starts_at",
+                ],
+                name="med_pto_status_start",
+            ),
+        ]
+    def __str__(self) -> str:
+        return (
+            f"{self.practitioner_assignment} — "
+            f"{self.starts_at} — {self.ends_at}"
+        )
+    @property
+    def practitioner(self):
+        return (
+            self.practitioner_assignment.practitioner
+        )
+    @property
+    def practitioner_id(self):
+        return (
+            self.practitioner_assignment
+            .practitioner_id
+        )
+    @property
+    def is_effective(self) -> bool:
+        return (
+            self.status
+            == (
+                MedicalPractitionerTimeOffStatus
+                .APPROVED
+            )
+        )
+    def overlaps(
+        self,
+        start,
+        end,
+    ) -> bool:
+        if not self.is_effective:
+            return False
+        return (
+            self.starts_at < end
+            and self.ends_at > start
+        )
+    def clean(self) -> None:
+        super().clean()
+        self.notes = clean_text(self.notes)
+        self.reason = clean_text(self.reason)
+        if (
+            self.starts_at
+            and self.ends_at
+            and self.ends_at <= self.starts_at
+        ):
+            raise ValidationError(
+                {
+                    "ends_at": (
+                        "Time-off end must be after "
+                        "its start."
+                    )
+                }
+            )
+        if not (
+            self.company_id
+            and self.practitioner_assignment_id
+        ):
+            return
+        if (
+            self.practitioner_assignment.company_id
+            != self.company_id
+        ):
+            raise ValidationError(
+                {
+                    "practitioner_assignment": (
+                        "Practitioner assignment must "
+                        "belong to the same company."
+                    )
+                }
+            )
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(
+            *args,
+            **kwargs,
+        )
+# END PHASE 10.3-C PRACTITIONER SCHEDULE AND TIME OFF FOUNDATION

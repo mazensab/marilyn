@@ -78,7 +78,80 @@ from .practitioner_service_assignments import (
     practitioner_service_assignment_detail,
     practitioner_service_assignment_status,
 )
+from .practitioner_availability import (
+    practitioner_availability,
+    practitioner_time_off_collection,
+    practitioner_time_off_detail,
+    schedule_break_collection,
+    schedule_break_detail,
+    weekly_schedule_collection,
+    weekly_schedule_detail,
+)
 urlpatterns = [
+    # PHASE 10.3-C+D PRACTITIONER AVAILABILITY
+    path(
+        "practitioner-schedules/",
+        weekly_schedule_collection,
+        name=(
+            "company-medical-"
+            "practitioner-schedules"
+        ),
+    ),
+    path(
+        (
+            "practitioner-schedules/"
+            "<int:schedule_id>/"
+        ),
+        weekly_schedule_detail,
+        name=(
+            "company-medical-"
+            "practitioner-schedule-detail"
+        ),
+    ),
+    path(
+        "practitioner-schedule-breaks/",
+        schedule_break_collection,
+        name=(
+            "company-medical-"
+            "practitioner-schedule-breaks"
+        ),
+    ),
+    path(
+        (
+            "practitioner-schedule-breaks/"
+            "<int:break_id>/"
+        ),
+        schedule_break_detail,
+        name=(
+            "company-medical-practitioner-"
+            "schedule-break-detail"
+        ),
+    ),
+    path(
+        "practitioner-time-offs/",
+        practitioner_time_off_collection,
+        name=(
+            "company-medical-"
+            "practitioner-time-offs"
+        ),
+    ),
+    path(
+        (
+            "practitioner-time-offs/"
+            "<int:time_off_id>/"
+        ),
+        practitioner_time_off_detail,
+        name=(
+            "company-medical-"
+            "practitioner-time-off-detail"
+        ),
+    ),
+    path(
+        "availability/",
+        practitioner_availability,
+        name="company-medical-availability",
+    ),
+
     # PHASE 10.3-B3 PRACTITIONER SERVICE ASSIGNMENT API
     path(
         "practitioner-service-assignments/",
