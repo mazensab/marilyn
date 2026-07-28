@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import {
+  CalendarClock,
   BarChart3,
   BellRing,
   Boxes,
@@ -302,6 +303,28 @@ const systemNavItems: NavGroup[] = [
 ];
 
 const companyNavItems: NavGroup[] = [
+  {
+    title: {
+      ar: "العمليات الطبية",
+      en: "Medical Operations",
+    },
+    items: [
+      {
+        title: {
+          ar: "المواعيد والحجوزات",
+          en: "Appointments & Reservations",
+        },
+        href: "/company/appointments",
+        icon: CalendarClock,
+        anyPermissions: [
+          PERMISSIONS.MEDICAL_APPOINTMENTS_VIEW,
+          PERMISSIONS.MEDICAL_APPOINTMENTS_ADD,
+          PERMISSIONS.MEDICAL_APPOINTMENTS_CHANGE,
+        ],
+        workspaces: ["company"],
+      },
+    ],
+  },
   {
     title: { ar: "وحدات الشركة", en: "Company Modules" },
     items: [

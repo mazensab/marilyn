@@ -354,6 +354,12 @@ export const PERMISSIONS = {
   AGENT_COMMISSIONS_VIEW: "agent_commissions.view",
   AGENT_ACCOUNT_VIEW: "agent_account.view",
   AGENT_ACCOUNT_EDIT: "agent_account.edit",
+  MEDICAL_APPOINTMENTS_VIEW:
+    "medical.view_medicalappointment",
+  MEDICAL_APPOINTMENTS_ADD:
+    "medical.add_medicalappointment",
+  MEDICAL_APPOINTMENTS_CHANGE:
+    "medical.change_medicalappointment",
 } as const;
 
 // ======================================================
