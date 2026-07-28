@@ -125,9 +125,15 @@ def iso_value(value):
     return value.isoformat() if value is not None else None
 
 
+
 def serialize_appointment(
     appointment: MedicalAppointment,
 ) -> dict[str, Any]:
+    from medical.appointment_engine import (
+        appointment_allowed_statuses,
+        appointment_can_reschedule,
+        appointment_is_terminal,
+    )
     service_assignment = (
         appointment.practitioner_service_assignment
         if (
@@ -146,6 +152,7 @@ def serialize_appointment(
         booking_mode = "SERVICE_ASSIGNMENT"
     elif appointment.practitioner_assignment_id:
         booking_mode = "PRACTITIONER_ASSIGNMENT"
+    extra_data = appointment.extra_data or {}
     return {
         "id": appointment.id,
         "company_id": appointment.company_id,
@@ -216,6 +223,26 @@ def serialize_appointment(
             appointment.scheduled_end
         ),
         "status": appointment.status,
+        "allowed_statuses": (
+            appointment_allowed_statuses(
+                appointment.status
+            )
+        ),
+        "can_reschedule": (
+            appointment_can_reschedule(
+                appointment
+            )
+        ),
+        "is_terminal": appointment_is_terminal(
+            appointment
+        ),
+        "reschedule_count": int(
+            extra_data.get(
+                "reschedule_count",
+                0,
+            )
+            or 0
+        ),
         "source": appointment.source,
         "reason": appointment.reason,
         "practitioner_name_snapshot": (
@@ -232,9 +259,7 @@ def serialize_appointment(
         "cancellation_reason": (
             appointment.cancellation_reason
         ),
-        "extra_data": (
-            appointment.extra_data or {}
-        ),
+        "extra_data": extra_data,
         "confirmed_at": iso_value(
             appointment.confirmed_at
         ),
@@ -327,6 +352,7 @@ RELATED_MODELS = {
 
 
 
+
 def apply_payload(
     *,
     appointment: MedicalAppointment | None,
@@ -336,6 +362,11 @@ def apply_payload(
     creating: bool,
 ) -> MedicalAppointment:
     from django.apps import apps
+    from medical.appointment_engine import (
+        capture_appointment_schedule,
+        finalize_appointment_reschedule,
+        validate_appointment_payload_control,
+    )
     if creating:
         appointment = MedicalAppointment(
             company=company
@@ -348,6 +379,18 @@ def apply_payload(
                 )
             }
         )
+    validate_appointment_payload_control(
+        appointment=appointment,
+        payload=payload,
+        creating=creating,
+    )
+    schedule_before = (
+        None
+        if creating
+        else capture_appointment_schedule(
+            appointment
+        )
+    )
     appointment.company = company
     if creating:
         number = str(
@@ -360,6 +403,14 @@ def apply_payload(
             number
             or next_appointment_number(company)
         )
+        requested_status = str(
+            payload.get(
+                "status",
+                appointment.status,
+            )
+            or appointment.status
+        ).strip().upper()
+        appointment.status = requested_status
     elif "appointment_number" in payload:
         appointment.appointment_number = str(
             payload.get(
@@ -541,28 +592,9 @@ def apply_payload(
                 )
             )
     for field_name in (
-        "confirmed_at",
-        "checked_in_at",
-        "started_at",
-        "completed_at",
-        "cancelled_at",
-        "no_show_at",
-    ):
-        if field_name in payload:
-            setattr(
-                appointment,
-                field_name,
-                parse_datetime_value(
-                    payload.get(field_name),
-                    field_name,
-                ),
-            )
-    for field_name in (
-        "status",
         "source",
         "reason",
         "notes",
-        "cancellation_reason",
     ):
         if field_name in payload:
             setattr(
@@ -621,6 +653,14 @@ def apply_payload(
         appointment.created_by = user
     appointment.updated_by = user
     appointment.full_clean()
+    if not creating:
+        finalized = finalize_appointment_reschedule(
+            appointment=appointment,
+            before=schedule_before,
+            actor=user,
+        )
+        if finalized:
+            appointment.full_clean()
     appointment.save()
     return appointment
 
@@ -951,21 +991,26 @@ VALID_STATUS_VALUES = {
 }
 
 
+
 STATUS_TRANSITIONS = {
+    "DRAFT": {
+        "SCHEDULED",
+        "CANCELLED",
+    },
     "SCHEDULED": {
         "CONFIRMED",
-        "CANCELLED",
         "NO_SHOW",
+        "CANCELLED",
     },
     "CONFIRMED": {
         "CHECKED_IN",
-        "CANCELLED",
         "NO_SHOW",
+        "CANCELLED",
     },
     "CHECKED_IN": {
         "IN_PROGRESS",
-        "CANCELLED",
         "NO_SHOW",
+        "CANCELLED",
     },
     "IN_PROGRESS": {
         "COMPLETED",
@@ -975,6 +1020,7 @@ STATUS_TRANSITIONS = {
     "CANCELLED": set(),
     "NO_SHOW": set(),
 }
+
 STATUS_TIMESTAMP_FIELDS = {
     "CONFIRMED": "confirmed_at",
     "CHECKED_IN": "checked_in_at",
@@ -985,10 +1031,15 @@ STATUS_TIMESTAMP_FIELDS = {
 }
 @api_view(["PATCH", "POST"])
 @permission_classes([HasAnyCompanyPermission])
+
 def appointment_status(
     request: Request,
     appointment_id: int,
 ) -> Response:
+    from medical.appointment_engine import (
+        apply_appointment_status_transition,
+        appointment_allowed_statuses,
+    )
     company, error = company_or_error(request)
     if error:
         return error
@@ -998,113 +1049,86 @@ def appointment_status(
     )
     if permission_error:
         return permission_error
-    appointment = appointment_queryset(company).filter(
-        id=appointment_id,
-    ).first()
+    appointment = (
+        appointment_queryset(company)
+        .filter(
+            id=appointment_id,
+        )
+        .first()
+    )
     if appointment is None:
         return Response(
             {
                 "success": False,
-                "message": "Appointment was not found.",
+                "message": (
+                    "Appointment was not found."
+                ),
             },
             status=404,
         )
     requested_status = str(
-        request.data.get("status", "")
+        request.data.get(
+            "status",
+            "",
+        )
+        or ""
     ).strip().upper()
-    valid_statuses = {
-        value
-        for value, _label in MedicalAppointment._meta.get_field("status").choices
-    }
-    if requested_status not in valid_statuses:
-        return Response(
-            {
-                "success": False,
-                "message": "Appointment status is invalid.",
-                "valid_statuses": sorted(valid_statuses),
-            },
-            status=400,
-        )
-    current_status = appointment.status
-    allowed_statuses = STATUS_TRANSITIONS.get(
-        current_status,
-        set(),
-    )
-    if (
-        requested_status != current_status
-        and requested_status not in allowed_statuses
-    ):
-        return Response(
-            {
-                "success": False,
-                "message": "Appointment status transition is invalid.",
-                "current_status": current_status,
-                "allowed_statuses": sorted(allowed_statuses),
-            },
-            status=400,
-        )
     cancellation_reason = str(
         request.data.get(
             "cancellation_reason",
             appointment.cancellation_reason or "",
         )
+        or ""
     ).strip()
-    if (
-        requested_status
-        == "CANCELLED"
-        and not cancellation_reason
-    ):
-        return Response(
-            {
-                "success": False,
-                "message": (
-                    "Cancellation reason is required "
-                    "when cancelling an appointment."
-                ),
-            },
-            status=400,
-        )
+    previous_status = appointment.status
     try:
         with transaction.atomic():
-            if (
-                requested_status
-                == "CANCELLED"
-            ):
-                appointment.cancellation_reason = (
-                    cancellation_reason
+            transition = (
+                apply_appointment_status_transition(
+                    appointment=appointment,
+                    requested_status=requested_status,
+                    actor=request.user,
+                    cancellation_reason=(
+                        cancellation_reason
+                    ),
                 )
-            if requested_status != current_status:
-                timestamp_field = STATUS_TIMESTAMP_FIELDS.get(
-                    requested_status
-                )
-                if timestamp_field:
-                    setattr(
-                        appointment,
-                        timestamp_field,
-                        timezone.now(),
-                    )
-            appointment.status = requested_status
-            appointment.updated_by = request.user
-            appointment.full_clean()
-            appointment.save()
-        appointment = appointment_queryset(company).get(
-            id=appointment.id,
+            )
+        appointment = (
+            appointment_queryset(company)
+            .get(
+                id=appointment.id
+            )
         )
         return Response(
             {
                 "success": True,
                 "message": (
-                    "Appointment status updated successfully."
+                    "Appointment status updated "
+                    "successfully."
                 ),
-                "item": serialize_appointment(appointment),
+                "transition": transition,
+                "item": serialize_appointment(
+                    appointment
+                ),
             }
         )
     except ValidationError as exc:
         return Response(
             {
                 "success": False,
-                "message": "Appointment status is invalid.",
-                "errors": validation_payload(exc),
+                "message": (
+                    "Appointment status transition "
+                    "is invalid."
+                ),
+                "current_status": previous_status,
+                "allowed_statuses": (
+                    appointment_allowed_statuses(
+                        previous_status
+                    )
+                ),
+                "errors": validation_payload(
+                    exc
+                ),
             },
             status=400,
         )
@@ -1113,7 +1137,8 @@ def appointment_status(
             {
                 "success": False,
                 "message": (
-                    "Appointment status could not be updated."
+                    "Appointment status could not "
+                    "be updated."
                 ),
             },
             status=400,
