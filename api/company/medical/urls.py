@@ -73,7 +73,44 @@ from .service_offerings import (
     service_offering_detail,
     service_offering_status,
 )
+from .practitioner_service_assignments import (
+    practitioner_service_assignment_collection,
+    practitioner_service_assignment_detail,
+    practitioner_service_assignment_status,
+)
 urlpatterns = [
+    # PHASE 10.3-B3 PRACTITIONER SERVICE ASSIGNMENT API
+    path(
+        "practitioner-service-assignments/",
+        practitioner_service_assignment_collection,
+        name=(
+            "company-medical-"
+            "practitioner-service-assignments"
+        ),
+    ),
+    path(
+        (
+            "practitioner-service-assignments/"
+            "<int:assignment_id>/"
+        ),
+        practitioner_service_assignment_detail,
+        name=(
+            "company-medical-practitioner-"
+            "service-assignment-detail"
+        ),
+    ),
+    path(
+        (
+            "practitioner-service-assignments/"
+            "<int:assignment_id>/status/"
+        ),
+        practitioner_service_assignment_status,
+        name=(
+            "company-medical-practitioner-"
+            "service-assignment-status"
+        ),
+    ),
+
     # PHASE 10.3-A3 — COMPANY SERVICE OFFERINGS
     path(
         "service-offerings/",
