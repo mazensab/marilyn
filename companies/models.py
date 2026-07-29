@@ -49,7 +49,6 @@ class CompanyActivityProfile(models.TextChoices):
     GENERAL = "GENERAL", "General"
     RETAIL = "RETAIL", "Retail"
     WHOLESALE = "WHOLESALE", "Wholesale"
-    JEWELRY = "JEWELRY", "Jewelry / Gold"
     PETROL_STATION = "PETROL_STATION", "Petrol Station"
 
 

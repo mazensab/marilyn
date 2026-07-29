@@ -313,7 +313,6 @@ def _build_stats(queryset: QuerySet[Company]) -> dict[str, Any]:
         general_count=Count("id", filter=Q(activity_profile=CompanyActivityProfile.GENERAL)),
         retail_count=Count("id", filter=Q(activity_profile=CompanyActivityProfile.RETAIL)),
         wholesale_count=Count("id", filter=Q(activity_profile=CompanyActivityProfile.WHOLESALE)),
-        jewelry_count=Count("id", filter=Q(activity_profile=CompanyActivityProfile.JEWELRY)),
         petrol_station_count=Count(
             "id",
             filter=Q(activity_profile=CompanyActivityProfile.PETROL_STATION),
@@ -343,7 +342,6 @@ def _build_stats(queryset: QuerySet[Company]) -> dict[str, Any]:
             "general": aggregate.get("general_count") or 0,
             "retail": aggregate.get("retail_count") or 0,
             "wholesale": aggregate.get("wholesale_count") or 0,
-            "jewelry": aggregate.get("jewelry_count") or 0,
             "petrol_station": aggregate.get("petrol_station_count") or 0,
             "with_ref": aggregate.get("with_activity_profile_ref_count") or 0,
             "without_ref": aggregate.get("without_activity_profile_ref_count") or 0,

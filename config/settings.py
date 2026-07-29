@@ -104,7 +104,6 @@ Mhamcloud_APPS = [
     "sales",
     "purchases",
     "inventory",
-    "jewelry",
     "activity_backends",
     "accounting",
     "treasury",
