@@ -379,7 +379,7 @@ def _resolve_legacy_activity_profile(
     if activity_profile_ref and activity_profile_ref.code in valid_activities:
         return activity_profile_ref.code
 
-    return CompanyActivityProfile.GENERAL
+    return CompanyActivityProfile.MEDICAL
 
 
 def _validate_required_company_data(

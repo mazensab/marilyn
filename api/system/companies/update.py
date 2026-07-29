@@ -365,7 +365,7 @@ def _legacy_activity_profile_from_ref(
     if current_value in valid_activities:
         return current_value
 
-    return CompanyActivityProfile.GENERAL
+    return CompanyActivityProfile.MEDICAL
 
 
 def _validate_required_company_data(company: Company) -> dict[str, str]:

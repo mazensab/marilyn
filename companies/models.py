@@ -46,10 +46,10 @@ class CompanyStatus(models.TextChoices):
 
 
 class CompanyActivityProfile(models.TextChoices):
-    GENERAL = "GENERAL", "General"
-    RETAIL = "RETAIL", "Retail"
-    WHOLESALE = "WHOLESALE", "Wholesale"
-    PETROL_STATION = "PETROL_STATION", "Petrol Station"
+    MEDICAL = (
+        "MEDICAL",
+        "Medical / Clinics",
+    )
 
 
 class ActivityProfile(models.Model):
@@ -281,7 +281,7 @@ class Company(models.Model):
     activity_profile = models.CharField(
         max_length=40,
         choices=CompanyActivityProfile.choices,
-        default=CompanyActivityProfile.GENERAL,
+        default=CompanyActivityProfile.MEDICAL,
         db_index=True,
         verbose_name="Activity profile",
     )

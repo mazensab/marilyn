@@ -303,48 +303,119 @@ def _build_stats(queryset: QuerySet[Company]) -> dict[str, Any]:
     """
 
     aggregate = queryset.aggregate(
-        active_count=Count("id", filter=Q(is_active=True)),
-        inactive_count=Count("id", filter=Q(is_active=False)),
-        trial_count=Count("id", filter=Q(status=CompanyStatus.TRIAL)),
-        status_active_count=Count("id", filter=Q(status=CompanyStatus.ACTIVE)),
-        suspended_count=Count("id", filter=Q(status=CompanyStatus.SUSPENDED)),
-        expired_count=Count("id", filter=Q(status=CompanyStatus.EXPIRED)),
-        cancelled_count=Count("id", filter=Q(status=CompanyStatus.CANCELLED)),
-        general_count=Count("id", filter=Q(activity_profile=CompanyActivityProfile.GENERAL)),
-        retail_count=Count("id", filter=Q(activity_profile=CompanyActivityProfile.RETAIL)),
-        wholesale_count=Count("id", filter=Q(activity_profile=CompanyActivityProfile.WHOLESALE)),
-        petrol_station_count=Count(
+        active_count=Count(
             "id",
-            filter=Q(activity_profile=CompanyActivityProfile.PETROL_STATION),
+            filter=Q(is_active=True),
+        ),
+        inactive_count=Count(
+            "id",
+            filter=Q(is_active=False),
+        ),
+        trial_count=Count(
+            "id",
+            filter=Q(
+                status=CompanyStatus.TRIAL
+            ),
+        ),
+        status_active_count=Count(
+            "id",
+            filter=Q(
+                status=CompanyStatus.ACTIVE
+            ),
+        ),
+        suspended_count=Count(
+            "id",
+            filter=Q(
+                status=CompanyStatus.SUSPENDED
+            ),
+        ),
+        expired_count=Count(
+            "id",
+            filter=Q(
+                status=CompanyStatus.EXPIRED
+            ),
+        ),
+        cancelled_count=Count(
+            "id",
+            filter=Q(
+                status=CompanyStatus.CANCELLED
+            ),
+        ),
+        medical_count=Count(
+            "id",
+            filter=Q(
+                activity_profile=(
+                    CompanyActivityProfile.MEDICAL
+                )
+            ),
         ),
         with_activity_profile_ref_count=Count(
             "id",
-            filter=Q(activity_profile_ref__isnull=False),
+            filter=Q(
+                activity_profile_ref__isnull=False
+            ),
         ),
         without_activity_profile_ref_count=Count(
             "id",
-            filter=Q(activity_profile_ref__isnull=True),
+            filter=Q(
+                activity_profile_ref__isnull=True
+            ),
         ),
     )
-
     total_count = queryset.count()
-
     return {
         "total": total_count,
-        "active": aggregate.get("active_count") or 0,
-        "inactive": aggregate.get("inactive_count") or 0,
-        "status_active": aggregate.get("status_active_count") or 0,
-        "trial": aggregate.get("trial_count") or 0,
-        "suspended": aggregate.get("suspended_count") or 0,
-        "expired": aggregate.get("expired_count") or 0,
-        "cancelled": aggregate.get("cancelled_count") or 0,
+        "active": (
+            aggregate.get("active_count")
+            or 0
+        ),
+        "inactive": (
+            aggregate.get("inactive_count")
+            or 0
+        ),
+        "status_active": (
+            aggregate.get(
+                "status_active_count"
+            )
+            or 0
+        ),
+        "trial": (
+            aggregate.get("trial_count")
+            or 0
+        ),
+        "suspended": (
+            aggregate.get(
+                "suspended_count"
+            )
+            or 0
+        ),
+        "expired": (
+            aggregate.get("expired_count")
+            or 0
+        ),
+        "cancelled": (
+            aggregate.get(
+                "cancelled_count"
+            )
+            or 0
+        ),
         "activity_profiles": {
-            "general": aggregate.get("general_count") or 0,
-            "retail": aggregate.get("retail_count") or 0,
-            "wholesale": aggregate.get("wholesale_count") or 0,
-            "petrol_station": aggregate.get("petrol_station_count") or 0,
-            "with_ref": aggregate.get("with_activity_profile_ref_count") or 0,
-            "without_ref": aggregate.get("without_activity_profile_ref_count") or 0,
+            "medical": (
+                aggregate.get("medical_count")
+                or 0
+            ),
+            "with_ref": (
+                aggregate.get(
+                    "with_activity_profile_ref_count"
+                )
+                or 0
+            ),
+            "without_ref": (
+                aggregate.get(
+                    "without_activity_profile_ref_count"
+                )
+                or 0
+            ),
         },
     }
 

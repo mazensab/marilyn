@@ -262,7 +262,7 @@ class CompanyWorkspacePhase3Tests(TestCase):
         self.company.refresh_from_db()
 
         self.assertEqual(self.company.activity_profile_ref_id, profile.id)
-        self.assertEqual(self.company.activity_profile, "GENERAL")
+        self.assertEqual(self.company.activity_profile, "MEDICAL")
 
     def test_activity_profiles_list_returns_system_and_current_company_profiles(self) -> None:
         """
@@ -361,7 +361,7 @@ class CompanyWorkspacePhase3Tests(TestCase):
 
         self.assertTrue(payload["ok"])
         self.assertEqual(data["company_id"], self.company.id)
-        self.assertEqual(data["legacy_activity_profile"], "GENERAL")
+        self.assertEqual(data["legacy_activity_profile"], "MEDICAL")
         self.assertEqual(data["activity_profile"]["id"], profile.id)
         self.assertEqual(data["activity_profile"]["code"], "SERVICES-API")
 
@@ -1108,7 +1108,7 @@ class SystemCompanyManagementApiTests(TestCase):
         )
 
         self.second_activity_profile, _second_profile_created = ActivityProfile.objects.get_or_create(
-            code=CompanyActivityProfile.WHOLESALE,
+            code="SPECIALTY-CLINIC",
             company=None,
             defaults={
                 "name": "Wholesale",
@@ -1141,7 +1141,7 @@ class SystemCompanyManagementApiTests(TestCase):
             name_ar="ط·آ´ط·آ±ط¸ئ’ط·آ© ط¸â€ ط·آ¸ط·آ§ط¸â€¦ ط¸â€ڑط·آ§ط·آ¦ط¸â€¦ط·آ©",
             name_en="Existing System Company",
             company_code="CMP-TEST-000001",
-            activity_profile=CompanyActivityProfile.RETAIL,
+            activity_profile=CompanyActivityProfile.MEDICAL,
             activity_profile_ref=self.activity_profile,
             status=CompanyStatus.TRIAL,
             is_active=True,
@@ -1323,7 +1323,7 @@ class SystemCompanyManagementApiTests(TestCase):
         self.assertTrue(response_payload["ok"])
         self.assertEqual(company_data["activity_profile_ref_id"], self.second_activity_profile.id)
         self.assertEqual(self.company.activity_profile_ref_id, self.second_activity_profile.id)
-        self.assertEqual(self.company.activity_profile, CompanyActivityProfile.WHOLESALE)
+        self.assertEqual(self.company.activity_profile, CompanyActivityProfile.MEDICAL)
 
 
 # ==== SYSTEM COMPANY MANAGEMENT API TESTS END ====

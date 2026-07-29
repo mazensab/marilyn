@@ -193,8 +193,8 @@ class Command(BaseCommand):
             "activity_profile": choice_value(
                 Company,
                 "activity_profile",
-                ["SERVICES", "GENERAL"],
-                "GENERAL",
+                ["MEDICAL"],
+                "MEDICAL",
             ),
             "status": choice_value(
                 Company,
