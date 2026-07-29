@@ -108,7 +108,6 @@ Mhamcloud_APPS = [
     "accounting",
     "treasury",
     "payments",
-    "pos",
     "notifications",
     "whatsapp",
     "hr",

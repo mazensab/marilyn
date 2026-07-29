@@ -505,7 +505,7 @@ const companyNavItems: NavGroup[] = [
         ],
       },
       {
-        title: { ar: "المبيعات ونقاط البيع", en: "Sales & POS" },
+        title: { ar: "المبيعات", en: "Sales" },
         href: "/company/sales",
         icon: ShoppingCart,
         anyPermissions: [
@@ -513,7 +513,6 @@ const companyNavItems: NavGroup[] = [
           PERMISSIONS.ORDERS_VIEW,
           PERMISSIONS.INVOICES_VIEW,
           PERMISSIONS.PAYMENTS_VIEW,
-          "pos.view",
         ],
         workspaces: ["company"],
         items: [
@@ -558,13 +557,6 @@ const companyNavItems: NavGroup[] = [
             href: "/company/sales/credit-notes",
             icon: ReceiptText,
             anyPermissions: [PERMISSIONS.INVOICES_VIEW, "credit_notes.view"],
-            workspaces: ["company"],
-          },
-          {
-            title: { ar: "نقاط البيع", en: "POS" },
-            href: "/company/pos",
-            icon: CreditCard,
-            anyPermissions: ["pos.view", PERMISSIONS.ORDERS_VIEW, PERMISSIONS.PAYMENTS_VIEW],
             workspaces: ["company"],
           },
         ],
@@ -836,13 +828,6 @@ const companyNavItems: NavGroup[] = [
             title: { ar: "تقارير العملاء والموردين", en: "Parties Reports" },
             href: "/company/reports/parties",
             icon: Users,
-            permission: PERMISSIONS.REPORTS_VIEW,
-            workspaces: ["company"],
-          },
-          {
-            title: { ar: "تقارير نقاط البيع", en: "POS Reports" },
-            href: "/company/reports/pos",
-            icon: CreditCard,
             permission: PERMISSIONS.REPORTS_VIEW,
             workspaces: ["company"],
           },

@@ -46,9 +46,7 @@ SUPPORTED_SOURCE_TYPES = {
     "preview",
     "sales_invoice",
     "sales_order",
-    "pos_order",
-    "pos_receipt",
-}
+        }
 
 THERMAL_WIDTHS = {
     "58MM": "58mm",
@@ -307,33 +305,6 @@ def _resolve_sales_order_payload(*, company, source_id: int) -> dict[str, Any]:
     return serialize_sales_order(order, include_items=True)
 
 
-def _resolve_pos_receipt_payload(*, company, source_id: int) -> dict[str, Any]:
-    """
-    Resolve POS order receipt payload inside company.
-    """
-    from api.company.pos.orders.receipt import build_pos_order_receipt
-    from pos.models import POSOrder
-
-    order = (
-        POSOrder.objects.select_related(
-            "company",
-            "session",
-            "register",
-            "branch",
-            "customer",
-            "created_by",
-        )
-        .prefetch_related("items", "payments")
-        .filter(company=company, id=source_id)
-        .first()
-    )
-
-    if not order:
-        raise ValidationError({"source_id": "POS order was not found."})
-
-    return build_pos_order_receipt(order)
-
-
 def resolve_document_source_payload(
     *,
     company,
@@ -375,12 +346,6 @@ def resolve_document_source_payload(
 
     if request_data.source_type == "sales_order":
         return _resolve_sales_order_payload(
-            company=company,
-            source_id=request_data.source_id,
-        )
-
-    if request_data.source_type in ["pos_order", "pos_receipt"]:
-        return _resolve_pos_receipt_payload(
             company=company,
             source_id=request_data.source_id,
         )
