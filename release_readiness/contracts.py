@@ -202,15 +202,6 @@ API_CONTRACTS: tuple[APIContract, ...] = (
         company_scoped=True,
     ),
     APIContract(
-        key="activity-backends",
-        module="Activity Backends",
-        scope="company",
-        base_path="/api/company/activity-backends/",
-        methods=("GET", "POST"),
-        description="Restaurant, clinic, and contracting activity-specific backend foundation contract.",
-        company_scoped=True,
-    ),
-    APIContract(
         key="release-readiness",
         module="Release Readiness",
         scope="system",

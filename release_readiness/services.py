@@ -35,7 +35,6 @@ REQUIRED_RELEASE_APPS: tuple[str, ...] = (
     "reports",
     "documents",
     "business_controls",
-    "activity_backends",
     "release_readiness",
 )
 

@@ -28,7 +28,6 @@ class ReleaseReadinessContractTests(TestCase):
         keys = contract_keys()
 
         self.assertIn("business-controls", keys)
-        self.assertIn("activity-backends", keys)
         self.assertIn("release-readiness", keys)
         self.assertIn("inventory", keys)
         self.assertIn("accounting", keys)

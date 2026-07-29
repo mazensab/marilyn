@@ -54,7 +54,6 @@ app_name = "company"
 urlpatterns = [
     path("tax-rates/", include("api.company.tax_rates.urls")),
 path("business-controls/", include("api.company.business_controls.urls")),
-    path("activity-backends/", include("api.company.activity_backends.urls")),
     path("me/", company_me, name="me"),
     path("profile/", company_profile, name="profile"),
     path("setup/", include("api.company.setup.urls")),
