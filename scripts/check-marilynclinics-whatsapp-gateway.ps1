@@ -1,9 +1,9 @@
 # ============================================================
-# Mhamcloud WhatsApp Gateway Checker
-# Path: scripts/check-Mhamcloud-whatsapp-gateway.ps1
+# Marilyn Clinics WhatsApp Gateway Checker
+# Path: scripts/check-marilynclinics-whatsapp-gateway.ps1
 # ============================================================
 $ErrorActionPreference = "Continue"
-$Root = "C:\Users\MHAMCLOUD\Documents\GitHub\Mhamcloud"
+$Root = Split-Path -Parent $PSScriptRoot
 $Gateway = Join-Path $Root "whatsapp_session_gateway"
 $HealthUrl = "http://127.0.0.1:3100/health"
 $LauncherLog = Join-Path $Gateway "logs\launcher.log"

@@ -1,6 +1,6 @@
 ﻿# ============================================================
-# 📂 scripts/start-Mhamcloud-whatsapp-gateway.ps1
-# 🧠 Mhamcloud | WhatsApp Session Gateway Launcher V1.0
+# 📂 scripts/start-marilynclinics-whatsapp-gateway.ps1
+# 🧠 Marilyn Clinics | WhatsApp Session Gateway Launcher V1.0
 # ------------------------------------------------------------
 # ✅ Auto-start local WhatsApp Session Gateway for dev runserver
 # ✅ Safe if already running on PORT
@@ -16,11 +16,11 @@ $PidFile = Join-Path $GatewayRoot "gateway.pid"
 $OutLog = Join-Path $LogsDir "node.out.log"
 $ErrLog = Join-Path $LogsDir "node.err.log"
 if (-not (Test-Path $GatewayRoot)) {
-  Write-Host "[Mhamcloud] WhatsApp gateway folder not found: $GatewayRoot"
+  Write-Host "[Marilyn Clinics] WhatsApp gateway folder not found: $GatewayRoot"
   exit 0
 }
 if (-not (Test-Path $GatewaySrc)) {
-  Write-Host "[Mhamcloud] WhatsApp gateway server not found: $GatewaySrc"
+  Write-Host "[Marilyn Clinics] WhatsApp gateway server not found: $GatewaySrc"
   exit 0
 }
 New-Item -ItemType Directory -Path $LogsDir -Force | Out-Null
@@ -50,16 +50,16 @@ $ExistingConnection = Get-NetTCPConnection -LocalPort $Port -ErrorAction Silentl
   Where-Object { $_.State -eq "Listen" } |
   Select-Object -First 1
 if ($ExistingConnection) {
-  Write-Host "[Mhamcloud] WhatsApp gateway already running on port $Port."
+  Write-Host "[Marilyn Clinics] WhatsApp gateway already running on port $Port."
   exit 0
 }
 if (-not (Test-Path (Join-Path $GatewayRoot "node_modules"))) {
-  Write-Host "[Mhamcloud] Installing WhatsApp gateway dependencies..."
+  Write-Host "[Marilyn Clinics] Installing WhatsApp gateway dependencies..."
   Push-Location $GatewayRoot
   npm install
   Pop-Location
 }
-Write-Host "[Mhamcloud] Starting WhatsApp gateway on port $Port..."
+Write-Host "[Marilyn Clinics] Starting WhatsApp gateway on port $Port..."
 $Process = Start-Process `
   -FilePath "node" `
   -ArgumentList "src/server.mjs" `
@@ -74,8 +74,8 @@ $StartedConnection = Get-NetTCPConnection -LocalPort $Port -ErrorAction Silently
   Where-Object { $_.State -eq "Listen" } |
   Select-Object -First 1
 if ($StartedConnection) {
-  Write-Host "[Mhamcloud] WhatsApp gateway started. PID=$($Process.Id), URL=http://127.0.0.1:$Port"
+  Write-Host "[Marilyn Clinics] WhatsApp gateway started. PID=$($Process.Id), URL=http://127.0.0.1:$Port"
   exit 0
 }
-Write-Host "[Mhamcloud] WhatsApp gateway start requested. PID=$($Process.Id). Check logs: $OutLog / $ErrLog"
+Write-Host "[Marilyn Clinics] WhatsApp gateway start requested. PID=$($Process.Id). Check logs: $OutLog / $ErrLog"
 exit 0
