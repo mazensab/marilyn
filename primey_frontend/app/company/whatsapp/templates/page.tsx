@@ -93,7 +93,6 @@ type CategoryFilter =
   | "SALES"
   | "PURCHASES"
   | "TREASURY"
-  | "POS"
   | "ACCOUNTING"
   | "INVENTORY"
   | "CUSTOMER_SERVICE";
@@ -143,7 +142,6 @@ const CATEGORY_OPTIONS: CategoryFilter[] = [
   "SALES",
   "PURCHASES",
   "TREASURY",
-  "POS",
   "ACCOUNTING",
   "INVENTORY",
   "CUSTOMER_SERVICE",
@@ -219,7 +217,6 @@ const translations = {
     SALES: "المبيعات",
     PURCHASES: "المشتريات",
     TREASURY: "الخزينة",
-    POS: "نقاط البيع",
     ACCOUNTING: "المحاسبة",
     INVENTORY: "المخزون",
     CUSTOMER_SERVICE: "خدمة العملاء",
@@ -325,7 +322,6 @@ const translations = {
     SALES: "Sales",
     PURCHASES: "Purchases",
     TREASURY: "Treasury",
-    POS: "POS",
     ACCOUNTING: "Accounting",
     INVENTORY: "Inventory",
     CUSTOMER_SERVICE: "Customer Service",

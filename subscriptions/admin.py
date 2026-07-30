@@ -94,7 +94,6 @@ class SubscriptionPlanAdmin(admin.ModelAdmin):
                     "max_users",
                     "max_branches",
                     "max_warehouses",
-                    "max_pos",
                 )
             },
         ),

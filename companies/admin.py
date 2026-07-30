@@ -348,7 +348,6 @@ class CompanySettingsAdmin(admin.ModelAdmin):
         "enable_vat",
         "default_vat_percentage",
         "enable_inventory_tracking",
-        "enable_pos",
         "enable_purchases",
         "enable_hr",
         "updated_at",
@@ -358,7 +357,6 @@ class CompanySettingsAdmin(admin.ModelAdmin):
         "timezone_name",
         "enable_vat",
         "enable_inventory_tracking",
-        "enable_pos",
         "enable_purchases",
         "enable_hr",
         "created_at",
@@ -434,7 +432,6 @@ class CompanySettingsAdmin(admin.ModelAdmin):
                 "fields": (
                     "enable_inventory_tracking",
                     "allow_negative_stock",
-                    "enable_pos",
                     "enable_purchases",
                     "enable_hr",
                 )

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /* ============================================================
    📂 primey_frontend/app/system/plans/page.tsx
@@ -111,7 +111,6 @@ type PlanRecord = {
   max_users: number;
   max_branches: number;
   max_warehouses: number;
-  max_pos: number;
   features: string[];
   is_active: boolean;
   is_public: boolean;
@@ -211,7 +210,6 @@ const translations = {
     users: "مستخدم",
     branches: "فرع",
     warehouses: "مخزن",
-    pos: "نقطة بيع",
     companies: "الشركات",
     status: "الحالة",
     visibility: "الظهور",
@@ -310,7 +308,6 @@ const translations = {
     users: "users",
     branches: "branches",
     warehouses: "warehouses",
-    pos: "POS",
     companies: "Companies",
     status: "Status",
     visibility: "Visibility",
@@ -633,7 +630,6 @@ function normalizePlan(value: unknown): PlanRecord {
     max_users: toNumber(record.max_users ?? limits.max_users, 0),
     max_branches: toNumber(record.max_branches ?? limits.max_branches, 0),
     max_warehouses: toNumber(record.max_warehouses ?? limits.max_warehouses, 0),
-    max_pos: toNumber(record.max_pos ?? limits.max_pos, 0),
     features: normalizeFeatures(record.features),
     is_active: toBoolean(record.is_active ?? record.active ?? record.status, true),
     is_public: toBoolean(record.is_public ?? record.public ?? record.visibility, true),
@@ -1037,7 +1033,6 @@ export default function SystemPlansPage() {
       plan.max_users,
       plan.max_branches,
       plan.max_warehouses,
-      plan.max_pos,
       plan.companies_count,
       plan.is_active ? t.active : t.inactive,
       plan.is_public ? t.public : t.internal,
@@ -1054,7 +1049,6 @@ export default function SystemPlansPage() {
       t.users,
       t.branches,
       t.warehouses,
-      t.pos,
       t.companies,
       t.status,
       t.visibility,
@@ -1500,24 +1494,6 @@ export default function SystemPlansPage() {
                             </TableCell>
 
                             <TableCell className={cn("h-[64px] px-4 align-middle", alignClass)}>
-                              <div className="grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
-                                <span className="inline-flex items-center gap-1">
-                                  <UsersRound className="h-3.5 w-3.5" />
-                                  {formatInteger(plan.max_users)} {t.users}
-                                </span>
-                                <span className="inline-flex items-center gap-1">
-                                  <Activity className="h-3.5 w-3.5" />
-                                  {formatInteger(plan.max_branches)} {t.branches}
-                                </span>
-                                <span className="inline-flex items-center gap-1">
-                                  <Warehouse className="h-3.5 w-3.5" />
-                                  {formatInteger(plan.max_warehouses)} {t.warehouses}
-                                </span>
-                                <span className="inline-flex items-center gap-1">
-                                  <Zap className="h-3.5 w-3.5" />
-                                  {formatInteger(plan.max_pos)} {t.pos}
-                                </span>
-                              </div>
                             </TableCell>
 
                             <TableCell className={cn("h-[64px] px-4 align-middle", alignClass)}>

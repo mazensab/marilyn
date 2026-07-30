@@ -108,7 +108,6 @@ type PlanRecord = {
   max_users: number;
   max_branches: number;
   max_warehouses: number;
-  max_pos: number;
   features: string[];
   is_active: boolean;
   is_public: boolean;
@@ -144,7 +143,6 @@ type PlanFormState = {
   max_users: string;
   max_branches: string;
   max_warehouses: string;
-  max_pos: string;
   features: string;
   is_active: boolean;
   is_public: boolean;
@@ -248,7 +246,6 @@ const translations = {
     users: "مستخدم",
     branches: "فرع",
     warehouses: "مخزن",
-    pos: "نقطة بيع",
     active: "مفعلة",
     inactive: "موقفة",
     public: "عامة",
@@ -262,7 +259,6 @@ const translations = {
     maxUsers: "عدد المستخدمين",
     maxBranches: "عدد الفروع",
     maxWarehouses: "عدد المخازن",
-    maxPos: "نقاط البيع",
     sortOrder: "ترتيب العرض",
     statusVisibility: "الحالة والظهور",
     addFeature: "إضافة",
@@ -329,7 +325,6 @@ const translations = {
     users: "users",
     branches: "branches",
     warehouses: "warehouses",
-    pos: "POS",
     active: "Active",
     inactive: "Inactive",
     public: "Public",
@@ -343,7 +338,6 @@ const translations = {
     maxUsers: "Max users",
     maxBranches: "Max branches",
     maxWarehouses: "Max warehouses",
-    maxPos: "Max POS",
     sortOrder: "Sort order",
     statusVisibility: "Status and visibility",
     addFeature: "Add",
@@ -647,7 +641,6 @@ function normalizePlan(value: unknown): PlanRecord {
     max_users: toNumber(record.max_users, 0),
     max_branches: toNumber(record.max_branches, 0),
     max_warehouses: toNumber(record.max_warehouses, 0),
-    max_pos: toNumber(record.max_pos, 0),
     features: normalizeFeatures(record.features),
     is_active: toBoolean(record.is_active, true),
     is_public: toBoolean(record.is_public, true),
@@ -717,7 +710,6 @@ function formFromPlan(plan: PlanRecord): PlanFormState {
     max_users: String(plan.max_users),
     max_branches: String(plan.max_branches),
     max_warehouses: String(plan.max_warehouses),
-    max_pos: String(plan.max_pos),
     features: plan.features.join("\n"),
     is_active: plan.is_active,
     is_public: plan.is_public,
@@ -1022,7 +1014,6 @@ export default function SystemPlanDetailPage() {
       "max_users",
       "max_branches",
       "max_warehouses",
-      "max_pos",
       "sort_order",
     ];
 
@@ -1057,7 +1048,6 @@ export default function SystemPlanDetailPage() {
           max_users: Math.trunc(toSafeNumber(editForm.max_users) ?? 1),
           max_branches: Math.trunc(toSafeNumber(editForm.max_branches) ?? 1),
           max_warehouses: Math.trunc(toSafeNumber(editForm.max_warehouses) ?? 1),
-          max_pos: Math.trunc(toSafeNumber(editForm.max_pos) ?? 1),
           features: featuresToList(editForm.features),
           is_active: editForm.is_active,
           is_public: editForm.is_public,
@@ -1446,7 +1436,6 @@ export default function SystemPlanDetailPage() {
                   ["max_users", t.maxUsers],
                   ["max_branches", t.maxBranches],
                   ["max_warehouses", t.maxWarehouses],
-                  ["max_pos", t.maxPos],
                 ].map(([field, label]) => (
                   <div key={field} className="space-y-2">
                     <label className="text-sm font-medium">{label}</label>
@@ -1801,10 +1790,6 @@ export default function SystemPlanDetailPage() {
                 </div>
                 <div className="rounded-2xl border bg-background p-3">
                   <Zap className="mb-2 h-4 w-4 text-muted-foreground" />
-                  <p dir="ltr" className="font-semibold tabular-nums">
-                    {formatInteger(plan.max_pos)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{t.pos}</p>
                 </div>
               </CardContent>
             </Card>

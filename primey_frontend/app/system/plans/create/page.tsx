@@ -68,7 +68,6 @@ type PlanFormState = {
   max_users: string;
   max_branches: string;
   max_warehouses: string;
-  max_pos: string;
   features: string;
   is_active: boolean;
   is_public: boolean;
@@ -144,7 +143,6 @@ const emptyForm: PlanFormState = {
   max_users: "1",
   max_branches: "1",
   max_warehouses: "1",
-  max_pos: "1",
   features: "",
   is_active: true,
   is_public: true,
@@ -183,7 +181,6 @@ const translations = {
     maxUsers: "عدد المستخدمين",
     maxBranches: "عدد الفروع",
     maxWarehouses: "عدد المخازن",
-    maxPos: "نقاط البيع",
     sortOrder: "ترتيب العرض",
     featuresPlaceholder: "مثال:\nفواتير مبيعات\nتقارير مالية\nإدارة المخزون",
     featureInputPlaceholder: "\u0627\u0643\u062a\u0628 \u0643\u0648\u062f \u0645\u064a\u0632\u0629 \u0645\u062e\u0635\u0635 \u0639\u0646\u062f \u0627\u0644\u062d\u0627\u062c\u0629 \u062b\u0645 \u0627\u0636\u063a\u0637 \u0625\u0636\u0627\u0641\u0629...",
@@ -255,7 +252,6 @@ const translations = {
     maxUsers: "Max users",
     maxBranches: "Max branches",
     maxWarehouses: "Max warehouses",
-    maxPos: "Max POS",
     sortOrder: "Sort order",
     featuresPlaceholder: "Example:\nSales invoices\nFinancial reports\nInventory management",
     featureInputPlaceholder: "Write a custom feature code if needed, then click Add...",
@@ -626,7 +622,6 @@ export default function SystemPlanCreatePage() {
       "max_users",
       "max_branches",
       "max_warehouses",
-      "max_pos",
       "sort_order",
     ];
 
@@ -696,7 +691,6 @@ export default function SystemPlanCreatePage() {
         max_users: Math.trunc(toSafeNumber(form.max_users) ?? 1),
         max_branches: Math.trunc(toSafeNumber(form.max_branches) ?? 1),
         max_warehouses: Math.trunc(toSafeNumber(form.max_warehouses) ?? 0),
-        max_pos: Math.trunc(toSafeNumber(form.max_pos) ?? 0),
         features: featuresToList(form.features),
         is_active: form.is_active,
         is_public: form.is_public,
@@ -1025,24 +1019,6 @@ export default function SystemPlanCreatePage() {
                   <FieldError message={errors.max_warehouses} />
                 </div>
 
-                <div className="space-y-2">
-                  <label className={labelClass()} htmlFor="max_pos">
-                    {t.maxPos}
-                  </label>
-                  <Input
-                    id="max_pos"
-                    type="text"
-                    inputMode="numeric"
-                    dir="ltr"
-                    value={form.max_pos}
-                    onChange={(event) =>
-                      updateField("max_pos", cleanIntegerInput(event.target.value))
-                    }
-                    className={numericInputClass()}
-                    disabled={submitting}
-                  />
-                  <FieldError message={errors.max_pos} />
-                </div>
               </CardContent>
             </Card>
 
@@ -1249,8 +1225,6 @@ export default function SystemPlanCreatePage() {
                   </div>
                   <div className="rounded-2xl border bg-background p-3">
                     <Coins className="mb-2 h-4 w-4 text-muted-foreground" />
-                    <p dir="ltr" className="font-semibold tabular-nums">{form.max_pos || "0"}</p>
-                    <p className="text-xs text-muted-foreground">{t.maxPos}</p>
                   </div>
                 </div>
               </CardContent>

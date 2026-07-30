@@ -44,7 +44,6 @@ class WhatsAppTemplateCategory(models.TextChoices):
     SALES = "SALES", "Sales"
     PURCHASES = "PURCHASES", "Purchases"
     TREASURY = "TREASURY", "Treasury"
-    POS = "POS", "POS"
     ACCOUNTING = "ACCOUNTING", "Accounting"
     INVENTORY = "INVENTORY", "Inventory"
     CUSTOMER_SERVICE = "CUSTOMER_SERVICE", "Customer Service"
@@ -71,8 +70,6 @@ class WhatsAppMessageSourceType(models.TextChoices):
     PURCHASE_BILL = "PURCHASE_BILL", "Purchase Bill"
     CUSTOMER_PAYMENT = "CUSTOMER_PAYMENT", "Customer Payment"
     SUPPLIER_PAYMENT = "SUPPLIER_PAYMENT", "Supplier Payment"
-    POS_ORDER = "POS_ORDER", "POS Order"
-    POS_RETURN = "POS_RETURN", "POS Return"
     INVENTORY_MOVEMENT = "INVENTORY_MOVEMENT", "Inventory Movement"
     SYSTEM = "SYSTEM", "System"
 

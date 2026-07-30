@@ -31,7 +31,6 @@ class DocumentType(models.TextChoices):
     CUSTOMER_RECEIPT = "CUSTOMER_RECEIPT", "Customer receipt"
     SUPPLIER_PAYMENT = "SUPPLIER_PAYMENT", "Supplier payment"
     JOURNAL_ENTRY = "JOURNAL_ENTRY", "Journal entry"
-    POS_RECEIPT = "POS_RECEIPT", "POS receipt"
 
 
 class DocumentTemplateLayout(models.TextChoices):

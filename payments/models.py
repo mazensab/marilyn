@@ -526,7 +526,6 @@ class PaymentCheckoutSession(models.Model):
     This model is intentionally generic so it can support:
     - sales invoices
     - sales orders
-    - POS orders
     - subscription payments
     - manual company payments
     """
@@ -535,7 +534,6 @@ class PaymentCheckoutSession(models.Model):
         MANUAL = "MANUAL", "Manual"
         SALES_ORDER = "SALES_ORDER", "Sales Order"
         SALES_INVOICE = "SALES_INVOICE", "Sales Invoice"
-        POS_ORDER = "POS_ORDER", "POS Order"
         SUBSCRIPTION = "SUBSCRIPTION", "Subscription"
         OTHER = "OTHER", "Other"
 

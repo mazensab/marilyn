@@ -112,7 +112,6 @@ type PlanRecord = {
   max_users: number;
   max_branches: number;
   max_warehouses: number;
-  max_pos: number;
   features: string[];
   is_active: boolean;
   is_public: boolean;
@@ -245,7 +244,6 @@ const translations = {
     users: "مستخدم",
     branches: "فرع",
     warehouses: "مخزن",
-    pos: "نقطة بيع",
     companies: "الشركات",
     features: "\u0645\u062c\u0645\u0648\u0639\u0627\u062a \u0627\u0644\u0645\u064a\u0632\u0627\u062a",
     status: "الحالة",
@@ -350,7 +348,6 @@ const translations = {
     users: "users",
     branches: "branches",
     warehouses: "warehouses",
-    pos: "POS",
     companies: "Companies",
     features: "Feature groups",
     status: "Status",
@@ -589,7 +586,6 @@ function normalizePlan(value: unknown): PlanRecord {
     max_users: toNumber(record.max_users ?? limits.max_users, 0),
     max_branches: toNumber(record.max_branches ?? limits.max_branches, 0),
     max_warehouses: toNumber(record.max_warehouses ?? limits.max_warehouses, 0),
-    max_pos: toNumber(record.max_pos ?? limits.max_pos, 0),
     features: normalizeFeatures(record.features),
     is_active: toBoolean(record.is_active ?? record.active ?? record.status, true),
     is_public: toBoolean(record.is_public ?? record.public ?? record.visibility, true),
@@ -1014,7 +1010,6 @@ export default function SystemPlansReportsPage() {
       plan.max_users,
       plan.max_branches,
       plan.max_warehouses,
-      plan.max_pos,
       plan.companies_count,
       plan.features.map((feature) => getFeatureLabel(feature, locale)).join(", "),
       plan.is_active ? t.active : t.inactive,
@@ -1032,7 +1027,6 @@ export default function SystemPlansReportsPage() {
       t.users,
       t.branches,
       t.warehouses,
-      t.pos,
       t.companies,
       t.features,
       t.status,
@@ -1495,24 +1489,6 @@ export default function SystemPlansReportsPage() {
                           </TableCell>
 
                           <TableCell className={cn("px-4", alignClass)}>
-                            <div className="grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
-                              <span className="inline-flex items-center gap-1">
-                                <UsersRound className="h-3.5 w-3.5" />
-                                {formatInteger(plan.max_users)} {t.users}
-                              </span>
-                              <span className="inline-flex items-center gap-1">
-                                <Activity className="h-3.5 w-3.5" />
-                                {formatInteger(plan.max_branches)} {t.branches}
-                              </span>
-                              <span className="inline-flex items-center gap-1">
-                                <Warehouse className="h-3.5 w-3.5" />
-                                {formatInteger(plan.max_warehouses)} {t.warehouses}
-                              </span>
-                              <span className="inline-flex items-center gap-1">
-                                <Zap className="h-3.5 w-3.5" />
-                                {formatInteger(plan.max_pos)} {t.pos}
-                              </span>
-                            </div>
                           </TableCell>
 
                           <TableCell className={cn("px-4", alignClass)}>

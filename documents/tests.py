@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # 📂 documents/tests.py
 # 🧠 Mhamcloud | Documents Templates Tests V1.1
 # ------------------------------------------------------------
@@ -344,19 +344,19 @@ class DocumentTemplateServicesTests(TestCase):
             user=self.user,
             data={
                 "name": "POS Template",
-                "document_type": DocumentType.POS_RECEIPT,
+                "document_type": DocumentType.CUSTOMER_RECEIPT,
             },
         )
 
         templates = list(
             get_company_document_templates(
                 company=self.company,
-                document_type=DocumentType.POS_RECEIPT,
+                document_type=DocumentType.CUSTOMER_RECEIPT,
             )
         )
 
         self.assertEqual(len(templates), 1)
-        self.assertEqual(templates[0].document_type, DocumentType.POS_RECEIPT)
+        self.assertEqual(templates[0].document_type, DocumentType.CUSTOMER_RECEIPT)
 
 
 class CompanyDocumentTemplatesAPITests(TestCase):
@@ -484,12 +484,12 @@ class CompanyDocumentTemplatesAPITests(TestCase):
             user=self.owner,
             data={
                 "name": "POS API Template",
-                "document_type": DocumentType.POS_RECEIPT,
+                "document_type": DocumentType.CUSTOMER_RECEIPT,
             },
         )
 
         response = self.client.get(
-            "/api/company/documents/templates/?document_type=POS_RECEIPT",
+            "/api/company/documents/templates/?document_type=CUSTOMER_RECEIPT",
             **self.company_headers(),
         )
 
@@ -810,7 +810,7 @@ class DocumentRenderingServicesTests(TestCase):
     def test_thermal_html_uses_thermal_width(self):
         request_data = normalize_document_render_request(
             {
-                "document_type": DocumentType.POS_RECEIPT,
+                "document_type": DocumentType.CUSTOMER_RECEIPT,
                 "source_type": "preview",
                 "thermal_width": "58MM",
             }
@@ -913,7 +913,7 @@ class CompanyDocumentRenderingAPITests(TestCase):
         response = self.client.post(
             "/api/company/documents/thermal/",
             data={
-                "document_type": DocumentType.POS_RECEIPT,
+                "document_type": DocumentType.CUSTOMER_RECEIPT,
                 "source_type": "preview",
                 "thermal_width": "80MM",
                 "as_json": True,

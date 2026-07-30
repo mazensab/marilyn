@@ -224,7 +224,6 @@ def _summary_payload(base_queryset: QuerySet[Branch]) -> dict[str, Any]:
         "head_office": base_queryset.filter(branch_type="HEAD_OFFICE").count(),
         "branches": base_queryset.filter(branch_type="BRANCH").count(),
         "warehouses": base_queryset.filter(branch_type="WAREHOUSE").count(),
-        "pos": base_queryset.filter(branch_type="POS").count(),
         "service_centers": base_queryset.filter(branch_type="SERVICE_CENTER").count(),
     }
 

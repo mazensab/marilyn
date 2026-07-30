@@ -669,7 +669,6 @@ class CompanyWorkspacePhase3Tests(TestCase):
             "payment_prefix": "PMT",
             "allow_negative_stock": False,
             "enable_inventory_tracking": True,
-            "enable_pos": True,
             "enable_purchases": True,
             "enable_hr": True,
             "enable_vat": True,

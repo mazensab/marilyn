@@ -230,7 +230,6 @@ class BranchType(models.TextChoices):
     HEAD_OFFICE = "HEAD_OFFICE", "Head office"
     BRANCH = "BRANCH", "Branch"
     WAREHOUSE = "WAREHOUSE", "Warehouse"
-    POS = "POS", "POS"
     SERVICE_CENTER = "SERVICE_CENTER", "Service center"
 
 
@@ -667,10 +666,6 @@ class CompanySettings(models.Model):
         default=True,
         verbose_name="Enable inventory tracking",
     )
-    enable_pos = models.BooleanField(
-        default=True,
-        verbose_name="Enable POS",
-    )
     enable_purchases = models.BooleanField(
         default=True,
         verbose_name="Enable purchases",
@@ -739,7 +734,6 @@ class CompanySettings(models.Model):
         ordering = ["-created_at"]
         indexes = [
             models.Index(fields=["default_language"]),
-            models.Index(fields=["enable_pos", "enable_inventory_tracking"]),
             models.Index(fields=["enable_vat"]),
         ]
 

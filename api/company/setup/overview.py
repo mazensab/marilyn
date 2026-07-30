@@ -145,7 +145,6 @@ def _settings_payload(settings_obj: CompanySettings) -> dict[str, Any]:
         "payment_prefix": settings_obj.payment_prefix,
         "allow_negative_stock": settings_obj.allow_negative_stock,
         "enable_inventory_tracking": settings_obj.enable_inventory_tracking,
-        "enable_pos": settings_obj.enable_pos,
         "enable_purchases": settings_obj.enable_purchases,
         "enable_hr": settings_obj.enable_hr,
         "enable_vat": settings_obj.enable_vat,

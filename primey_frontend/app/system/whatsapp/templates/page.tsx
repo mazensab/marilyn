@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 /* ============================================================
    📂 primey_frontend/app/system/whatsapp/templates/page.tsx
    💬 Mhamcloud — System WhatsApp Templates Page
@@ -43,7 +43,7 @@ import { cn } from "@/lib/utils";
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
 type StatusFilter = "all" | "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
-type CategoryFilter = "all" | "GENERAL" | "SALES" | "PURCHASES" | "TREASURY" | "POS" | "ACCOUNTING" | "INVENTORY" | "CUSTOMER_SERVICE";
+type CategoryFilter = "all" | "GENERAL" | "SALES" | "PURCHASES" | "TREASURY" | "ACCOUNTING" | "INVENTORY" | "CUSTOMER_SERVICE";
 type SortKey = "newest" | "oldest" | "name" | "code" | "status";
 type TemplateRow = {
   id: string;
@@ -117,7 +117,6 @@ const tr = {
     SALES: "المبيعات",
     PURCHASES: "المشتريات",
     TREASURY: "الخزينة",
-    POS: "نقاط البيع",
     ACCOUNTING: "المحاسبة",
     INVENTORY: "المخزون",
     CUSTOMER_SERVICE: "خدمة العملاء",
@@ -192,7 +191,6 @@ const tr = {
     SALES: "Sales",
     PURCHASES: "Purchases",
     TREASURY: "Treasury",
-    POS: "POS",
     ACCOUNTING: "Accounting",
     INVENTORY: "Inventory",
     CUSTOMER_SERVICE: "Customer service",
@@ -636,7 +634,6 @@ export default function SystemWhatsAppTemplatesPage() {
                 <option value="SALES">{t.SALES}</option>
                 <option value="PURCHASES">{t.PURCHASES}</option>
                 <option value="TREASURY">{t.TREASURY}</option>
-                <option value="POS">{t.POS}</option>
                 <option value="ACCOUNTING">{t.ACCOUNTING}</option>
                 <option value="INVENTORY">{t.INVENTORY}</option>
                 <option value="CUSTOMER_SERVICE">{t.CUSTOMER_SERVICE}</option>

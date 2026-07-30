@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # ًں“‚ api/system/billing_documents/tests.py
 # ًں§  Mhamcloud | System Billing Documents API Tests V1.0
 # ------------------------------------------------------------
@@ -129,7 +129,6 @@ class SystemBillingDocumentsAPITests(TestCase):
             max_users=50,
             max_branches=5,
             max_warehouses=3,
-            max_pos=3,
             features=[
                 "accounting",
                 "sales",

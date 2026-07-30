@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # ًں“‚ billing/services.py
 # ًں§  Mhamcloud | Platform Billing Documents Services V1.2
 # ------------------------------------------------------------
@@ -547,11 +547,6 @@ def build_subscription_plan_snapshot(
         "max_warehouses": getattr(
             plan,
             "max_warehouses",
-            None,
-        ),
-        "max_pos": getattr(
-            plan,
-            "max_pos",
             None,
         ),
         "features": list(features),

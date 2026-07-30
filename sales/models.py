@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # 📂 sales/models.py
 # 🧠 Mhamcloud | Sales Models V1.3
 # ------------------------------------------------------------
@@ -102,13 +102,12 @@ class SalesInvoiceSource(models.TextChoices):
     """
     Source of invoice creation.
 
-    This allows future POS, online checkout, recurring invoices,
+    This allows online checkout, recurring invoices,
     and API integrations without changing invoice identity.
     """
 
     MANUAL = "MANUAL", "Manual"
     SALES_ORDER = "SALES_ORDER", "Sales order"
-    POS = "POS", "POS"
     ONLINE = "ONLINE", "Online"
     IMPORT = "IMPORT", "Import"
     API = "API", "API"
@@ -7937,5 +7936,3 @@ class CustomerCreditAllocation(models.Model):
 
 # End Phase 21.6.1 - Customer Credit Balance Models Foundation
 # ============================================================
-
-

@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # 📂 billing/tests.py
 # 🧠 Mhamcloud | Platform Billing Documents Tests V1.2
 # ------------------------------------------------------------
@@ -455,7 +455,6 @@ class PlatformSubscriptionInvoiceTests(TestCase):
             max_users=50,
             max_branches=5,
             max_warehouses=3,
-            max_pos=3,
             features=[
                 "accounting",
                 "sales",

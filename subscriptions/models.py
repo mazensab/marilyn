@@ -109,10 +109,6 @@ class SubscriptionPlan(models.Model):
         default=0,
         verbose_name="الحد الأقصى للمستودعات",
     )
-    max_pos = models.PositiveIntegerField(
-        default=0,
-        verbose_name="الحد الأقصى لنقاط البيع",
-    )
 
     features = models.JSONField(
         default=list,

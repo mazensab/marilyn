@@ -87,7 +87,6 @@ def _plan_payload(plan: SubscriptionPlan) -> dict[str, Any]:
         "max_users": plan.max_users,
         "max_branches": plan.max_branches,
         "max_warehouses": plan.max_warehouses,
-        "max_pos": plan.max_pos,
         "features": plan.features if isinstance(plan.features, list) else [],
         "is_active": plan.is_active,
         "is_public": plan.is_public,

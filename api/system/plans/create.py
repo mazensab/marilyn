@@ -190,7 +190,6 @@ def _plan_payload(plan: SubscriptionPlan) -> dict[str, Any]:
         "max_users": plan.max_users,
         "max_branches": plan.max_branches,
         "max_warehouses": plan.max_warehouses,
-        "max_pos": plan.max_pos,
         "features": plan.features if isinstance(plan.features, list) else [],
         "is_active": plan.is_active,
         "is_public": plan.is_public,
@@ -305,10 +304,6 @@ def system_plan_create(request: HttpRequest) -> JsonResponse:
             _get_value(request, payload, "max_warehouses", 0),
             default=0,
         )
-        max_pos = _to_positive_int(
-            _get_value(request, payload, "max_pos", 0),
-            default=0,
-        )
         sort_order = _to_positive_int(
             _get_value(request, payload, "sort_order", 0),
             default=0,
@@ -347,7 +342,6 @@ def system_plan_create(request: HttpRequest) -> JsonResponse:
                 "max_users": max_users,
                 "max_branches": max_branches,
                 "max_warehouses": max_warehouses,
-                "max_pos": max_pos,
                 "features": features,
                 "is_active": is_active,
                 "is_public": is_public,
