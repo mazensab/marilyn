@@ -32,6 +32,7 @@ import {
   History,
   Loader2,
   MoreVertical,
+  Plus,
   Printer,
   RefreshCw,
   RotateCcw,
@@ -100,6 +101,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AppointmentBookingDialog,
+  AppointmentRescheduleDialog,
+} from "@/app/company/_components/company-appointment-booking-dialogs";
 import { cn } from "@/lib/utils";
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
@@ -132,6 +137,7 @@ type AppointmentRecord = {
   canReschedule: boolean;
   isTerminal: boolean;
   rescheduleCount: number;
+  practitionerServiceAssignmentId: string;
   bookingMode: string;
   totalSlotMinutes: number;
   priceSnapshot: number;
@@ -184,6 +190,8 @@ const translations = {
     detailSubtitle:
       "عرض بيانات الحجز والمريض والممارس والخدمة ودورة حياة الموعد.",
     back: "العودة إلى المواعيد",
+    newAppointment: "إضافة موعد",
+    reschedule: "إعادة الجدولة",
     refresh: "تحديث",
     export: "تصدير Excel",
     print: "طباعة",
@@ -303,6 +311,8 @@ const translations = {
     detailSubtitle:
       "View booking, patient, practitioner, service, and lifecycle information.",
     back: "Back to appointments",
+    newAppointment: "New appointment",
+    reschedule: "Reschedule",
     refresh: "Refresh",
     export: "Export Excel",
     print: "Print",
@@ -1008,6 +1018,11 @@ function normalizeAppointment(
       numberValue(
         record.reschedule_count,
       ),
+    practitionerServiceAssignmentId:
+      text(
+        record.practitioner_service_assignment_id,
+      ) ||
+      text(serviceAssignment.id),
     bookingMode:
       text(record.booking_mode),
     totalSlotMinutes:
@@ -1902,6 +1917,14 @@ export function CompanyAppointmentsPage() {
   ] = React.useState("");
   const [actionId, setActionId] =
     React.useState("");
+  const [createOpen, setCreateOpen] =
+    React.useState(false);
+  const [
+    rescheduleTarget,
+    setRescheduleTarget,
+  ] = React.useState<
+    AppointmentRecord | null
+  >(null);
   const t = translations[locale];
   const dir =
     locale === "ar" ? "rtl" : "ltr";
@@ -2572,8 +2595,21 @@ export function CompanyAppointmentsPage() {
                     <ExternalLink className="h-4 w-4" />
                     {t.openDetails}
                   </DropdownMenuItem>
+                  {row.canReschedule ? (
+                    <DropdownMenuItem
+                      onSelect={() =>
+                        setRescheduleTarget(
+                          row,
+                        )
+                      }
+                    >
+                      <History className="h-4 w-4" />
+                      {t.reschedule}
+                    </DropdownMenuItem>
+                  ) : null}
                   {row.allowedStatuses
-                    .length ? (
+                    .length ||
+                  row.canReschedule ? (
                     <DropdownMenuSeparator />
                   ) : null}
                   {row.allowedStatuses.map(
@@ -2626,6 +2662,7 @@ export function CompanyAppointmentsPage() {
         t.openDetails,
         t.patient,
         t.practitioner,
+        t.reschedule,
         t.schedule,
         t.service,
         t.status,
@@ -2731,6 +2768,15 @@ export function CompanyAppointmentsPage() {
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              onClick={() =>
+                setCreateOpen(true)
+              }
+            >
+              <Plus className="h-4 w-4" />
+              {t.newAppointment}
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -2947,6 +2993,62 @@ export function CompanyAppointmentsPage() {
             />
           </CardContent>
         </Card>
+        <AppointmentBookingDialog
+          locale={locale}
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          onCompleted={async (
+            appointmentId,
+          ) => {
+            await loadAppointments({
+              silent: true,
+            });
+            if (appointmentId) {
+              router.push(
+                `/company/appointments/${encodeURIComponent(
+                  appointmentId,
+                )}`,
+              );
+            }
+          }}
+        />
+        <AppointmentRescheduleDialog
+          locale={locale}
+          open={Boolean(
+            rescheduleTarget,
+          )}
+          onOpenChange={(open) => {
+            if (!open) {
+              setRescheduleTarget(null);
+            }
+          }}
+          appointment={
+            rescheduleTarget
+              ? {
+                  id:
+                    rescheduleTarget.id,
+                  appointmentNumber:
+                    rescheduleTarget
+                      .appointmentNumber,
+                  practitionerServiceAssignmentId:
+                    rescheduleTarget
+                      .practitionerServiceAssignmentId,
+                  scheduledStart:
+                    rescheduleTarget
+                      .scheduledStart,
+                  canReschedule:
+                    rescheduleTarget
+                      .canReschedule,
+                }
+              : null
+          }
+          onCompleted={async () => {
+            setRescheduleTarget(null);
+            await loadAppointments({
+              silent: true,
+            });
+          }}
+        />
         <LifecycleDialogs
           locale={locale}
           transitionTarget={
@@ -3014,6 +3116,10 @@ export function CompanyAppointmentDetailPage() {
   ] = React.useState("");
   const [actionBusy, setActionBusy] =
     React.useState(false);
+  const [
+    rescheduleOpen,
+    setRescheduleOpen,
+  ] = React.useState(false);
   const t = translations[locale];
   const dir =
     locale === "ar" ? "rtl" : "ltr";
@@ -3475,6 +3581,17 @@ export function CompanyAppointmentDetailPage() {
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {appointment.canReschedule ? (
+              <Button
+                type="button"
+                onClick={() =>
+                  setRescheduleOpen(true)
+                }
+              >
+                <History className="h-4 w-4" />
+                {t.reschedule}
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="outline"
@@ -3890,6 +4007,31 @@ export function CompanyAppointmentDetailPage() {
             </Card>
           </div>
         </div>
+        <AppointmentRescheduleDialog
+          locale={locale}
+          open={rescheduleOpen}
+          onOpenChange={
+            setRescheduleOpen
+          }
+          appointment={{
+            id: appointment.id,
+            appointmentNumber:
+              appointment.appointmentNumber,
+            practitionerServiceAssignmentId:
+              appointment
+                .practitionerServiceAssignmentId,
+            scheduledStart:
+              appointment.scheduledStart,
+            canReschedule:
+              appointment.canReschedule,
+          }}
+          onCompleted={async () => {
+            setRescheduleOpen(false);
+            await loadAppointment({
+              silent: true,
+            });
+          }}
+        />
         <LifecycleDialogs
           locale={locale}
           transitionTarget={
