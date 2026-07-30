@@ -5,17 +5,20 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  BarChart3,
-  Building2,
+  ArrowLeft,
+  ArrowRight,
+  CalendarCheck2,
   CheckCircle2,
-  CreditCard,
   Eye,
   EyeOff,
+  FileHeart,
+  HeartPulse,
   Languages,
   Loader2,
   LockKeyhole,
   ShieldCheck,
-  User2,
+  Sparkles,
+  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -23,16 +26,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 /* =========================================================
-   📌 Marilyn Clinics - Unified Login Page
+   Marilyn Clinics - Unified Login Page
    Path: marilyn_frontend/app/(guest)/login/page.tsx
 
-   ✅ صفحة دخول موحدة للنظام والشركات
-   ✅ دخول آمن: username/password
-   ✅ يدعم العربية والإنجليزية
-   ✅ يدعم RTL / LTR
-   ✅ CSRF + Cookies Session
-   ✅ Redirect ذكي حسب whoami/dashboard_path
-   ✅ Sonner Toasts
+   - صفحة دخول واحدة لجميع المستخدمين.
+   - التوجيه بعد الدخول حسب whoami/dashboard_path.
+   - لا توجد واجهات دخول مستقلة للأدوار.
+   - CSRF + Cookies Session.
+   - Arabic / English.
+   - RTL / LTR.
+   - Sonner Toasts.
+   - جميع العناصر مبنية من UI المشروع دون مصادر خارجية.
 ========================================================= */
 
 type AppLocale = "ar" | "en";
@@ -77,6 +81,7 @@ type WhoAmIResponse = {
 type JsonObject = Record<string, unknown>;
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "";
+const FALLBACK_LOGIN_MODE: LoginMode = "company";
 
 function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -133,6 +138,7 @@ function extractApiMessage(data: unknown, fallback: string): string {
   if (directMessage) return directMessage;
 
   const errors = payload.errors;
+
   if (errors && typeof errors === "object") {
     const firstValue = Object.values(errors as JsonObject)[0];
     const message = firstString(firstValue);
@@ -152,7 +158,7 @@ function extractIds(user: WhoAmIResponse | null) {
   const profileExtra = user?.profile?.extra_data ?? {};
   const defaultMembership = user?.default_membership ?? null;
   const firstMembership = Array.isArray(user?.memberships)
-    ? user?.memberships?.[0]
+    ? user.memberships[0]
     : null;
 
   return {
@@ -176,11 +182,14 @@ function isSystemUser(user: WhoAmIResponse | null): boolean {
   const normalizedRole = normalizeUpper(
     user.role || user.profile?.role || user.default_membership?.role
   );
+
   const normalizedUserType = normalizeUpper(
     user.user_type || user.profile?.user_type
   );
+
   const normalizedScope = normalizeUpper(user.scope_type || user.workspace);
   const permissions = user.permissions || {};
+
   const groups = Array.isArray(permissions.groups)
     ? permissions.groups.map((item) => normalizeUpper(item))
     : [];
@@ -216,6 +225,7 @@ function resolveRedirectPath(
   }
 
   const dashboardPath = String(user.dashboard_path || "").trim();
+
   if (dashboardPath.startsWith("/")) {
     return dashboardPath;
   }
@@ -223,6 +233,7 @@ function resolveRedirectPath(
   const workspace = normalizeUpper(
     user.workspace || user.scope_type || user.default_membership?.workspace
   );
+
   const { companyId, agentId } = extractIds(user);
   const role = normalizeUpper(user.role || user.profile?.role);
 
@@ -265,8 +276,6 @@ export default function Page() {
   const router = useRouter();
 
   const [locale, setLocale] = useState<AppLocale>("ar");
-  const [mode, setMode] = useState<LoginMode>("company");
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -276,73 +285,89 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
 
   const isArabic = locale === "ar";
+  const DirectionArrow = isArabic ? ArrowLeft : ArrowRight;
 
   const content = useMemo(
     () => ({
-      title: isArabic ? "مرحبا بعودتك إلى Marilyn Clinics" : "Welcome back to Marilyn Clinics",
+      title: isArabic ? "مرحبا بعودتك" : "Welcome Back",
       subtitle: isArabic
-        ? "سجل الدخول لإدارة المرضى والمواعيد والسجلات الطبية والفوترة والمدفوعات من منصة واحدة آمنة."
-        : "Sign in to manage patients, appointments, medical records, billing, and payments from one secure platform.",
-
-      systemTab: isArabic ? "إدارة المنصة" : "Platform admin",
-      companyTab: isArabic ? "بوابة المنشأة الطبية" : "Medical organization portal",
+        ? "سجل الدخول للمتابعة إلى Marilyn Clinics"
+        : "Sign in to continue to Marilyn Clinics",
 
       usernameLabel: isArabic ? "اسم المستخدم" : "Username",
+      usernamePlaceholder: isArabic
+        ? "أدخل اسم المستخدم"
+        : "Enter your username",
+
       passwordLabel: isArabic ? "كلمة المرور" : "Password",
+      passwordPlaceholder: isArabic
+        ? "أدخل كلمة المرور"
+        : "Enter your password",
+
       remember: isArabic ? "تذكرني" : "Remember me",
-      resetPassword: isArabic ? "إعادة تعيين كلمة المرور" : "Reset password?",
-      login: isArabic ? "تسجيل الدخول" : "Sign in",
+      resetPassword: isArabic ? "نسيت كلمة المرور" : "Forgot password?",
+      login: isArabic ? "تسجيل الدخول" : "Log in",
       loading: isArabic ? "جار تسجيل الدخول..." : "Signing in...",
+
+      languageButton: isArabic ? "English" : "العربية",
       passwordShow: isArabic ? "إظهار كلمة المرور" : "Show password",
       passwordHide: isArabic ? "إخفاء كلمة المرور" : "Hide password",
-      securityNote: isArabic
-        ? "جلسة دخول آمنة ومحمية"
-        : "Secure protected session",
-      welcomeBadge: isArabic ? "بوابة الدخول" : "Access portal",
+
+      secureBadge: isArabic
+        ? "دخول آمن ومحمي"
+        : "Secure protected access",
+
+      securityFooter: isArabic
+        ? "يتم توجيهك تلقائيا حسب دورك وصلاحياتك ونطاق المنشأة أو الفرع."
+        : "You will be routed automatically based on your role, permissions, organization, and branch scope.",
+
+      requiredFields: isArabic
+        ? "يرجى تعبئة اسم المستخدم وكلمة المرور"
+        : "Please enter your username and password",
+
       invalidCredentials: isArabic
         ? "اسم المستخدم أو كلمة المرور غير صحيحة"
         : "Invalid username or password",
+
       csrfMissing: isArabic
         ? "تعذر تجهيز جلسة الأمان حاول مرة أخرى"
-        : "Unable to initialize secure session, please try again",
+        : "Unable to initialize the secure session. Please try again.",
+
       sessionFailed: isArabic
         ? "تم تسجيل الدخول لكن تعذر التحقق من الجلسة"
         : "Signed in, but session validation failed",
+
       loginFailed: isArabic ? "فشل تسجيل الدخول" : "Login failed",
-      requiredFields: isArabic
-        ? "يرجى تعبئة اسم المستخدم وكلمة المرور"
-        : "Please enter username and password",
       loginSuccess: isArabic
         ? "تم تسجيل الدخول بنجاح"
         : "Signed in successfully",
-      usernamePlaceholder: isArabic ? "أدخل اسم المستخدم" : "Enter username",
-      passwordPlaceholder: isArabic ? "أدخل كلمة المرور" : "Enter password",
-      modeNote:
-        mode === "system"
-          ? isArabic
-            ? "دخول إدارة المنصة مخصص لفريق Marilyn Clinics وصلاحيات النظام العليا."
-            : "Platform admin access is for Marilyn Clinics internal and system-level roles."
-          : isArabic
-            ? "دخول المنشأة الطبية مخصص للمالك ومدير العيادة والممارسين والموظفين حسب صلاحيات العضوية."
-            : "Medical organization portal access is for owners, clinic administrators, practitioners, and staff based on membership permissions.",
-      formTitle:
-        mode === "system"
-          ? isArabic
-            ? "دخول إدارة Marilyn Clinics"
-            : "Marilyn Clinics admin sign in"
-          : isArabic
-            ? "دخول حساب المنشأة الطبية"
-            : "Medical organization account sign in",
-      formSubtitle:
-        mode === "system"
-          ? isArabic
-            ? "استخدم بيانات حساب النظام للوصول إلى لوحة إدارة المنصة."
-            : "Use your system account credentials to access the platform dashboard."
-          : isArabic
-            ? "استخدم بيانات حسابك للوصول إلى مساحة شركتك وعملياتك المالية."
-            : "Use your account credentials to access your company workspace and financial operations.",
+
+      visualEyebrow: isArabic
+        ? "رعاية مصممة حول المريض"
+        : "CAREFULLY DESIGNED FOR CARE",
+
+      visualTopLine: isArabic
+        ? "تقنية متطورة. تجربة إنسانية."
+        : "SMART TECHNOLOGY. HUMAN EXPERIENCE.",
+
+      visualTitleOne: isArabic ? "الجمال." : "Beauty.",
+      visualTitleTwo: isArabic ? "العناية." : "Care.",
+      visualTitleThree: isArabic ? "بمستوى أرقى." : "Elevated.",
+
+      visualDescription: isArabic
+        ? "تجربة متكاملة لإدارة العيادات والمواعيد والملفات الطبية والمدفوعات مصممة لتقديم رعاية أكثر سلاسة وخصوصية."
+        : "A complete experience for clinics, appointments, medical records, and payments—designed for smoother, more private care.",
+
+      visualAction: isArabic ? "اكتشف التجربة" : "Explore the experience",
+
+      featureOne: isArabic ? "تجربة شخصية" : "Personal Care",
+      featureTwo: isArabic ? "ملفات آمنة" : "Secure Records",
+      featureThree: isArabic ? "مواعيد ذكية" : "Smart Booking",
+
+      bottleLabel: isArabic ? "عناية متكاملة" : "COMPLETE CARE",
+      bottleSubLabel: "MARILYN",
     }),
-    [isArabic, mode]
+    [isArabic]
   );
 
   useEffect(() => {
@@ -355,6 +380,7 @@ export default function Page() {
           : null;
 
       const nextLocale: AppLocale = savedLocale === "en" ? "en" : "ar";
+
       setLocale(nextLocale);
 
       if (typeof document !== "undefined") {
@@ -370,6 +396,7 @@ export default function Page() {
   const toggleLanguage = () => {
     try {
       const nextLocale: AppLocale = locale === "ar" ? "en" : "ar";
+
       setLocale(nextLocale);
 
       if (typeof window !== "undefined") {
@@ -387,14 +414,7 @@ export default function Page() {
     }
   };
 
-  const switchMode = (nextMode: LoginMode) => {
-    if (loading) return;
-
-    setMode(nextMode);
-    setError(null);
-  };
-
-  const fetchWhoamiAndRedirect = async (preferredMode: LoginMode) => {
+  const fetchWhoamiAndRedirect = async () => {
     const whoamiResponse = await fetch(resolveApiUrl("/api/auth/whoami/"), {
       method: "GET",
       credentials: "include",
@@ -406,14 +426,11 @@ export default function Page() {
     }
 
     const user = (await whoamiResponse.json()) as WhoAmIResponse;
-    const redirectPath = resolveRedirectPath(user, preferredMode);
+    const redirectPath = resolveRedirectPath(user, FALLBACK_LOGIN_MODE);
 
     router.replace(redirectPath);
   };
 
-  /* =========================================================
-     🚀 Marilyn Clinics Login Handler
-  ========================================================= */
   const handleLoginSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -458,7 +475,7 @@ export default function Page() {
       }
 
       toast.success(content.loginSuccess);
-      await fetchWhoamiAndRedirect(mode);
+      await fetchWhoamiAndRedirect();
     } catch (err) {
       const message = err instanceof Error ? err.message : content.loginFailed;
 
@@ -473,354 +490,217 @@ export default function Page() {
   return (
     <main
       dir={isArabic ? "rtl" : "ltr"}
-      className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(67,42,88,0.14),_transparent_32%),radial-gradient(circle_at_bottom,_rgba(140,156,220,0.14),_transparent_36%),linear-gradient(to_bottom_right,_hsl(var(--background)),_hsl(var(--muted)/0.55))]"
+      className="relative h-dvh overflow-hidden bg-[#e9e1d7] text-[#29241f]"
     >
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary/10 to-transparent" />
-        <div className="absolute -left-16 top-24 h-52 w-52 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -right-16 bottom-16 h-60 w-60 rounded-full bg-[#8c9cdc]/15 blur-3xl" />
+      <style jsx global>{`
+        #login-form input:-webkit-autofill,
+        #login-form input:-webkit-autofill:hover,
+        #login-form input:-webkit-autofill:focus,
+        #login-form input:-webkit-autofill:active {
+          -webkit-text-fill-color: #2f2a25 !important;
+          caret-color: #2f2a25;
+          -webkit-box-shadow:
+            0 0 0 1000px rgba(249, 246, 241, 0.96) inset !important;
+          box-shadow:
+            0 0 0 1000px rgba(249, 246, 241, 0.96) inset !important;
+          transition: background-color 9999s ease-out 0s;
+        }
+      `}</style>
+
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(255,255,255,0.92),transparent_31%),radial-gradient(circle_at_88%_76%,rgba(206,180,138,0.2),transparent_34%),linear-gradient(145deg,#eee7de_0%,#e7ded3_44%,#f0ebe4_100%)]" />
+
+        <div className="absolute -left-24 top-[-5rem] h-[30rem] w-[11rem] rotate-[38deg] rounded-full bg-white/50 blur-2xl" />
+        <div className="absolute left-[10%] top-[-8rem] h-[32rem] w-[5rem] rotate-[38deg] rounded-full bg-white/35 blur-xl" />
+        <div className="absolute right-[4%] top-0 h-full w-px bg-white/40" />
+        <div className="absolute right-[5.5%] top-0 h-full w-px bg-[#c6b8a5]/25" />
+        <div className="absolute right-[7%] top-0 h-full w-px bg-white/40" />
+
+        <div className="absolute -bottom-20 -left-16 h-72 w-72 rounded-full border-[44px] border-white/25 blur-[1px]" />
+        <div className="absolute -bottom-36 right-[-5rem] h-96 w-96 rounded-full bg-[#d8c2a4]/20 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid w-full max-w-6xl overflow-hidden rounded-[32px] border border-white/20 bg-background/80 shadow-2xl backdrop-blur-xl lg:grid-cols-2">
-          <section className="relative hidden min-h-[720px] overflow-hidden bg-gradient-to-br from-[#432a58] via-primary to-[#8c9cdc] text-white lg:flex">
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-            <div className="absolute right-[-80px] top-[-80px] h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-            <div className="absolute bottom-[-90px] left-[-90px] h-80 w-80 rounded-full bg-black/10 blur-3xl" />
-
-            <div className="relative z-10 flex h-full w-full flex-col justify-between p-10 xl:p-14">
-              <div
-                className={`flex items-center gap-3 ${
-                  isArabic ? "flex-row-reverse" : ""
-                }`}
-              >
-                <div className="rounded-2xl bg-white/15 p-3 backdrop-blur">
-                  <ShieldCheck className="h-6 w-6" />
-                </div>
-                <div className={isArabic ? "text-right" : "text-left"}>
-                  <p className="text-sm font-medium text-white/80">
-                    {content.welcomeBadge}
-                  </p>
-                  <h1 className="text-2xl font-bold tracking-tight">
-                    Marilyn Clinics
-                  </h1>
-                </div>
-              </div>
-
-              <div className={isArabic ? "text-right" : "text-left"}>
-                <div
-                  className={`mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm backdrop-blur ${
-                    isArabic ? "flex-row-reverse" : ""
-                  }`}
-                >
-                  <LockKeyhole className="h-4 w-4" />
-                  <span>{content.securityNote}</span>
-                </div>
-
-                <h2 className="max-w-xl text-4xl font-extrabold leading-tight xl:text-5xl">
-                  {isArabic
-                    ? "دخول موحد لإدارة المنصة ومساحات الشركات"
-                    : "Unified access for platform and company workspaces"}
-                </h2>
-
-                <p className="mt-6 max-w-xl text-base leading-8 text-white/85 xl:text-lg">
-                  {isArabic
-                    ? "تجمع Marilyn Clinics إدارة المرضى والمواعيد والسجلات الطبية والفوترة والمدفوعات والتقارير في تجربة واحدة آمنة ومهيأة للعيادات والمراكز الطبية داخل السعودية."
-                    : "Marilyn Clinics brings patients, appointments, medical records, billing, payments, and reports into one secure experience for clinics and medical centers in Saudi Arabia."}
-                </p>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur-md">
-                  <div
-                    className={`mb-3 flex items-center gap-3 ${
-                      isArabic ? "flex-row-reverse" : ""
-                    }`}
-                  >
-                    <div className="rounded-2xl bg-white/10 p-2">
-                      <Building2 className="h-5 w-5" />
-                    </div>
-                    <h3 className="font-semibold">
-                      {isArabic ? "شركات متعددة" : "Multi-company"}
-                    </h3>
-                  </div>
-                  <p className="text-sm leading-7 text-white/80">
-                    {isArabic
-                      ? "توجيه تلقائي لمساحة الشركة حسب عضوية المستخدم وصلاحياته."
-                      : "Automatic routing to the correct company workspace by membership and permissions."}
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur-md">
-                  <div
-                    className={`mb-3 flex items-center gap-3 ${
-                      isArabic ? "flex-row-reverse" : ""
-                    }`}
-                  >
-                    <div className="rounded-2xl bg-white/10 p-2">
-                      <BarChart3 className="h-5 w-5" />
-                    </div>
-                    <h3 className="font-semibold">
-                      {isArabic ? "تقارير مالية" : "Financial reports"}
-                    </h3>
-                  </div>
-                  <p className="text-sm leading-7 text-white/80">
-                    {isArabic
-                      ? "جاهزية للسجلات الطبية والمواعيد والفوترة والمدفوعات والتقارير."
-                      : "Ready for medical records, appointments, billing, payments, and reports."}
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur-md">
-                  <div
-                    className={`mb-3 flex items-center gap-3 ${
-                      isArabic ? "flex-row-reverse" : ""
-                    }`}
-                  >
-                    <div className="rounded-2xl bg-white/10 p-2">
-                      <CreditCard className="h-5 w-5" />
-                    </div>
-                    <h3 className="font-semibold">
-                      {isArabic ? "اشتراكات ومدفوعات" : "Billing & payments"}
-                    </h3>
-                  </div>
-                  <p className="text-sm leading-7 text-white/80">
-                    {isArabic
-                      ? "إدارة اشتراكات المنشآت الطبية ومدفوعات المنصة من نفس النظام."
-                      : "Manage medical organization subscriptions and platform payments from the same system."}
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-white/15 bg-white/10 p-5 backdrop-blur-md">
-                  <div
-                    className={`mb-3 flex items-center gap-3 ${
-                      isArabic ? "flex-row-reverse" : ""
-                    }`}
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/90 p-2">
-                      <Image
-                        src="/currency/sar.svg"
-                        alt="SAR"
-                        width={20}
-                        height={20}
-                        className="h-5 w-5"
-                      />
-                    </div>
-                    <h3 className="font-semibold">
-                      {isArabic ? "جاهز للسعودية" : "Saudi-ready"}
-                    </h3>
-                  </div>
-                  <p className="text-sm leading-7 text-white/80">
-                    {isArabic
-                      ? "تصميم مناسب للريال السعودي ضريبة القيمة المضافة واللغة العربية."
-                      : "Designed for SAR, VAT, and Arabic-first business workflows."}
-                  </p>
-                </div>
-              </div>
+      <div className="relative mx-auto flex h-dvh w-full max-w-[1440px] items-center justify-center px-2 py-2 sm:px-4 sm:py-3 lg:px-6 xl:px-10">
+        <div
+          dir="ltr"
+          className="grid h-full w-full max-w-[600px] items-center gap-3 xl:max-w-[1240px] xl:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)] xl:gap-5"
+        >
+          <section
+            id="login-form"
+            dir={isArabic ? "rtl" : "ltr"}
+            className="relative flex h-[calc(100dvh-1rem)] max-h-[760px] min-h-0 overflow-hidden rounded-[30px] border border-white/80 bg-[rgba(247,243,237,0.9)] shadow-[0_28px_90px_rgba(86,65,42,0.16)] backdrop-blur-xl sm:h-[calc(100dvh-1.5rem)] sm:rounded-[38px]"
+          >
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-white/65 to-transparent" />
+              <div className="absolute -right-20 top-24 h-48 w-48 rounded-full bg-[#d6b878]/10 blur-3xl" />
+              <div className="absolute -bottom-20 -left-16 h-56 w-56 rounded-full bg-white/50 blur-3xl" />
             </div>
-          </section>
 
-          <section className="flex min-h-[720px] items-center justify-center p-5 sm:p-8 lg:p-10">
-            <div className="w-full max-w-md">
-              <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Image
-                    src="/hero logo.png"
-                    alt="Marilyn Clinics"
-                    width={132}
-                    height={44}
-                    priority
-                    className="h-auto w-[132px]"
-                  />
-                </div>
+            <div className="relative z-10 mx-auto grid h-full min-h-0 w-full max-w-[520px] grid-rows-[auto_minmax(0,1fr)_auto] px-4 py-3 sm:px-7 sm:py-4 lg:px-9 lg:py-5">
+              <header className="relative flex min-h-[72px] items-center justify-center sm:min-h-[78px] [@media(max-height:720px)]:min-h-[58px]">
+                <Image
+                  src="/logo/marilyn.svg"
+                  alt="Marilyn Clinics"
+                  width={156}
+                  height={52}
+                  priority
+                  className="absolute left-1/2 top-1/2 h-auto w-[104px] -translate-x-1/2 -translate-y-1/2 object-contain sm:w-[118px] xl:top-[58%] [@media(max-height:720px)]:w-[96px]"
+                />
 
-                <Button
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={toggleLanguage}
-                  className="h-10 rounded-2xl px-3"
+                  className="absolute end-0 top-1/2 inline-flex h-9 -translate-y-1/2 items-center gap-1.5 rounded-full border border-[#cbbda9]/65 bg-white/55 px-2.5 text-xs font-semibold text-[#6d6154] shadow-sm backdrop-blur transition hover:border-[#b89b69] hover:bg-white/80 hover:text-[#3f382f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99150]/35 sm:h-10 sm:gap-2 sm:px-3"
+                  aria-label={content.languageButton}
                 >
-                  <span
-                    className={`flex items-center gap-2 ${
-                      isArabic ? "flex-row-reverse" : ""
-                    }`}
-                  >
-                    <Languages className="h-4 w-4" />
-                    <span>{isArabic ? "EN" : "عربي"}</span>
-                  </span>
-                </Button>
-              </div>
+                  <Languages className="h-4 w-4" />
+                  <span>{isArabic ? "EN" : "عربي"}</span>
+                </button>
+              </header>
 
-              <div className={isArabic ? "text-right" : "text-left"}>
+              <div className="flex min-h-0 flex-col justify-start overflow-y-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:py-4 xl:justify-center [@media(max-height:720px)]:py-1">
                 <div
-                  className={`mb-3 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-xs font-medium text-primary ${
-                    isArabic ? "flex-row-reverse" : ""
+                  className={`mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-[#cdbb9e]/55 bg-white/50 px-3 py-1.5 text-xs font-semibold text-[#78664e] ${
+                    isArabic ? "self-start" : "self-start"
                   }`}
                 >
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  <span>{content.securityNote}</span>
+                  <ShieldCheck className="h-4 w-4 text-[#ae874a]" />
+                  <span>{content.secureBadge}</span>
                 </div>
 
-                <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
-                  {content.title}
-                </h2>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  {content.subtitle}
-                </p>
-              </div>
-
-              <div className="mt-8 rounded-[28px] border border-border/70 bg-card/95 p-4 shadow-xl shadow-primary/5">
-                <div className="mb-5 grid grid-cols-2 gap-2 rounded-2xl bg-muted/50 p-1">
-                  <button
-                    type="button"
-                    onClick={() => switchMode("company")}
-                    className={`flex h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold transition ${
-                      mode === "company"
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
-                    } ${isArabic ? "flex-row-reverse" : ""}`}
-                  >
-                    <Building2 className="h-4 w-4" />
-                    <span>{content.companyTab}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => switchMode("system")}
-                    className={`flex h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold transition ${
-                      mode === "system"
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
-                    } ${isArabic ? "flex-row-reverse" : ""}`}
-                  >
-                    <ShieldCheck className="h-4 w-4" />
-                    <span>{content.systemTab}</span>
-                  </button>
-                </div>
-
-                <div
-                  className={`mb-5 rounded-3xl border border-[#8c9cdc]/25 bg-[#8c9cdc]/10 p-4 ${
-                    isArabic ? "text-right" : "text-left"
-                  }`}
-                >
-                  <div
-                    className={`mb-2 flex items-center gap-2 font-semibold text-foreground ${
-                      isArabic ? "flex-row-reverse" : ""
+                <div className={isArabic ? "text-right" : "text-left"}>
+                  <h1
+                    className={`text-[2.2rem] font-semibold leading-[1.12] tracking-[-0.035em] text-[#29241f] sm:text-[2.85rem] [@media(max-height:720px)]:text-[2rem] ${
+                      isArabic ? "font-sans" : "font-serif"
                     }`}
                   >
-                    {mode === "system" ? (
-                      <ShieldCheck className="h-4 w-4 text-primary" />
-                    ) : (
-                      <Building2 className="h-4 w-4 text-primary" />
-                    )}
-                    <span>{content.formTitle}</span>
-                  </div>
-                  <p className="text-sm leading-7 text-muted-foreground">
-                    {content.formSubtitle}
+                    {content.title}
+                  </h1>
+
+                  <p className="mt-3 text-sm leading-7 text-[#756d63] sm:text-base">
+                    {content.subtitle}
                   </p>
                 </div>
 
-                <form onSubmit={handleLoginSubmit} className="space-y-5">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
+                <form
+                  onSubmit={handleLoginSubmit}
+                  className="mt-4 space-y-3 [@media(max-height:720px)]:mt-3 [@media(max-height:720px)]:space-y-2.5"
+                  noValidate
+                >
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="login-username"
+                      className="block text-sm font-semibold text-[#4b443c]"
+                    >
                       {content.usernameLabel}
                     </label>
+
                     <div className="relative">
-                      <User2
-                        className={`absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground ${
-                          isArabic ? "right-4" : "left-4"
+                      <UserRound
+                        className={`pointer-events-none absolute top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#6e675f] ${
+                          isArabic ? "right-5" : "left-5"
                         }`}
                       />
+
                       <Input
+                        id="login-username"
+                        name="username"
                         required
                         autoComplete="username"
+                        autoCapitalize="none"
+                        spellCheck={false}
                         dir={isArabic ? "rtl" : "ltr"}
                         placeholder={content.usernamePlaceholder}
                         value={username}
-                        onChange={(e) => {
-                          setUsername(e.target.value);
+                        onChange={(event) => {
+                          setUsername(event.target.value);
                           setError(null);
                         }}
-                        className={`h-12 rounded-2xl border-border/70 bg-muted/30 shadow-sm ${
-                          isArabic ? "pr-11 text-right" : "pl-11 text-left"
+                        className={`h-[52px] rounded-[18px] border border-white/80 bg-[rgba(255,255,255,0.58)] text-[15px] text-[#2f2a25] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_24px_rgba(112,91,64,0.06)] placeholder:text-[#958c81] focus-visible:border-[#bf9b61] focus-visible:ring-2 focus-visible:ring-[#c8a86e]/20 ${
+                          isArabic
+                            ? "pr-14 pl-5 text-right"
+                            : "pl-14 pr-5 text-left"
                         }`}
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="login-password"
+                      className="block text-sm font-semibold text-[#4b443c]"
+                    >
                       {content.passwordLabel}
                     </label>
+
                     <div className="relative">
                       <LockKeyhole
-                        className={`absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground ${
-                          isArabic ? "right-4" : "left-4"
+                        className={`pointer-events-none absolute top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#6e675f] ${
+                          isArabic ? "right-5" : "left-5"
                         }`}
                       />
 
                       <Input
+                        id="login-password"
+                        name="password"
                         required
                         autoComplete="current-password"
                         type={showPassword ? "text" : "password"}
                         dir={isArabic ? "rtl" : "ltr"}
                         placeholder={content.passwordPlaceholder}
                         value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
+                        onChange={(event) => {
+                          setPassword(event.target.value);
                           setError(null);
                         }}
-                        className={`h-12 rounded-2xl border-border/70 bg-muted/30 shadow-sm ${
+                        className={`h-[52px] rounded-[18px] border border-white/80 bg-[rgba(255,255,255,0.58)] text-[15px] text-[#2f2a25] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_24px_rgba(112,91,64,0.06)] placeholder:text-[#958c81] focus-visible:border-[#bf9b61] focus-visible:ring-2 focus-visible:ring-[#c8a86e]/20 ${
                           isArabic
-                            ? "pr-11 pl-12 text-right"
-                            : "pl-11 pr-12 text-left"
+                            ? "pr-14 pl-14 text-right"
+                            : "pl-14 pr-14 text-left"
                         }`}
                       />
 
                       <button
                         type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        className={`absolute top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-muted-foreground transition hover:bg-muted hover:text-foreground ${
-                          isArabic ? "left-2" : "right-2"
+                        onClick={() => setShowPassword((previous) => !previous)}
+                        className={`absolute top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl text-[#6c655d] transition hover:bg-[#e9dfd2]/70 hover:text-[#342e28] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8a86e]/30 ${
+                          isArabic ? "left-2.5" : "right-2.5"
                         }`}
                         aria-label={
                           showPassword
                             ? content.passwordHide
                             : content.passwordShow
                         }
+                        aria-pressed={showPassword}
                       >
                         {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
+                          <EyeOff className="h-[18px] w-[18px]" />
                         ) : (
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-[18px] w-[18px]" />
                         )}
                       </button>
                     </div>
                   </div>
 
-                  <div
-                    className={`flex items-center justify-between gap-3 text-sm ${
-                      isArabic ? "flex-row-reverse" : ""
-                    }`}
-                  >
-                    <label
-                      className={`flex cursor-pointer items-center gap-2 text-muted-foreground ${
-                        isArabic ? "flex-row-reverse" : ""
-                      }`}
-                    >
+                  <div className="flex items-center justify-between gap-4 pt-1 text-sm">
+                    <label className="inline-flex cursor-pointer items-center gap-2.5 text-[#71685e]">
                       <input
                         type="checkbox"
                         checked={remember}
-                        onChange={() => setRemember((prev) => !prev)}
-                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                        onChange={(event) => setRemember(event.target.checked)}
+                        className="peer sr-only"
                       />
+
+                      <span className="flex h-5 w-5 items-center justify-center rounded-[6px] border border-[#b9ad9e] bg-white/45 shadow-sm transition peer-checked:border-[#b38b4b] peer-checked:bg-[#b38b4b] peer-focus-visible:ring-2 peer-focus-visible:ring-[#c8a86e]/35">
+                        <CheckCircle2 className="h-3.5 w-3.5 scale-75 text-white opacity-0 transition peer-checked:scale-100 peer-checked:opacity-100" />
+                      </span>
+
                       <span>{content.remember}</span>
                     </label>
 
                     <Link
                       href="/reset-password"
-                      className="font-medium text-primary transition hover:underline"
+                      className="font-semibold text-[#a57b3d] transition hover:text-[#7e5925] hover:underline hover:underline-offset-4"
                     >
                       {content.resetPassword}
                     </Link>
@@ -828,9 +708,9 @@ export default function Page() {
 
                   {error ? (
                     <div
-                      className={`rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-400 ${
-                        isArabic ? "text-right" : "text-left"
-                      }`}
+                      role="alert"
+                      aria-live="polite"
+                      className="rounded-[18px] border border-[#d9a39b]/55 bg-[#fff5f2] px-4 py-3 text-sm leading-6 text-[#9f463c]"
                     >
                       {error}
                     </div>
@@ -839,31 +719,161 @@ export default function Page() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="h-12 w-full rounded-2xl text-base font-semibold shadow-lg"
+                    className="group h-[52px] w-full rounded-[18px] border border-[#b58c4d]/40 bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] px-6 text-sm font-semibold text-[#2e251a] shadow-[0_15px_34px_rgba(168,121,56,0.24),inset_0_1px_0_rgba(255,255,255,0.4)] transition hover:brightness-[1.03] hover:shadow-[0_18px_42px_rgba(168,121,56,0.3)] disabled:cursor-not-allowed disabled:opacity-70 sm:text-base"
                   >
                     {loading ? (
-                      <span
-                        className={`flex items-center justify-center gap-2 ${
-                          isArabic ? "flex-row-reverse" : ""
-                        }`}
-                      >
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="flex items-center justify-center gap-2.5">
+                        <Loader2 className="h-5 w-5 animate-spin" />
                         <span>{content.loading}</span>
                       </span>
                     ) : (
-                      content.login
+                      <span className="flex w-full items-center justify-center gap-3">
+                        <span>{content.login}</span>
+                        <DirectionArrow className="h-5 w-5 transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
+                      </span>
                     )}
                   </Button>
                 </form>
+              </div>
 
-                <div className="mt-6 border-t border-border/60 pt-5">
-                  <p
-                    className={`text-xs leading-6 text-muted-foreground ${
-                      isArabic ? "text-right" : "text-left"
+              <footer className="mt-2 border-t border-[#cbbfaf]/55 pt-2.5 [@media(max-height:680px)]:hidden">
+                <div className="flex items-start gap-2.5 text-xs leading-6 text-[#847a6f]">
+                  <LockKeyhole className="mt-1 h-3.5 w-3.5 shrink-0 text-[#aa8246]" />
+                  <p>{content.securityFooter}</p>
+                </div>
+              </footer>
+            </div>
+          </section>
+
+          <section
+            dir={isArabic ? "rtl" : "ltr"}
+            className="relative hidden h-[calc(100dvh-1.5rem)] max-h-[760px] min-h-0 overflow-hidden rounded-[38px] border border-white/80 bg-[rgba(248,245,239,0.9)] shadow-[0_28px_90px_rgba(86,65,42,0.16)] backdrop-blur-xl xl:block"
+          >
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.46),transparent_38%),radial-gradient(circle_at_78%_34%,rgba(208,174,113,0.18),transparent_29%),radial-gradient(circle_at_18%_92%,rgba(255,255,255,0.72),transparent_30%)]" />
+              <div className="absolute left-0 top-0 h-full w-px bg-white/85" />
+              <div className="absolute right-[9%] top-0 h-full w-px bg-[#cabcaa]/25" />
+              <div className="absolute right-[11%] top-0 h-full w-px bg-white/70" />
+              <div className="absolute right-[13%] top-0 h-full w-px bg-[#cabcaa]/20" />
+            </div>
+
+            <div className="relative z-10 flex h-full min-h-0 flex-col px-10 py-7">
+              <div className="flex items-start justify-between gap-5">
+                <div className={isArabic ? "text-right" : "text-left"}>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#756b60] sm:text-xs">
+                    {content.visualTopLine}
+                  </p>
+
+                  <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-[#a27c43] sm:text-xs">
+                    {content.visualEyebrow}
+                  </p>
+                </div>
+
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#c8b694]/55 bg-white/45 text-[#aa8144] shadow-sm backdrop-blur">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+              </div>
+
+              <div className="relative mt-6 min-h-0 flex-1">
+                <div
+                  className={`relative z-20 max-w-[335px] ${
+                    isArabic ? "text-right" : "text-left"
+                  }`}
+                >
+                  <div className="mb-6 h-[2px] w-14 rounded-full bg-[#bd9250]" />
+
+                  <h2
+                    className={`text-[3.15rem] font-medium leading-[1.06] tracking-[-0.04em] text-[#29241f] [@media(max-height:720px)]:text-[2.8rem] ${
+                      isArabic ? "font-sans" : "font-serif"
                     }`}
                   >
-                    {content.modeNote}
+                    <span className="block">{content.visualTitleOne}</span>
+                    <span className="block">{content.visualTitleTwo}</span>
+                    <span className="block text-[#b48745]">
+                      {content.visualTitleThree}
+                    </span>
+                  </h2>
+
+                  <p className="mt-5 max-w-[315px] text-sm leading-6 text-[#665e55]">
+                    {content.visualDescription}
                   </p>
+
+                  <Link
+                    href="/"
+                    className="group mt-7 inline-flex items-center gap-3 text-sm font-semibold text-[#423a32] transition hover:text-[#9b7033]"
+                  >
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full border border-[#b89561] bg-white/35 text-[#9d743b] shadow-sm transition group-hover:bg-[#c79d5b] group-hover:text-white">
+                      <DirectionArrow className="h-5 w-5" />
+                    </span>
+                    <span>{content.visualAction}</span>
+                  </Link>
+                </div>
+
+                <div
+                  dir="ltr"
+                  aria-hidden="true"
+                  className={`pointer-events-none absolute -bottom-2 z-10 h-[385px] w-[288px] scale-[0.74] ${
+                    isArabic
+                      ? "-left-8 origin-bottom-left"
+                      : "-right-8 origin-bottom-right"
+                  }`}
+                >
+                  <div className="absolute right-[34px] top-[5px] h-[210px] w-[76px] rotate-[22deg]">
+                    <div className="absolute right-[4px] top-0 h-[72px] w-[68px] rounded-t-[24px] rounded-b-[14px] border border-[#9d733d]/35 bg-[linear-gradient(100deg,#755024_0%,#d4ad67_32%,#8f642d_58%,#d9b873_100%)] shadow-[0_12px_25px_rgba(88,57,23,0.25)]">
+                      <div className="absolute inset-x-2 top-2 h-px bg-white/45" />
+                      <div className="absolute inset-x-3 bottom-2 h-px bg-black/15" />
+                    </div>
+
+                    <div className="absolute left-[28px] top-[66px] h-[125px] w-[16px] rounded-full border border-white/80 bg-[linear-gradient(to_right,rgba(255,255,255,0.55),rgba(255,255,255,0.12),rgba(205,171,111,0.35))] shadow-[inset_0_0_10px_rgba(255,255,255,0.75)]" />
+
+                    <div className="absolute left-[29px] top-[184px] h-5 w-4 rounded-b-full bg-[radial-gradient(circle_at_35%_25%,#fff9ea_0%,#d7b777_46%,#a87839_100%)] shadow-[0_7px_10px_rgba(145,96,38,0.18)]" />
+                  </div>
+
+                  <div className="absolute right-[83px] top-[211px] h-7 w-7 rounded-full bg-[radial-gradient(circle_at_35%_25%,#fff9ea_0%,#d8b978_45%,#ad7b38_100%)] shadow-[0_10px_16px_rgba(137,94,42,0.18)]" />
+
+                  <div className="absolute bottom-0 right-[34px] h-[242px] w-[172px]">
+                    <div className="absolute left-[44px] top-0 h-[48px] w-[84px] rounded-t-[24px] border border-white/80 bg-[linear-gradient(to_right,rgba(255,255,255,0.74),rgba(215,206,193,0.42),rgba(255,255,255,0.76))] shadow-[inset_0_0_14px_rgba(255,255,255,0.75)]" />
+
+                    <div className="absolute inset-x-0 bottom-0 top-[36px] overflow-hidden rounded-t-[42px] rounded-b-[34px] border border-white/80 bg-[linear-gradient(90deg,rgba(245,241,234,0.76)_0%,rgba(206,196,181,0.42)_38%,rgba(255,255,255,0.83)_70%,rgba(221,213,201,0.58)_100%)] shadow-[0_22px_38px_rgba(95,75,52,0.18),inset_0_0_24px_rgba(255,255,255,0.7)]">
+                      <div className="absolute left-4 top-4 h-[80%] w-6 rounded-full bg-white/35 blur-md" />
+
+                      <div className="absolute inset-x-5 bottom-7 rounded-[17px] border border-white/75 bg-[rgba(247,243,236,0.78)] px-4 py-5 text-center shadow-[0_8px_20px_rgba(96,74,48,0.08)] backdrop-blur">
+                        <HeartPulse className="mx-auto h-7 w-7 text-[#a67d43]" />
+                        <p className="mt-3 text-[11px] font-semibold tracking-[0.26em] text-[#5c5146]">
+                          {content.bottleSubLabel}
+                        </p>
+                        <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#a27a42]">
+                          {content.bottleLabel}
+                        </p>
+                        <div className="mx-auto mt-3 h-px w-8 bg-[#b79158]" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="absolute bottom-[-7px] right-[4px] h-8 w-[245px] rounded-[50%] bg-[#967650]/16 blur-lg" />
+                </div>
+              </div>
+
+              <div className="relative z-30 mt-4 grid grid-cols-3 overflow-hidden rounded-[25px] border border-white/75 bg-[rgba(255,255,255,0.48)] shadow-[0_14px_35px_rgba(87,66,42,0.09)] backdrop-blur-md">
+                <div className="flex min-h-[82px] flex-col items-center justify-center px-2 py-3 text-center">
+                  <HeartPulse className="h-6 w-6 text-[#9c7847]" />
+                  <span className="mt-2 text-[11px] font-medium leading-4 text-[#51483f] sm:text-xs">
+                    {content.featureOne}
+                  </span>
+                </div>
+
+                <div className="flex min-h-[82px] flex-col items-center justify-center border-s border-[#c8bbab]/50 px-2 py-3 text-center">
+                  <FileHeart className="h-6 w-6 text-[#9c7847]" />
+                  <span className="mt-2 text-[11px] font-medium leading-4 text-[#51483f] sm:text-xs">
+                    {content.featureTwo}
+                  </span>
+                </div>
+
+                <div className="flex min-h-[82px] flex-col items-center justify-center border-s border-[#c8bbab]/50 px-2 py-3 text-center">
+                  <CalendarCheck2 className="h-6 w-6 text-[#9c7847]" />
+                  <span className="mt-2 text-[11px] font-medium leading-4 text-[#51483f] sm:text-xs">
+                    {content.featureThree}
+                  </span>
                 </div>
               </div>
             </div>
