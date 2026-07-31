@@ -66,6 +66,9 @@ type SearchItem = {
     en: string;
   };
 };
+type SearchProps = {
+  compact?: boolean;
+};
 
 /* =====================================================
    SEARCH DATA
@@ -580,7 +583,7 @@ function getWorkspaceHeading(workspace: WorkspaceType, isArabic: boolean): strin
    COMPONENT
 ===================================================== */
 
-export default function Search() {
+export default function Search({ compact = false }: SearchProps) {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
 
@@ -685,48 +688,68 @@ export default function Search() {
         variant="outline"
         onClick={() => setOpen(true)}
         className={cn(
-          "h-11 w-full justify-between gap-2 rounded-2xl px-3 text-muted-foreground shadow-sm transition-all",
-          "border-white/70 bg-white/76 hover:border-primary/20 hover:bg-white hover:text-foreground hover:shadow-md",
-          "dark:border-white/10 dark:bg-white/[0.055] dark:hover:bg-white/[0.09]",
+          compact
+            ? [
+                "size-10 shrink-0 justify-center rounded-full border p-0",
+                "border-[#cbbda9]/65 bg-white/55 text-[#a57b3d]",
+                "shadow-[0_4px_14px_rgba(112,91,64,0.08)] backdrop-blur-xl",
+                "transition-all duration-200 hover:border-[#b58c4d]/40",
+                "hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)]",
+                "hover:text-white hover:shadow-[0_12px_28px_rgba(168,121,56,0.28)]",
+                "dark:border-white/10 dark:bg-white/[0.055] dark:text-[#d9b979] dark:hover:text-white",
+              ]
+            : [
+                "h-11 w-full justify-between gap-2 rounded-2xl px-3",
+                "text-muted-foreground shadow-sm transition-all",
+                "border-white/70 bg-white/76",
+                "hover:border-primary/20 hover:bg-white hover:text-foreground hover:shadow-md",
+                "dark:border-white/10 dark:bg-white/[0.055] dark:hover:bg-white/[0.09]",
+              ],
         )}
         aria-label={isArabic ? "فتح البحث السريع" : "Open quick search"}
         title={isArabic ? "فتح البحث السريع" : "Open quick search"}
       >
-        <span
-          className={cn(
-            "flex min-w-0 items-center gap-2",
-            isArabic ? "flex-row-reverse" : "flex-row",
-          )}
-        >
-          <span
-            className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition",
-              "bg-primary/10 text-primary",
-            )}
-          >
-            <SearchIcon className="h-4 w-4" />
-          </span>
+        {compact ? (
+          <SearchIcon className="h-4 w-4" />
+        ) : (
+          <>
+            <span
+              className={cn(
+                "flex min-w-0 items-center gap-2",
+                isArabic ? "flex-row-reverse" : "flex-row",
+              )}
+            >
+              <span
+                className={cn(
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition",
+                  "bg-primary/10 text-primary",
+                )}
+              >
+                <SearchIcon className="h-4 w-4" />
+              </span>
 
-          <span className="truncate text-sm">{placeholder}</span>
-        </span>
+              <span className="truncate text-sm">{placeholder}</span>
+            </span>
 
-        {shortcutText ? (
-          <span
-            className={cn(
-              "rounded-xl border px-2 py-1 text-[11px] font-semibold text-muted-foreground",
-              "border-slate-200/80 bg-white/70",
-              "dark:border-white/10 dark:bg-white/[0.06]",
-            )}
-          >
-            {shortcutText}
-          </span>
-        ) : null}
+            {shortcutText ? (
+              <span
+                className={cn(
+                  "rounded-xl border px-2 py-1 text-[11px] font-semibold text-muted-foreground",
+                  "border-slate-200/80 bg-white/70",
+                  "dark:border-white/10 dark:bg-white/[0.06]",
+                )}
+              >
+                {shortcutText}
+              </span>
+            ) : null}
+          </>
+        )}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
           className={cn(
-            "overflow-hidden rounded-[1.65rem] border-white/70 bg-background/95 p-0 shadow-[0_22px_80px_rgba(15,23,42,0.22)] backdrop-blur-xl sm:max-w-2xl",
+            "overflow-hidden rounded-[1.65rem] border-[#cbbda9]/55 bg-[rgba(249,246,241,0.92)] p-0 shadow-[0_22px_80px_rgba(112,91,64,0.20)] backdrop-blur-2xl sm:max-w-2xl",
             "dark:border-white/10 dark:bg-slate-950/95 dark:shadow-[0_22px_80px_rgba(0,0,0,0.45)]",
           )}
         >
@@ -752,7 +775,7 @@ export default function Search() {
                   isArabic ? "flex-row-reverse" : "flex-row",
                 )}
               >
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#cbbda9]/55 bg-white/60 text-[#a57b3d] shadow-sm">
                   <SearchIcon className="h-4 w-4" />
                 </span>
 
@@ -797,8 +820,8 @@ export default function Search() {
                             item.description?.ar || ""
                           } ${item.description?.en || ""}`}
                           className={cn(
-                            "rounded-2xl p-0 aria-selected:bg-primary/8 aria-selected:text-primary",
-                            "data-[selected=true]:bg-primary/8",
+                            "rounded-2xl p-0 aria-selected:bg-[#b7853f] aria-selected:text-white",
+                            "data-[selected=true]:bg-[#b7853f] data-[selected=true]:text-white",
                           )}
                           asChild
                         >
@@ -807,8 +830,10 @@ export default function Search() {
                             onClick={() => setOpen(false)}
                             className={cn(
                               "flex items-center justify-between gap-3 rounded-2xl px-3 py-3 transition",
-                              "hover:bg-primary/8",
-                              active ? "bg-primary/10 text-primary" : "text-foreground",
+                              "hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] hover:text-white",
+                              active
+                                ? "bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] text-white shadow-sm"
+                                : "text-[#8f6a37]",
                               isArabic
                                 ? "flex-row-reverse text-right"
                                 : "flex-row text-left",
@@ -824,8 +849,8 @@ export default function Search() {
                                 className={cn(
                                   "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border shadow-sm transition",
                                   active
-                                    ? "border-primary/15 bg-primary/12 text-primary"
-                                    : "border-slate-200/75 bg-white/78 text-muted-foreground dark:border-white/10 dark:bg-white/[0.055]",
+                                    ? "border-white/30 bg-white/20 text-white"
+                                    : "border-[#cbbda9]/55 bg-white/70 text-[#a57b3d] dark:border-white/10 dark:bg-white/[0.055]",
                                 )}
                               >
                                 <Icon className="h-4.5 w-4.5" />

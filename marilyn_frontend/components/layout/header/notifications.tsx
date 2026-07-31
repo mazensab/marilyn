@@ -550,9 +550,13 @@ const searchParams = new URLSearchParams({
           size="icon"
           variant="ghost"
           className={cn(
-            "relative h-9 w-9 rounded-xl transition",
-            "hover:bg-slate-100 hover:text-foreground",
-            "dark:hover:bg-white/[0.08]",
+            "relative h-10 w-10 rounded-full border transition-all duration-200",
+            "border-[#cbbda9]/65 bg-white/55 text-[#a57b3d]",
+            "shadow-[0_4px_14px_rgba(112,91,64,0.08)] backdrop-blur-xl",
+            "hover:border-[#b58c4d]/40",
+            "hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)]",
+            "hover:text-white hover:shadow-[0_12px_28px_rgba(168,121,56,0.28)]",
+            "dark:border-white/10 dark:bg-white/[0.055] dark:text-[#d9b979] dark:hover:text-white",
           )}
           aria-label={isArabic ? "الإشعارات" : "Notifications"}
           title={isArabic ? "الإشعارات" : "Notifications"}
@@ -576,7 +580,7 @@ const searchParams = new URLSearchParams({
         align={isMobile ? "center" : isArabic ? "start" : "end"}
         sideOffset={10}
         className={cn(
-          "w-[22rem] overflow-hidden rounded-[1.65rem] border-white/70 bg-background/95 p-0 shadow-[0_22px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl",
+          "w-[22rem] overflow-hidden rounded-[1.65rem] border-[#cbbda9]/55 bg-[rgba(249,246,241,0.90)] p-0 shadow-[0_22px_80px_rgba(112,91,64,0.18)] backdrop-blur-2xl",
           "dark:border-white/10 dark:bg-slate-950/95 dark:shadow-[0_22px_80px_rgba(0,0,0,0.42)]",
         )}
       >
@@ -595,7 +599,7 @@ const searchParams = new URLSearchParams({
                     isArabic ? "flex-row-reverse" : "flex-row",
                   )}
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#cbbda9]/55 bg-white/60 text-[#a57b3d] shadow-sm">
                     <BellIcon className="h-4.5 w-4.5" />
                   </span>
 
@@ -677,7 +681,7 @@ const searchParams = new URLSearchParams({
 
             {!loading && notifications.length === 0 ? (
               <div className="flex min-h-[300px] flex-col items-center justify-center px-6 py-10 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-primary/10 text-primary">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#cbbda9]/55 bg-white/60 text-[#a57b3d] shadow-sm">
                   <Sparkles className="h-6 w-6" />
                 </div>
 

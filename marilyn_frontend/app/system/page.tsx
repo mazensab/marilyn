@@ -729,7 +729,7 @@ function KpiCard({
   t: (typeof translations)[Locale];
 }) {
   return (
-    <Card className="group overflow-hidden rounded-2xl border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <Card className="group overflow-hidden rounded-2xl border-white/75 bg-white/72 shadow-[0_12px_34px_rgba(112,91,64,0.08)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(112,91,64,0.14)] dark:border-white/10 dark:bg-white/[0.055]">
       <Link href={href} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2">
           <div className="min-w-0">
@@ -738,7 +738,7 @@ function KpiCard({
               {money ? <MoneyValue value={value} label={t.sar} /> : percent ? formatPercent(value) : formatInteger(value)}
             </CardTitle>
           </div>
-          <span className="rounded-2xl bg-primary/10 p-2.5 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
+          <span className="rounded-full border border-[#cbbda9]/55 bg-white/70 p-2.5 text-[#a57b3d] shadow-sm transition-all duration-200 group-hover:border-[#b58c4d]/40 group-hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] group-hover:text-white group-hover:shadow-[0_12px_28px_rgba(168,121,56,0.28)]">
             <Icon className="h-5 w-5" />
           </span>
         </CardHeader>
@@ -1427,7 +1427,7 @@ export default function SystemDashboardPage() {
 
   if (loading) {
     return (
-      <main dir={dir} className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
+      <main dir={dir} className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
         <DashboardSkeleton />
       </main>
     );
@@ -1435,7 +1435,7 @@ export default function SystemDashboardPage() {
 
   if (error) {
     return (
-      <main dir={dir} className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
+      <main dir={dir} className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
         <Card className="mx-auto max-w-3xl rounded-3xl border-destructive/30 bg-card shadow-sm">
           <CardHeader className="text-center">
             <div className="mx-auto mb-2 rounded-full bg-destructive/10 p-4 text-destructive">
@@ -1457,15 +1457,15 @@ export default function SystemDashboardPage() {
   }
 
   return (
-    <main dir={dir} className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
+    <main dir={dir} className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1500px] space-y-6">
-        <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">
+        <section className="overflow-hidden rounded-3xl border border-white/80 bg-white/72 shadow-[0_18px_52px_rgba(112,91,64,0.10)] backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.055]">
           <div className="relative p-6 sm:p-8">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/80 via-primary/30 to-transparent" />
+            <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)]" />
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="max-w-3xl">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#cbbda9]/55 bg-white/60 px-3 py-1 text-xs font-medium text-[#8f6a37] shadow-sm">
+                  <Sparkles className="h-3.5 w-3.5 text-[#a57b3d]" />
                   {t.systemHealth}
                 </div>
                 <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t.title}</h1>

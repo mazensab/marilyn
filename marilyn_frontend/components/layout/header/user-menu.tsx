@@ -15,6 +15,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useTheme } from "next-themes";
 
 import { useAuth } from "@/components/providers/AuthProvider";
 
@@ -29,6 +30,10 @@ import {
   LogOut,
   ShieldCheck,
   Sparkles,
+  Globe2,
+  Laptop,
+  MoonIcon,
+  SunIcon,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -204,11 +209,59 @@ export default function UserMenu() {
   const pathname = usePathname();
   const authSession = normalizeSession(useAuth());
 
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [locale, setLocale] = useState<AppLocale>("ar");
-
   const isArabic = locale === "ar";
-
+  const CurrentThemeIcon =
+    theme === "system"
+      ? Laptop
+      : resolvedTheme === "dark"
+        ? MoonIcon
+        : SunIcon;
+  const themeLabel =
+    theme === "light"
+      ? isArabic
+        ? "فاتح"
+        : "Light"
+      : theme === "dark"
+        ? isArabic
+          ? "داكن"
+          : "Dark"
+        : isArabic
+          ? "حسب النظام"
+          : "System";
+  const toggleLanguage = () => {
+    try {
+      const nextLocale: AppLocale =
+        isArabic ? "en" : "ar";
+      window.localStorage.setItem(
+        "primey-locale",
+        nextLocale,
+      );
+      window.dispatchEvent(
+        new Event("primey-locale-changed"),
+      );
+      setLocale(nextLocale);
+      applyDocumentLocale(nextLocale);
+    } catch (error) {
+      console.error(
+        "User menu language toggle error:",
+        error,
+      );
+    }
+  };
+  const cycleTheme = () => {
+    if (theme === "light") {
+      setTheme("dark");
+      return;
+    }
+    if (theme === "dark") {
+      setTheme("system");
+      return;
+    }
+    setTheme("light");
+  };
   const sessionUser = authSession.user || null;
   const subscription = authSession.subscription || {};
 
@@ -391,14 +444,19 @@ export default function UserMenu() {
         <button
           type="button"
           className={cn(
-            "inline-flex h-9 w-9 items-center justify-center rounded-xl transition",
-            "hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
-            "dark:hover:bg-white/[0.08]",
+            "inline-flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-200",
+            "border-[#cbbda9]/65 bg-white/55 text-[#a57b3d]",
+            "shadow-[0_4px_14px_rgba(112,91,64,0.08)] backdrop-blur-xl",
+            "hover:border-[#b58c4d]/40",
+            "hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)]",
+            "hover:text-white hover:shadow-[0_12px_28px_rgba(168,121,56,0.28)]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8a86e]/35",
+            "dark:border-white/10 dark:bg-white/[0.055] dark:hover:text-white",
           )}
           aria-label={isArabic ? "قائمة المستخدم" : "User menu"}
           title={isArabic ? "قائمة المستخدم" : "User menu"}
         >
-          <Avatar className="h-8.5 w-8.5 cursor-pointer rounded-xl border border-white/80 shadow-sm dark:border-white/10">
+          <Avatar className="h-9 w-9 cursor-pointer rounded-full border border-[#cbbda9]/55 bg-white/70 shadow-sm dark:border-white/10 dark:bg-white/[0.06]">
             {userAvatar ? (
               <AvatarImage
                 src={userAvatar}
@@ -407,7 +465,7 @@ export default function UserMenu() {
               />
             ) : null}
 
-            <AvatarFallback className="rounded-xl bg-primary/10 text-sm font-bold text-primary">
+            <AvatarFallback className="rounded-full bg-white/70 text-sm font-bold text-[#a57b3d]">
               {avatarFallback}
             </AvatarFallback>
           </Avatar>
@@ -416,7 +474,7 @@ export default function UserMenu() {
 
       <DropdownMenuContent
         className={cn(
-          "w-[--radix-dropdown-menu-trigger-width] min-w-72 overflow-hidden rounded-[1.65rem] border-white/70 bg-background/95 p-2 shadow-[0_22px_80px_rgba(15,23,42,0.18)] backdrop-blur-xl",
+          "w-[--radix-dropdown-menu-trigger-width] min-w-72 overflow-hidden rounded-[1.65rem] border-[#cbbda9]/55 bg-[rgba(249,246,241,0.92)] p-2 shadow-[0_22px_80px_rgba(112,91,64,0.18)] backdrop-blur-2xl",
           "dark:border-white/10 dark:bg-slate-950/95 dark:shadow-[0_22px_80px_rgba(0,0,0,0.42)]",
         )}
         align={isArabic ? "start" : "end"}
@@ -471,15 +529,51 @@ export default function UserMenu() {
 
           <DropdownMenuGroup className="space-y-1">
             <DropdownMenuItem
+              onClick={toggleLanguage}
+              className={cn(
+                "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
+                "focus:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] focus:text-white",
+                menuDirectionClass,
+              )}
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#cbbda9]/50 bg-white/65 text-[#a57b3d] dark:bg-white/[0.06]">
+                <Globe2 className="size-4" />
+              </span>
+              <span className="min-w-0 flex-1 truncate">
+                {isArabic ? "اللغة" : "Language"}
+              </span>
+              <span className="shrink-0 text-xs font-semibold text-muted-foreground">
+                {isArabic ? "English" : "العربية"}
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={cycleTheme}
+              className={cn(
+                "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
+                "focus:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] focus:text-white",
+                menuDirectionClass,
+              )}
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#cbbda9]/50 bg-white/65 text-[#a57b3d] dark:bg-white/[0.06]">
+                <CurrentThemeIcon className="size-4" />
+              </span>
+              <span className="min-w-0 flex-1 truncate">
+                {isArabic ? "المظهر" : "Appearance"}
+              </span>
+              <span className="shrink-0 text-xs font-semibold text-muted-foreground">
+                {themeLabel}
+              </span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
               asChild
               className={cn(
                 "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
-                "focus:bg-primary/10 focus:text-primary",
+                "focus:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] focus:text-white",
                 menuDirectionClass,
               )}
             >
               <Link href="/system/settings">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#cbbda9]/50 bg-white/65 text-[#a57b3d]">
                   <Sparkles className="size-4" />
                 </span>
 
@@ -497,11 +591,11 @@ export default function UserMenu() {
               onClick={() => router.push(accountHref)}
               className={cn(
                 "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
-                "focus:bg-primary/10 focus:text-primary",
+                "focus:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] focus:text-white",
                 menuDirectionClass,
               )}
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-muted-foreground dark:bg-white/[0.06]">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#cbbda9]/50 bg-white/65 text-[#a57b3d] dark:bg-white/[0.06]">
                 <BadgeCheck className="size-4" />
               </span>
 
@@ -512,11 +606,11 @@ export default function UserMenu() {
               onClick={() => router.push(billingHref)}
               className={cn(
                 "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
-                "focus:bg-primary/10 focus:text-primary",
+                "focus:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] focus:text-white",
                 menuDirectionClass,
               )}
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-muted-foreground dark:bg-white/[0.06]">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#cbbda9]/50 bg-white/65 text-[#a57b3d] dark:bg-white/[0.06]">
                 <CreditCard className="size-4" />
               </span>
 
@@ -527,11 +621,11 @@ export default function UserMenu() {
               onClick={() => router.push(notificationsHref)}
               className={cn(
                 "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
-                "focus:bg-primary/10 focus:text-primary",
+                "focus:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] focus:text-white",
                 menuDirectionClass,
               )}
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-muted-foreground dark:bg-white/[0.06]">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full border border-[#cbbda9]/50 bg-white/65 text-[#a57b3d] dark:bg-white/[0.06]">
                 <NotificationsIcon className="size-4" />
               </span>
 

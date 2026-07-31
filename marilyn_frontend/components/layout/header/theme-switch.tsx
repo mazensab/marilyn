@@ -140,7 +140,7 @@ export default function ThemeSwitch() {
         type="button"
         size="icon"
         variant="ghost"
-        className="h-9 w-9 rounded-xl"
+        className="h-10 w-10 rounded-full"
         aria-label="Toggle theme"
         disabled
       >
@@ -157,9 +157,13 @@ export default function ThemeSwitch() {
           size="icon"
           variant="ghost"
           className={cn(
-            "h-9 w-9 rounded-xl transition",
-            "hover:bg-slate-100 hover:text-foreground",
-            "dark:hover:bg-white/[0.08]",
+            "h-10 w-10 rounded-full border transition-all duration-200",
+            "border-[#cbbda9]/65 bg-white/55 text-[#a57b3d]",
+            "shadow-[0_4px_14px_rgba(112,91,64,0.08)] backdrop-blur-xl",
+            "hover:border-[#b58c4d]/40",
+            "hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)]",
+            "hover:text-white hover:shadow-[0_12px_28px_rgba(168,121,56,0.28)]",
+            "dark:border-white/10 dark:bg-white/[0.055] dark:text-[#d9b979] dark:hover:text-white",
           )}
           aria-label={isArabic ? "تبديل المظهر" : "Toggle theme"}
           title={isArabic ? "تبديل المظهر" : "Toggle theme"}
@@ -175,7 +179,7 @@ export default function ThemeSwitch() {
         align={isArabic ? "start" : "end"}
         sideOffset={10}
         className={cn(
-          "min-w-44 rounded-2xl border-white/70 bg-background/95 p-2 shadow-[0_18px_55px_rgba(15,23,42,0.14)] backdrop-blur-xl",
+          "min-w-44 rounded-2xl border-[#cbbda9]/55 bg-[rgba(249,246,241,0.92)] p-2 shadow-[0_18px_55px_rgba(112,91,64,0.16)] backdrop-blur-2xl",
           "dark:border-white/10 dark:bg-slate-950/95 dark:shadow-[0_18px_55px_rgba(0,0,0,0.35)]",
         )}
       >
@@ -190,8 +194,10 @@ export default function ThemeSwitch() {
                 onClick={() => setTheme(option.value)}
                 className={cn(
                   "flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
-                  "focus:bg-primary/10 focus:text-primary",
-                  isActive ? "bg-primary/10 text-primary" : "",
+                  "focus:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] focus:text-white",
+                  isActive
+                    ? "bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] text-white shadow-sm"
+                    : "text-[#8f6a37]",
                   isArabic ? "flex-row-reverse text-right" : "flex-row text-left",
                 )}
               >
@@ -199,8 +205,8 @@ export default function ThemeSwitch() {
                   className={cn(
                     "flex size-8 shrink-0 items-center justify-center rounded-xl",
                     isActive
-                      ? "bg-primary/12 text-primary"
-                      : "bg-slate-100 text-muted-foreground dark:bg-white/[0.06]",
+                      ? "bg-white/20 text-white"
+                      : "border border-[#cbbda9]/50 bg-white/65 text-[#a57b3d] dark:bg-white/[0.06]",
                   )}
                 >
                   <Icon className="size-4" />

@@ -2,11 +2,16 @@
 
 /* =====================================================
    📂 components/layout/sidebar/nav-main.tsx
-   🧠 Mhamcloud — Main Sidebar Navigation
+   🧠 Marilyn Clinics — Main Sidebar Navigation
    Premium sidebar navigation items
 ===================================================== */
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -28,6 +33,12 @@ import {
 } from "@/components/ui/sidebar";
 
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import {
   CalendarClock,
   BarChart3,
   BellRing,
@@ -41,6 +52,7 @@ import {
   Gift,
   Home,
   KeyRound,
+  LayoutGrid,
   MessageCircle,
   Package,
   ReceiptText,
@@ -117,6 +129,7 @@ type NavGroup = {
 
 type NavMainProps = {
   type: WorkspaceType;
+  variant?: "sidebar" | "overview" | "header";
 };
 
 type SidebarAuthSession = Partial<AuthSession>;
@@ -127,7 +140,7 @@ type SidebarAuthSession = Partial<AuthSession>;
 
 const systemNavItems: NavGroup[] = [
   {
-    title: { ar: "منصة Mhamcloud", en: "Mhamcloud Platform" },
+    title: { ar: "منصة Marilyn Clinics", en: "Marilyn Clinics Platform" },
     items: [
       {
         title: { ar: "لوحة النظام", en: "System Dashboard" },
@@ -1530,11 +1543,293 @@ function hasActiveChild(pathname: string, item: NavItem): boolean {
   );
 }
 
+
+type HeaderSystemNavItemProps = {
+  item: NavItem;
+  pathname: string;
+  isArabic: boolean;
+  isOverview?: boolean;
+};
+
+function HeaderSystemNavItem({
+  item,
+  pathname,
+  isArabic,
+  isOverview = false,
+}: HeaderSystemNavItemProps) {
+  const [open, setOpen] = useState(false);
+  const closeTimerRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
+
+  const clearCloseTimer = () => {
+    if (!closeTimerRef.current) return;
+
+    clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = null;
+  };
+
+  const openMenu = () => {
+    clearCloseTimer();
+    setOpen(true);
+  };
+
+  const scheduleClose = () => {
+    clearCloseTimer();
+
+    closeTimerRef.current = setTimeout(() => {
+      setOpen(false);
+    }, 160);
+  };
+
+  const active =
+    isItemActive(pathname, item) ||
+    hasActiveChild(pathname, item);
+
+  const Icon =
+    isOverview
+      ? LayoutGrid
+      : item.icon || Home;
+  const title = isOverview
+    ? isArabic
+      ? "\u0646\u0638\u0631\u0629 \u0639\u0627\u0645\u0629"
+      : "Overview"
+    : isArabic
+      ? item.title.ar
+      : item.title.en;
+
+  const triggerClassName = cn(
+    "group/header-nav flex h-10 shrink-0 items-center justify-center",
+    "rounded-full border outline-none transition-all duration-200",
+    "focus-visible:ring-2 focus-visible:ring-[#c8a86e]/35",
+    isOverview
+      ? [
+          "gap-2 border-[#cbbda9]/65 bg-white/55 pe-3 ps-1 text-[#a57b3d]",
+          "shadow-[0_4px_14px_rgba(112,91,64,0.08)] backdrop-blur-xl",
+          "hover:border-[#b58c4d]/40",
+          "hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)]",
+          "hover:text-white hover:shadow-[0_12px_28px_rgba(168,121,56,0.28)]",
+        ]
+      : [
+          "w-10 border-[#cbbda9]/65 bg-white/55 p-0 text-[#a57b3d]",
+          "shadow-[0_4px_14px_rgba(112,91,64,0.08)] backdrop-blur-xl",
+          "hover:border-[#b58c4d]/40",
+          "hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)]",
+          "hover:text-white hover:shadow-[0_12px_28px_rgba(168,121,56,0.28)]",
+        ],
+    active &&
+      "border-[#b58c4d]/40 bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] text-white shadow-[0_12px_28px_rgba(168,121,56,0.28)]",
+    "dark:border-white/10 dark:bg-white/[0.055] dark:text-[#d9b979]",
+    "dark:hover:text-white",
+  );
+
+  if (isOverview || !item.items?.length) {
+    return (
+      <Link
+        href={item.href}
+        title={title}
+        aria-label={title}
+        className={triggerClassName}
+      >
+        {isOverview ? (
+          <span
+            aria-hidden="true"
+            className={cn(
+              "grid size-8 shrink-0 grid-cols-2 gap-[2px]",
+              "rounded-full border border-[#cbbda9]/55",
+              "bg-white/95 p-[8px] shadow-sm",
+              "transition-all duration-200",
+              "group-hover/header-nav:border-white/80",
+              "group-hover/header-nav:bg-white",
+              active && "border-white/80 bg-white",
+              "dark:border-white/15 dark:bg-white/[0.12]",
+            )}
+          >
+            <span className="rounded-[1px] bg-[#b7853f]" />
+            <span className="rounded-[1px] bg-[#b7853f]" />
+            <span className="rounded-[1px] bg-[#b7853f]" />
+            <span className="rounded-[1px] bg-[#b7853f]" />
+          </span>
+        ) : (
+          <Icon className="size-4" />
+        )}
+
+        {isOverview ? (
+          <span className="hidden whitespace-nowrap text-[13px] font-semibold sm:inline">
+            {title}
+          </span>
+        ) : null}
+      </Link>
+    );
+  }
+
+  return (
+    <DropdownMenu
+      open={open}
+      onOpenChange={setOpen}
+      modal={false}
+    >
+      <div
+        onMouseEnter={openMenu}
+        onMouseLeave={scheduleClose}
+      >
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label={title}
+            className={triggerClassName}
+            onFocus={openMenu}
+          >
+            <Icon className="size-4" />
+          </button>
+        </DropdownMenuTrigger>
+      </div>
+
+      <DropdownMenuContent
+        align="center"
+        sideOffset={10}
+        collisionPadding={14}
+        onMouseEnter={openMenu}
+        onMouseLeave={scheduleClose}
+        className={cn(
+          "relative isolate w-[min(88vw,330px)] overflow-hidden",
+          "rounded-[1.45rem] p-2",
+          "border border-[#cbbda9]/50 ring-1 ring-white/45",
+          "!bg-[rgba(249,246,241,0.78)]",
+          "shadow-[0_30px_90px_rgba(112,91,64,0.20)]",
+          "!backdrop-blur-[40px] backdrop-saturate-150",
+          "supports-[backdrop-filter]:!bg-[rgba(249,246,241,0.66)]",
+          "dark:border-white/10 dark:ring-white/[0.07]",
+          "dark:!bg-slate-950/[0.52]",
+          "dark:shadow-[0_32px_96px_rgba(0,0,0,0.48)]",
+        )}
+      >
+        <div dir={isArabic ? "rtl" : "ltr"}>
+          <div
+            className={cn(
+              "flex items-center gap-3 px-2.5 py-2",
+              isArabic
+                ? "flex-row-reverse text-right"
+                : "flex-row text-left",
+            )}
+          >
+            <span
+              className={cn(
+                "flex size-9 shrink-0 items-center",
+                "justify-center rounded-full",
+                "border border-[#cbbda9]/55 bg-white/65",
+                "text-[#a57b3d] shadow-sm backdrop-blur-xl",
+                "dark:border-white/10",
+                "dark:bg-white/[0.07]",
+                "dark:text-[#d9b979]",
+              )}
+            >
+              <Icon className="size-4" />
+            </span>
+
+            <div className="min-w-0">
+              <div className="truncate text-sm font-bold text-[#9a7440] dark:text-[#d9b979]">
+                {title}
+              </div>
+
+              <div className="mt-0.5 text-[11px] text-muted-foreground">
+                {isArabic
+                  ? "\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0648\u062d\u062f\u0629"
+                  : "Module pages"}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-1 space-y-1">
+            {item.items.map((child) => {
+              const ChildIcon = child.icon || FileText;
+              const childActive =
+                isItemActive(pathname, child) ||
+                hasActiveChild(pathname, child);
+              const childTitle = isArabic
+                ? child.title.ar
+                : child.title.en;
+
+              return (
+                <Link
+                  key={`${child.href}-${child.title.en}`}
+                  href={child.href}
+                  target={
+                    child.newTab
+                      ? "_blank"
+                      : undefined
+                  }
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "group/module-link flex min-w-0",
+                    "items-center gap-3 rounded-xl",
+                    "px-2.5 py-2.5 text-slate-950 transition-all duration-200 dark:text-slate-100",
+                    "hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)]",
+                    "hover:text-white hover:shadow-[0_10px_24px_rgba(168,121,56,0.24)]",
+                    "focus-visible:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)]",
+                    "focus-visible:text-white focus-visible:outline-none",
+                    childActive &&
+                      "bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] font-semibold text-white shadow-[0_10px_24px_rgba(168,121,56,0.24)]",
+                    isArabic
+                      ? "flex-row-reverse text-right"
+                      : "flex-row text-left",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex size-8 shrink-0 items-center",
+                      "justify-center rounded-full",
+                      "border border-[#cbbda9]/50",
+                      "bg-white/68 text-[#a57b3d]",
+                      "transition-all duration-200",
+                      "group-hover/module-link:border-white/30",
+                      "group-hover/module-link:bg-white/20",
+                      "group-hover/module-link:text-white",
+                      "group-hover/module-link:shadow-sm",
+                      "dark:border-white/10",
+                      "dark:bg-white/[0.055]",
+                      childActive &&
+                        "border-white/30 bg-white/20 text-white shadow-sm",
+                    )}
+                  >
+                    <ChildIcon className="size-3.5" />
+                  </span>
+
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                    {childTitle}
+                  </span>
+
+                  {child.isNew || child.isDataBadge ? (
+                    <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-[#9a7440] shadow-sm">
+                      {child.isDataBadge ||
+                        (isArabic
+                          ? "\u062c\u062f\u064a\u062f"
+                          : "New")}
+                    </span>
+                  ) : null}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+
 /* =====================================================
    COMPONENT
 ===================================================== */
 
-export function NavMain({ type }: NavMainProps) {
+export function NavMain({ type, variant = "sidebar" }: NavMainProps) {
   const pathname = usePathname();
   const authSession = useAuth() as SidebarAuthSession;
 
@@ -1872,6 +2167,161 @@ export function NavMain({ type }: NavMainProps) {
       </SidebarMenuSubItem>
     );
   };
+
+
+  if (variant === "header") {
+    const headerItems = navItems.flatMap(
+      (group) => group.items,
+    );
+
+    return (
+      <nav
+        aria-label={
+          isArabic
+            ? "\u0648\u062d\u062f\u0627\u062a \u0627\u0644\u0646\u0638\u0627\u0645"
+            : "System modules"
+        }
+        className={cn(
+          "max-w-full overflow-x-auto",
+          "overscroll-x-contain",
+          "[scrollbar-width:none]",
+          "[&::-webkit-scrollbar]:hidden",
+        )}
+      >
+        <div className="flex min-w-max items-center gap-0.5">
+          {headerItems.map((item) => (
+            <HeaderSystemNavItem
+              key={`${item.href}-${item.title.en}`}
+              item={item}
+              pathname={pathname}
+              isArabic={isArabic}
+              isOverview={item.href === "/system"}
+            />
+          ))}
+        </div>
+      </nav>
+    );
+  }
+
+  if (variant === "overview") {
+    const overviewItems = navItems.flatMap((nav) => nav.items);
+
+    return (
+      <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-3">
+        {overviewItems.map((item) => {
+          const Icon = item.icon;
+          const itemTitle = isArabic ? item.title.ar : item.title.en;
+          const active = isItemActive(pathname, item);
+          const activeParent = active || hasActiveChild(pathname, item);
+          const children = item.items || [];
+
+          return (
+            <section
+              key={`overview-${item.href}-${item.title.en}`}
+              className={cn(
+                "h-full rounded-2xl border p-2.5 transition",
+                "border-white/60 bg-white/[0.34] shadow-[0_8px_24px_rgba(15,23,42,0.035)]",
+                "hover:border-white/[0.85] hover:bg-white/[0.52]",
+                "dark:border-white/10 dark:bg-white/[0.035] dark:hover:bg-white/[0.06]",
+                activeParent &&
+                  "border-primary/20 bg-primary/[0.07] dark:bg-primary/[0.11]",
+              )}
+            >
+              <Link
+                href={item.href}
+                target={item.newTab ? "_blank" : undefined}
+                className={cn(
+                  "group/overview flex min-h-10 items-center gap-2.5 rounded-xl px-1.5 py-1.5",
+                  isArabic ? "flex-row-reverse text-right" : "flex-row text-left",
+                )}
+              >
+                {Icon ? (
+                  <span
+                    className={cn(
+                      "flex size-9 shrink-0 items-center justify-center rounded-xl border",
+                      "border-white/65 bg-white/[0.58] text-muted-foreground shadow-sm",
+                      "group-hover/overview:text-primary",
+                      "dark:border-white/10 dark:bg-white/[0.055]",
+                      activeParent && "bg-primary/10 text-primary",
+                    )}
+                  >
+                    <Icon className="size-4" />
+                  </span>
+                ) : null}
+
+                <span className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">
+                  {itemTitle}
+                </span>
+
+                {children.length > 0 ? (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-950/[0.06] px-1.5 text-[10px] font-bold text-muted-foreground dark:bg-white/[0.08]">
+                    {children.length}
+                  </span>
+                ) : (
+                  <ChevronIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                )}
+              </Link>
+
+              {children.length > 0 ? (
+                <div className="mt-1.5 grid gap-1">
+                  {children.map((child) => {
+                    const ChildIcon = child.icon;
+                    const childTitle = isArabic
+                      ? child.title.ar
+                      : child.title.en;
+                    const childActive = isItemActive(pathname, child);
+
+                    return (
+                      <Link
+                        key={`overview-child-${child.href}-${child.title.en}`}
+                        href={child.href}
+                        target={child.newTab ? "_blank" : undefined}
+                        className={cn(
+                          "group/overview-child flex min-h-9 items-center gap-2 rounded-xl px-2 py-1.5 text-sm transition",
+                          "text-muted-foreground hover:bg-white/[0.58] hover:text-foreground",
+                          "dark:hover:bg-white/[0.055]",
+                          childActive &&
+                            "bg-primary/10 font-semibold text-primary",
+                          isArabic
+                            ? "flex-row-reverse text-right"
+                            : "flex-row text-left",
+                        )}
+                      >
+                        {ChildIcon ? (
+                          <span
+                            className={cn(
+                              "flex size-7 shrink-0 items-center justify-center rounded-lg",
+                              "bg-slate-950/[0.045] text-muted-foreground",
+                              "group-hover/overview-child:text-primary",
+                              "dark:bg-white/[0.055]",
+                              childActive && "bg-primary/10 text-primary",
+                            )}
+                          >
+                            <ChildIcon className="size-3.5" />
+                          </span>
+                        ) : null}
+
+                        <span className="min-w-0 flex-1 truncate">
+                          {childTitle}
+                        </span>
+
+                        {child.isNew || child.isDataBadge ? (
+                          <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold text-primary">
+                            {child.isDataBadge ||
+                              (isArabic ? "جديد" : "New")}
+                          </span>
+                        ) : null}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </section>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <>
