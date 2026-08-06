@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
+// communications_surfaces_hr_practitioner_spirit_v2=true
 /* ============================================================
    📂 marilyn_frontend/app/system/whatsapp/settings/page.tsx
-   💬 Mhamcloud — System WhatsApp Settings Page
+   💬 Marilyn Clinics — System WhatsApp Settings Page
    ------------------------------------------------------------
    ✅ Standalone route page, no internal tabs
    ✅ Approved Premium system page pattern
@@ -13,14 +14,12 @@
    ✅ No fake demo data
 ============================================================ */
 import * as React from "react";
-import Link from "next/link";
 import {
+  Activity,
   Copy,
   FileText,
   KeyRound,
-  LayoutDashboard,
   Loader2,
-  MessageCircle,
   Phone,
   Power,
   Printer,
@@ -31,13 +30,15 @@ import {
   SendHorizontal,
   Settings2,
   Smartphone,
-  Sparkles,
   TriangleAlert,
   Unplug,
   Webhook,
   Wifi,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  printCurrentPage,
+} from "@/lib/managed-print-window";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +48,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  registerBrandButtonClass,
+  registerOutlineButtonClass,
+} from "@/components/ui/data-register";
+import { SystemKpiCard } from "@/components/ui/system-kpi-card";
+import { CommunicationsCenterTabs } from "@/components/system/communications-center-tabs";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -108,14 +115,8 @@ type ConnectionForm = {
   session_name: string;
   session_mode: string;
 };
-type QuickLink = {
-  title: string;
-  description: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-};
 const API_ENDPOINT = "/api/system/whatsapp/connection/";
-const DEFAULT_TEST_BODY = "Mhamcloud system WhatsApp test message.";
+const DEFAULT_TEST_BODY = "Marilyn Clinics system WhatsApp test message.";
 const translations = {
   ar: {
     title: "إعدادات واتساب النظام",
@@ -424,7 +425,7 @@ function normalizeConnection(value: unknown): SystemConnection {
     allowBroadcasts: toBool(record.allow_broadcasts),
     sendTestEnabled: toBool(record.send_test_enabled),
     defaultTestRecipient: toStringValue(record.default_test_recipient),
-    sessionName: toStringValue(record.session_name) || "Mhamcloud-system-session",
+    sessionName: toStringValue(record.session_name) || "marilyn-system-session",
     sessionMode: toStringValue(record.session_mode) || "qr",
     sessionStatus: toStringValue(record.session_status) || "disconnected",
     sessionConnectedPhone: toStringValue(record.session_connected_phone),
@@ -443,7 +444,7 @@ function buildForm(connection: SystemConnection | null): ConnectionForm {
     provider: connection?.provider || "WEB_SESSION",
     is_enabled: connection?.isEnabled ?? false,
     is_active: connection?.isActive ?? false,
-    business_name: connection?.businessName || "Mhamcloud Support",
+    business_name: connection?.businessName || "Marilyn Clinics Support",
     phone_number: connection?.phoneNumber || "",
     phone_number_id: connection?.phoneNumberId || "",
     business_account_id: connection?.businessAccountId || "",
@@ -458,7 +459,7 @@ function buildForm(connection: SystemConnection | null): ConnectionForm {
     allow_broadcasts: connection?.allowBroadcasts ?? true,
     send_test_enabled: connection?.sendTestEnabled ?? true,
     default_test_recipient: connection?.defaultTestRecipient || "",
-    session_name: connection?.sessionName || "Mhamcloud-system-session",
+    session_name: connection?.sessionName || "marilyn-system-session",
     session_mode: connection?.sessionMode || "qr",
   };
 }
@@ -490,54 +491,6 @@ function formatDate(value: string, locale: Locale, fallback: string): string {
     timeStyle: "short",
   }).format(date);
 }
-function KpiCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-}: {
-  title: string;
-  value: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-}) {
-  return (
-    <Card className="overflow-hidden rounded-2xl border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2">
-        <div className="min-w-0">
-          <CardDescription className="truncate text-sm">{title}</CardDescription>
-          <CardTitle className="mt-2 truncate text-2xl font-bold tracking-tight">
-            {value}
-          </CardTitle>
-        </div>
-        <span className="rounded-2xl bg-primary/10 p-2.5 text-primary">
-          <Icon className="h-5 w-5" />
-        </span>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <p className="line-clamp-2 text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-function QuickLinkCard({ action }: { action: QuickLink }) {
-  const Icon = action.icon;
-  return (
-    <Card className="group rounded-2xl border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <Link href={action.href} className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-          <div className="min-w-0">
-            <CardTitle className="text-base">{action.title}</CardTitle>
-            <CardDescription className="mt-2 line-clamp-2">{action.description}</CardDescription>
-          </div>
-          <span className="rounded-2xl bg-primary/10 p-2.5 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-            <Icon className="h-5 w-5" />
-          </span>
-        </CardHeader>
-      </Link>
-    </Card>
-  );
-}
 function ActionCard({
   title,
   description,
@@ -561,7 +514,7 @@ function ActionCard({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "group rounded-2xl border border-border/70 bg-card p-5 text-start shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60",
+        "group rounded-lg border border-border/70 bg-card p-5 text-start shadow-none transition hover:border-[#b58c4d]/50 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60",
         danger && "hover:border-destructive/30",
       )}
     >
@@ -570,7 +523,9 @@ function ActionCard({
           <h3 className="font-semibold">{title}</h3>
           <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{description}</p>
         </div>
-        <span className={cn("rounded-2xl p-2.5", danger ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
+        <span className={cn("rounded-2xl p-2.5", danger
+          ? "bg-destructive/10 text-destructive"
+          : "border border-[#cbbda9]/55 bg-[#fbf8f2] text-[#a57b3d] shadow-sm")}>
           {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Icon className="h-5 w-5" />}
         </span>
       </div>
@@ -582,7 +537,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 function InfoBox({ label, value, alignClass }: { label: string; value: string; alignClass: string }) {
   return (
-    <div className={cn("rounded-2xl border bg-background p-4", alignClass)}>
+    <div className={cn("rounded-lg border bg-background p-4", alignClass)}>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-2 break-words text-sm font-semibold">{value}</p>
     </div>
@@ -598,7 +553,7 @@ function ToggleRow({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex items-center justify-between gap-3 rounded-2xl border bg-background px-4 py-3 text-sm">
+    <label className="flex items-center justify-between gap-3 rounded-lg border bg-background px-4 py-3 text-sm">
       <span className="font-medium">{label}</span>
       <input
         type="checkbox"
@@ -795,7 +750,7 @@ export default function SystemWhatsAppSettingsPage() {
   }
   function openPrintWindow(kind: "print" | "pdf") {
     if (kind === "pdf") toast.info(t.pdfHint);
-    window.print();
+    printCurrentPage();
   }
   async function copyPairingCode() {
     if (!connection?.sessionPairingCode || typeof navigator === "undefined" || !navigator.clipboard) return;
@@ -806,32 +761,6 @@ export default function SystemWhatsAppSettingsPage() {
   const gatewayText = connection?.gatewayConfigured ? t.configured : t.notConfigured;
   const tokenText = connection?.hasAccessToken || connection?.hasWebhookVerifyToken ? t.saved : t.missing;
   const modeText = connection?.sessionMode || form.session_mode || "qr";
-  const pageLinks: QuickLink[] = [
-    {
-      title: t.overviewTitle,
-      description: t.overviewDesc,
-      href: "/system/whatsapp",
-      icon: MessageCircle,
-    },
-    {
-      title: t.templatesTitle,
-      description: t.templatesDesc,
-      href: "/system/whatsapp/templates",
-      icon: FileText,
-    },
-    {
-      title: t.messagesTitle,
-      description: t.messagesDesc,
-      href: "/system/whatsapp/messages",
-      icon: SendHorizontal,
-    },
-    {
-      title: t.dashboardTitle,
-      description: t.dashboardDesc,
-      href: "/system",
-      icon: LayoutDashboard,
-    },
-  ];
   if (loading) return <SettingsSkeleton dir={dir} />;
   if (error) {
     return (
@@ -846,7 +775,7 @@ export default function SystemWhatsAppSettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4 text-center">
             <p className="rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground">{error}</p>
-            <Button onClick={() => void loadConnection({ silent: true })} className="rounded-xl">
+            <Button onClick={() => void loadConnection({ silent: true })} className="rounded-lg">
               <RefreshCw className="h-4 w-4" />
               {t.tryAgain}
             </Button>
@@ -856,78 +785,140 @@ export default function SystemWhatsAppSettingsPage() {
     );
   }
   return (
-    <main dir={dir} className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
-      <div className="w-full space-y-6">
-        <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">
-          <div className="relative p-6 sm:p-8">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/80 via-primary/30 to-transparent" />
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-              <div className="max-w-4xl">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
-                  {t.badge}
-                </div>
-                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t.title}</h1>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">{t.subtitle}</p>
-                {!connection?.gatewayConfigured ? (
-                  <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>{t.gatewayHint}</span>
-                  </div>
-                ) : null}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  className="rounded-xl bg-background"
-                  onClick={() => void loadConnection({ silent: true })}
-                  disabled={refreshing}
-                >
-                  {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                  {t.refresh}
-                </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => openPrintWindow("print")}>
-                  <Printer className="h-4 w-4" />
-                  {t.print}
-                </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => openPrintWindow("pdf")}>
-                  <FileText className="h-4 w-4" />
-                  {t.pdf}
-                </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={resetLocalForm}>
-                  <RotateCcw className="h-4 w-4" />
-                  {t.reset}
-                </Button>
-                <Button className="rounded-xl" onClick={() => void saveSettings()} disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  {t.save}
-                </Button>
-              </div>
+    <main dir={dir} className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
+      <div className="w-full space-y-5">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-4xl">
+            <div className="mb-2 flex items-center gap-2 text-xs font-medium text-[#9a7139]">
+              <Settings2 className="h-3.5 w-3.5 text-[#a57b3d]" />
+              {t.badge}
             </div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {t.title}
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+              {t.subtitle}
+            </p>
+            <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+              <Activity className="h-4 w-4 text-emerald-500" />
+              {t.fromLiveApi}
+            </p>
+            {!connection?.gatewayConfigured ? (
+              <div className="mt-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{t.gatewayHint}</span>
+              </div>
+            ) : null}
           </div>
-        </section>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              className={
+                registerOutlineButtonClass
+              }
+              onClick={() =>
+                void loadConnection({
+                  silent: true,
+                })
+              }
+              disabled={refreshing}
+            >
+              {refreshing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {t.refresh}
+            </Button>
+            <Button
+              variant="brand"
+              className={
+                registerBrandButtonClass
+              }
+              onClick={() =>
+                openPrintWindow("print")
+              }
+            >
+              <Printer className="h-4 w-4" />
+              {t.print}
+            </Button>
+            <Button
+              variant="outline"
+              className={
+                registerOutlineButtonClass
+              }
+              onClick={() =>
+                openPrintWindow("pdf")
+              }
+            >
+              <FileText className="h-4 w-4" />
+              {t.pdf}
+            </Button>
+            <Button
+              variant="outline"
+              className={
+                registerOutlineButtonClass
+              }
+              onClick={resetLocalForm}
+            >
+              <RotateCcw className="h-4 w-4" />
+              {t.reset}
+            </Button>
+            <Button
+              variant="brand"
+              className={
+                registerBrandButtonClass
+              }
+              onClick={() =>
+                void saveSettings()
+              }
+              disabled={saving}
+            >
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {t.save}
+            </Button>
+          </div>
+        </header>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <KpiCard title={t.connectionStatus} value={statusText} description={t.fromLiveApi} icon={Power} />
-          <KpiCard title={t.gatewayStatus} value={gatewayText} description={t.fromLiveApi} icon={Webhook} />
-          <KpiCard title={t.tokenStatus} value={tokenText} description={t.fromLiveApi} icon={KeyRound} />
-          <KpiCard title={t.sessionMode} value={modeText} description={t.fromLiveApi} icon={Wifi} />
+          <SystemKpiCard
+            title={t.connectionStatus}
+            value={statusText}
+            description={t.fromLiveApi}
+            icon={Power}
+          />
+          <SystemKpiCard
+            title={t.gatewayStatus}
+            value={gatewayText}
+            description={t.fromLiveApi}
+            icon={Webhook}
+          />
+          <SystemKpiCard
+            title={t.tokenStatus}
+            value={tokenText}
+            description={t.fromLiveApi}
+            icon={KeyRound}
+          />
+          <SystemKpiCard
+            title={t.sessionMode}
+            value={modeText}
+            description={t.fromLiveApi}
+            icon={Wifi}
+          />
         </div>
-        <Card className="rounded-2xl shadow-sm">
+        <CommunicationsCenterTabs
+          active="settings"
+          locale={locale}
+        />
+        <Card className="rounded-lg bg-card shadow-none">
           <CardHeader>
-            <CardTitle>{t.pageLinksTitle}</CardTitle>
-            <CardDescription>{t.pageLinksDesc}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {pageLinks.map((action) => (
-                <QuickLinkCard key={action.href} action={action} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="rounded-2xl shadow-sm">
-          <CardHeader>
-            <CardTitle>{t.actionsTitle}</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Wifi className="h-4 w-4 text-[#a57b3d]" />
+              {t.actionsTitle}
+            </CardTitle>
             <CardDescription>{t.actionsDesc}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -969,10 +960,10 @@ export default function SystemWhatsAppSettingsPage() {
           </CardContent>
         </Card>
         <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-lg bg-card shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Settings2 className="h-5 w-5" />
+                <Settings2 className="h-5 w-5 text-[#a57b3d]" />
                 {t.settingsTitle}
               </CardTitle>
               <CardDescription>{t.settingsDesc}</CardDescription>
@@ -984,7 +975,7 @@ export default function SystemWhatsAppSettingsPage() {
                   <select
                     value={form.provider}
                     onChange={(event) => updateField("provider", event.target.value)}
-                    className="h-10 rounded-xl border bg-background px-3 text-sm"
+                    className="h-9 rounded-lg border bg-background px-3 text-sm"
                   >
                     <option value="WEB_SESSION">WEB_SESSION</option>
                     <option value="WHATSAPP_CLOUD">WHATSAPP_CLOUD</option>
@@ -994,22 +985,22 @@ export default function SystemWhatsAppSettingsPage() {
                 </div>
                 <div className="grid gap-2">
                   <FieldLabel>{t.businessName}</FieldLabel>
-                  <Input className="h-10 rounded-xl" value={form.business_name} onChange={(event) => updateField("business_name", event.target.value)} />
+                  <Input className="h-9 rounded-lg" value={form.business_name} onChange={(event) => updateField("business_name", event.target.value)} />
                 </div>
                 <div className="grid gap-2">
                   <FieldLabel>{t.phoneNumber}</FieldLabel>
-                  <Input className="h-10 rounded-xl" value={form.phone_number} onChange={(event) => updateField("phone_number", event.target.value)} placeholder="+9665XXXXXXXX" />
+                  <Input className="h-9 rounded-lg" value={form.phone_number} onChange={(event) => updateField("phone_number", event.target.value)} placeholder="+9665XXXXXXXX" />
                 </div>
                 <div className="grid gap-2">
                   <FieldLabel>{t.sessionName}</FieldLabel>
-                  <Input className="h-10 rounded-xl" value={form.session_name} onChange={(event) => updateField("session_name", event.target.value)} />
+                  <Input className="h-9 rounded-lg" value={form.session_name} onChange={(event) => updateField("session_name", event.target.value)} />
                 </div>
                 <div className="grid gap-2">
                   <FieldLabel>{t.sessionMode}</FieldLabel>
                   <select
                     value={form.session_mode}
                     onChange={(event) => updateField("session_mode", event.target.value)}
-                    className="h-10 rounded-xl border bg-background px-3 text-sm"
+                    className="h-9 rounded-lg border bg-background px-3 text-sm"
                   >
                     <option value="qr">QR</option>
                     <option value="pairing_code">Pairing Code</option>
@@ -1017,27 +1008,27 @@ export default function SystemWhatsAppSettingsPage() {
                 </div>
                 <div className="grid gap-2">
                   <FieldLabel>{t.apiVersion}</FieldLabel>
-                  <Input className="h-10 rounded-xl" value={form.api_version} onChange={(event) => updateField("api_version", event.target.value)} />
+                  <Input className="h-9 rounded-lg" value={form.api_version} onChange={(event) => updateField("api_version", event.target.value)} />
                 </div>
                 <div className="grid gap-2">
                   <FieldLabel>{t.defaultLanguage}</FieldLabel>
-                  <Input className="h-10 rounded-xl" value={form.default_language_code} onChange={(event) => updateField("default_language_code", event.target.value)} />
+                  <Input className="h-9 rounded-lg" value={form.default_language_code} onChange={(event) => updateField("default_language_code", event.target.value)} />
                 </div>
                 <div className="grid gap-2">
                   <FieldLabel>{t.defaultCountry}</FieldLabel>
-                  <Input className="h-10 rounded-xl" value={form.default_country_code} onChange={(event) => updateField("default_country_code", event.target.value)} />
+                  <Input className="h-9 rounded-lg" value={form.default_country_code} onChange={(event) => updateField("default_country_code", event.target.value)} />
                 </div>
                 <div className="grid gap-2">
                   <FieldLabel>{t.phoneNumberId}</FieldLabel>
-                  <Input className="h-10 rounded-xl" value={form.phone_number_id} onChange={(event) => updateField("phone_number_id", event.target.value)} />
+                  <Input className="h-9 rounded-lg" value={form.phone_number_id} onChange={(event) => updateField("phone_number_id", event.target.value)} />
                 </div>
                 <div className="grid gap-2">
                   <FieldLabel>{t.businessAccountId}</FieldLabel>
-                  <Input className="h-10 rounded-xl" value={form.business_account_id} onChange={(event) => updateField("business_account_id", event.target.value)} />
+                  <Input className="h-9 rounded-lg" value={form.business_account_id} onChange={(event) => updateField("business_account_id", event.target.value)} />
                 </div>
                 <div className="grid gap-2 md:col-span-2">
                   <FieldLabel>{t.appId}</FieldLabel>
-                  <Input className="h-10 rounded-xl" value={form.app_id} onChange={(event) => updateField("app_id", event.target.value)} />
+                  <Input className="h-9 rounded-lg" value={form.app_id} onChange={(event) => updateField("app_id", event.target.value)} />
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
@@ -1048,16 +1039,16 @@ export default function SystemWhatsAppSettingsPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-lg bg-card shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Power className="h-5 w-5" />
+                <Power className="h-5 w-5 text-[#a57b3d]" />
                 {t.connectionDetailsTitle}
               </CardTitle>
               <CardDescription>{t.connectionDetailsDesc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className={cn("rounded-2xl border bg-background p-4", alignClass)}>
+              <div className={cn("rounded-lg border bg-background p-4", alignClass)}>
                 <p className="text-xs text-muted-foreground">{t.connectionStatus}</p>
                 <Badge variant="outline" className={cn("mt-2 rounded-full", statusBadgeClass(connection?.sessionStatus || ""))}>
                   {statusText}
@@ -1074,10 +1065,10 @@ export default function SystemWhatsAppSettingsPage() {
           </Card>
         </section>
         <section className="grid gap-6 xl:grid-cols-2">
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-lg bg-card shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Webhook className="h-5 w-5" />
+                <Webhook className="h-5 w-5 text-[#a57b3d]" />
                 {t.webhookTitle}
               </CardTitle>
               <CardDescription>{t.webhookDesc}</CardDescription>
@@ -1085,18 +1076,18 @@ export default function SystemWhatsAppSettingsPage() {
             <CardContent className="space-y-4">
               <div className="grid gap-2">
                 <FieldLabel>{t.callbackUrl}</FieldLabel>
-                <Input className="h-10 rounded-xl" value={form.webhook_callback_url} onChange={(event) => updateField("webhook_callback_url", event.target.value)} />
+                <Input className="h-9 rounded-lg" value={form.webhook_callback_url} onChange={(event) => updateField("webhook_callback_url", event.target.value)} />
               </div>
               <div className="grid gap-2">
                 <FieldLabel>{t.accessToken}</FieldLabel>
-                <Input type="password" className="h-10 rounded-xl" value={form.access_token} onChange={(event) => updateField("access_token", event.target.value)} placeholder={t.accessTokenHint} />
+                <Input type="password" className="h-9 rounded-lg" value={form.access_token} onChange={(event) => updateField("access_token", event.target.value)} placeholder={t.accessTokenHint} />
                 <Badge variant={connection?.hasAccessToken ? "default" : "secondary"} className="w-fit rounded-full">
                   {connection?.hasAccessToken ? t.saved : t.missing}
                 </Badge>
               </div>
               <div className="grid gap-2">
                 <FieldLabel>{t.verifyToken}</FieldLabel>
-                <Input type="password" className="h-10 rounded-xl" value={form.webhook_verify_token} onChange={(event) => updateField("webhook_verify_token", event.target.value)} placeholder={t.verifyTokenHint} />
+                <Input type="password" className="h-9 rounded-lg" value={form.webhook_verify_token} onChange={(event) => updateField("webhook_verify_token", event.target.value)} placeholder={t.verifyTokenHint} />
                 <Badge variant={connection?.hasWebhookVerifyToken ? "default" : "secondary"} className="w-fit rounded-full">
                   {connection?.hasWebhookVerifyToken ? t.saved : t.missing}
                 </Badge>
@@ -1104,10 +1095,10 @@ export default function SystemWhatsAppSettingsPage() {
               <ToggleRow label={t.webhookVerified} checked={form.webhook_verified} onChange={(checked) => updateField("webhook_verified", checked)} />
             </CardContent>
           </Card>
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-lg bg-card shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <SendHorizontal className="h-5 w-5" />
+                <SendHorizontal className="h-5 w-5 text-[#a57b3d]" />
                 {t.testTitle}
               </CardTitle>
               <CardDescription>{t.testDesc}</CardDescription>
@@ -1115,11 +1106,11 @@ export default function SystemWhatsAppSettingsPage() {
             <CardContent className="space-y-4">
               <div className="grid gap-2">
                 <FieldLabel>{t.defaultRecipient}</FieldLabel>
-                <Input className="h-10 rounded-xl" value={form.default_test_recipient} onChange={(event) => updateField("default_test_recipient", event.target.value)} placeholder="+9665XXXXXXXX" />
+                <Input className="h-9 rounded-lg" value={form.default_test_recipient} onChange={(event) => updateField("default_test_recipient", event.target.value)} placeholder="+9665XXXXXXXX" />
               </div>
               <div className="grid gap-2">
                 <FieldLabel>{t.recipientPhone}</FieldLabel>
-                <Input className="h-10 rounded-xl" value={testRecipient} onChange={(event) => setTestRecipient(event.target.value)} placeholder="+9665XXXXXXXX" />
+                <Input className="h-9 rounded-lg" value={testRecipient} onChange={(event) => setTestRecipient(event.target.value)} placeholder="+9665XXXXXXXX" />
               </div>
               <div className="grid gap-2">
                 <FieldLabel>{t.messageBody}</FieldLabel>
@@ -1127,10 +1118,10 @@ export default function SystemWhatsAppSettingsPage() {
                   value={testBody}
                   onChange={(event) => setTestBody(event.target.value)}
                   rows={5}
-                  className="min-h-28 rounded-xl border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="min-h-28 rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
-              <Button className="w-full rounded-xl" disabled={Boolean(actionLoading) || !testRecipient} onClick={() => void runConnectionAction("test")}>
+              <Button variant="brand" className={registerBrandButtonClass + " w-full"} disabled={Boolean(actionLoading) || !testRecipient} onClick={() => void runConnectionAction("test")}>
                 {actionLoading === "test" ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizontal className="h-4 w-4" />}
                 {t.sendTest}
               </Button>
@@ -1138,44 +1129,44 @@ export default function SystemWhatsAppSettingsPage() {
           </Card>
         </section>
         <section className="grid gap-6 xl:grid-cols-2">
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-lg bg-card shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <QrCode className="h-5 w-5" />
+                <QrCode className="h-5 w-5 text-[#a57b3d]" />
                 {t.qrTitle}
               </CardTitle>
               <CardDescription>{t.qrDesc}</CardDescription>
             </CardHeader>
             <CardContent>
               {connection?.sessionQrCode ? (
-                <div className="flex justify-center rounded-2xl border bg-white p-4">
+                <div className="flex justify-center rounded-lg border bg-white p-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={connection.sessionQrCode} alt={t.qrTitle} className="h-auto max-h-80 w-auto max-w-full rounded-xl" />
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed bg-background p-10 text-center text-sm text-muted-foreground">
+                <div className="rounded-lg border border-dashed bg-background p-10 text-center text-sm text-muted-foreground">
                   {t.qrEmpty}
                 </div>
               )}
             </CardContent>
           </Card>
-          <Card className="rounded-2xl shadow-sm">
+          <Card className="rounded-lg bg-card shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Smartphone className="h-5 w-5" />
+                <Smartphone className="h-5 w-5 text-[#a57b3d]" />
                 {t.pairingTitle}
               </CardTitle>
               <CardDescription>{t.pairingDesc}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-2 rounded-2xl border bg-background p-4">
+              <div className="flex items-center gap-2 rounded-lg border bg-background p-4">
                 <code className="flex-1 break-all text-lg font-bold tracking-widest">
                   {connection?.sessionPairingCode || t.pairingEmpty}
                 </code>
                 <Button
                   variant="outline"
                   size="icon"
-                  className="rounded-xl"
+                  className="rounded-lg"
                   disabled={!connection?.sessionPairingCode}
                   onClick={() => void copyPairingCode()}
                   title={t.copy}
@@ -1185,7 +1176,7 @@ export default function SystemWhatsAppSettingsPage() {
               </div>
               <div className="grid gap-2">
                 <FieldLabel>{t.recipientPhone}</FieldLabel>
-                <Input className="h-10 rounded-xl" value={testRecipient} onChange={(event) => setTestRecipient(event.target.value)} placeholder="+9665XXXXXXXX" />
+                <Input className="h-9 rounded-lg" value={testRecipient} onChange={(event) => setTestRecipient(event.target.value)} placeholder="+9665XXXXXXXX" />
               </div>
             </CardContent>
           </Card>
@@ -1194,4 +1185,3 @@ export default function SystemWhatsAppSettingsPage() {
     </main>
   );
 }
-

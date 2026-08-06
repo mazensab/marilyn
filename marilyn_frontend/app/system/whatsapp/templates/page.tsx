@@ -1,7 +1,8 @@
 "use client";
+// communications_surfaces_hr_practitioner_spirit_v2=true
 /* ============================================================
    📂 marilyn_frontend/app/system/whatsapp/templates/page.tsx
-   💬 Mhamcloud — System WhatsApp Templates Page
+   💬 Marilyn Clinics — System WhatsApp Templates Page
    ------------------------------------------------------------
    ✅ Standalone route page, no internal tabs
    ✅ Approved Premium system page pattern
@@ -11,31 +12,37 @@
    ✅ Arabic/English via primey-locale
 ============================================================ */
 import * as React from "react";
-import Link from "next/link";
 import {
+  Activity,
   Archive,
   CheckCircle2,
   FileSpreadsheet,
   FileText,
   Inbox,
-  LayoutDashboard,
   Loader2,
-  MessageCircle,
   Printer,
   RefreshCw,
   RotateCcw,
-  Search,
-  SendHorizontal,
-  Settings2,
-  Sparkles,
   Tag,
   TriangleAlert,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  printCurrentPage,
+} from "@/lib/managed-print-window";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DataRegisterEmptyState,
+  DataRegisterSearch,
+  DataRegisterToolbar,
+  registerBrandButtonClass,
+  registerOutlineButtonClass,
+} from "@/components/ui/data-register";
+import { SystemKpiCard } from "@/components/ui/system-kpi-card";
+import { CommunicationsCenterTabs } from "@/components/system/communications-center-tabs";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -316,24 +323,6 @@ function statusBadgeClass(value: string): string {
 function csvCell(value: string): string {
   return `"${value.replaceAll('"', '""')}"`;
 }
-function KpiCard({ title, value, description, icon: Icon }: { title: string; value: number; description: string; icon: React.ComponentType<{ className?: string }> }) {
-  return (
-    <Card className="overflow-hidden rounded-2xl border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2">
-        <div className="min-w-0">
-          <CardDescription className="truncate text-sm">{title}</CardDescription>
-          <CardTitle className="mt-2 text-3xl font-bold tracking-tight">{formatInteger(value)}</CardTitle>
-        </div>
-        <span className="rounded-2xl bg-primary/10 p-2.5 text-primary">
-          <Icon className="h-5 w-5" />
-        </span>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <p className="line-clamp-2 text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
 function TemplatesSkeleton({ dir }: { dir: "rtl" | "ltr" }) {
   return (
     <main dir={dir} className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
@@ -460,7 +449,7 @@ export default function SystemWhatsAppTemplatesPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "Mhamcloud-system-whatsapp-templates.csv";
+    link.download = "marilyn-system-whatsapp-templates.csv";
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -470,7 +459,7 @@ export default function SystemWhatsAppTemplatesPage() {
       return;
     }
     if (mode === "pdf") toast.info(t.pdfHint);
-    window.print();
+    printCurrentPage();
   }
   async function updateTemplateStatus(template: TemplateRow, nextStatus: "ACTIVE" | "INACTIVE" | "ARCHIVED") {
     try {
@@ -498,12 +487,6 @@ export default function SystemWhatsAppTemplatesPage() {
   const activeCount = templates.filter((item) => item.status === "ACTIVE").length;
   const draftCount = templates.filter((item) => item.status === "DRAFT").length;
   const archivedCount = templates.filter((item) => item.status === "ARCHIVED").length;
-  const pageLinks = [
-    { title: t.settings, desc: t.settingsDesc, href: "/system/whatsapp/settings", icon: Settings2 },
-    { title: t.messages, desc: t.messagesDesc, href: "/system/whatsapp/messages", icon: SendHorizontal },
-    { title: t.overview, desc: t.overviewDesc, href: "/system/whatsapp", icon: MessageCircle },
-    { title: t.dashboard, desc: t.dashboardDesc, href: "/system", icon: LayoutDashboard },
-  ];
   if (loading) return <TemplatesSkeleton dir={dir} />;
   if (error) {
     return (
@@ -528,80 +511,123 @@ export default function SystemWhatsAppTemplatesPage() {
     );
   }
   return (
-    <main dir={dir} className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
-      <div className="w-full space-y-6">
-        <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">
-          <div className="relative p-6 sm:p-8">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/80 via-primary/30 to-transparent" />
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-              <div className="max-w-4xl">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
-                  {t.badge}
-                </div>
-                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t.title}</h1>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">{t.subtitle}</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => void loadTemplates({ silent: true })} disabled={refreshing}>
-                  {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                  {t.refresh}
-                </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={exportExcel}>
-                  <FileSpreadsheet className="h-4 w-4" />
-                  {t.excel}
-                </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => printPage("print")}>
-                  <Printer className="h-4 w-4" />
-                  {t.print}
-                </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => printPage("pdf")}>
-                  <FileText className="h-4 w-4" />
-                  {t.pdf}
-                </Button>
-              </div>
+    <main dir={dir} className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
+      <div className="w-full space-y-5">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-4xl">
+            <div className="mb-2 flex items-center gap-2 text-xs font-medium text-[#9a7139]">
+              <FileText className="h-3.5 w-3.5 text-[#a57b3d]" />
+              {t.badge}
             </div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {t.title}
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+              {t.subtitle}
+            </p>
+            <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+              <Activity className="h-4 w-4 text-emerald-500" />
+              {t.live}
+            </p>
           </div>
-        </section>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              className={
+                registerOutlineButtonClass
+              }
+              onClick={() =>
+                void loadTemplates({
+                  silent: true,
+                })
+              }
+              disabled={refreshing}
+            >
+              {refreshing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {t.refresh}
+            </Button>
+            <Button
+              variant="outline"
+              className={
+                registerOutlineButtonClass
+              }
+              onClick={exportExcel}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              {t.excel}
+            </Button>
+            <Button
+              variant="brand"
+              className={
+                registerBrandButtonClass
+              }
+              onClick={() =>
+                printPage("print")
+              }
+            >
+              <Printer className="h-4 w-4" />
+              {t.print}
+            </Button>
+            <Button
+              variant="outline"
+              className={
+                registerOutlineButtonClass
+              }
+              onClick={() =>
+                printPage("pdf")
+              }
+            >
+              <FileText className="h-4 w-4" />
+              {t.pdf}
+            </Button>
+          </div>
+        </header>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <KpiCard title={t.total} value={templates.length} description={t.live} icon={FileText} />
-          <KpiCard title={t.active} value={activeCount} description={t.live} icon={CheckCircle2} />
-          <KpiCard title={t.draft} value={draftCount} description={t.live} icon={Tag} />
-          <KpiCard title={t.archived} value={archivedCount} description={t.live} icon={Archive} />
+          <SystemKpiCard
+            title={t.total}
+            value={templates.length}
+            description={t.live}
+            icon={FileText}
+          />
+          <SystemKpiCard
+            title={t.active}
+            value={activeCount}
+            description={t.live}
+            icon={CheckCircle2}
+          />
+          <SystemKpiCard
+            title={t.draft}
+            value={draftCount}
+            description={t.live}
+            icon={Tag}
+          />
+          <SystemKpiCard
+            title={t.archived}
+            value={archivedCount}
+            description={t.live}
+            icon={Archive}
+          />
         </div>
-        <Card className="rounded-2xl shadow-sm">
-          <CardHeader>
-            <CardTitle>{t.pagesTitle}</CardTitle>
-            <CardDescription>{t.pagesDesc}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {pageLinks.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Card key={item.href} className="group rounded-2xl border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                    <Link href={item.href} className="block h-full">
-                      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-                        <div className="min-w-0">
-                          <CardTitle className="text-base">{item.title}</CardTitle>
-                          <CardDescription className="mt-2 line-clamp-2">{item.desc}</CardDescription>
-                        </div>
-                        <span className="rounded-2xl bg-primary/10 p-2.5 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-                          <Icon className="h-5 w-5" />
-                        </span>
-                      </CardHeader>
-                    </Link>
-                  </Card>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="w-full rounded-2xl shadow-sm">
+        <CommunicationsCenterTabs
+          active="templates"
+          locale={locale}
+          counts={{
+            templates:
+              templates.length,
+          }}
+        />
+        <Card className="w-full overflow-hidden rounded-lg bg-card shadow-none">
           <CardHeader className="gap-3">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <CardTitle>{t.tableTitle}</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <FileText className="h-4 w-4 text-[#a57b3d]" />
+                  {t.tableTitle}
+                </CardTitle>
                 <CardDescription className="mt-2">{t.tableDesc}</CardDescription>
               </div>
               <Badge variant="outline" className="w-fit rounded-full px-3 py-1">
@@ -611,48 +637,114 @@ export default function SystemWhatsAppTemplatesPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-3 rounded-2xl border bg-background p-3 lg:grid-cols-[1fr_160px_180px_150px_auto]">
-              <div className="relative">
-                <Search className="pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground ltr:left-3 rtl:right-3" />
-                <Input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder={t.search}
-                  className="h-10 rounded-xl bg-muted/30 ltr:pl-9 rtl:pr-9"
-                />
+            <DataRegisterToolbar>
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                <div className="min-w-[280px] flex-1">
+                  <DataRegisterSearch
+                    value={search}
+                    onChange={setSearch}
+                    placeholder={t.search}
+                  />
+                </div>
+                <select
+                  value={statusFilter}
+                  onChange={(event) =>
+                    setStatusFilter(
+                      event.target.value as StatusFilter,
+                    )
+                  }
+                  className="h-9 w-full rounded-lg border bg-background px-3 text-sm sm:w-[145px]"
+                >
+                  <option value="all">
+                    {t.all}
+                  </option>
+                  <option value="DRAFT">
+                    {t.DRAFT}
+                  </option>
+                  <option value="ACTIVE">
+                    {t.ACTIVE}
+                  </option>
+                  <option value="INACTIVE">
+                    {t.INACTIVE}
+                  </option>
+                  <option value="ARCHIVED">
+                    {t.ARCHIVED}
+                  </option>
+                </select>
+                <select
+                  value={categoryFilter}
+                  onChange={(event) =>
+                    setCategoryFilter(
+                      event.target.value as CategoryFilter,
+                    )
+                  }
+                  className="h-9 w-full rounded-lg border bg-background px-3 text-sm sm:w-[165px]"
+                >
+                  <option value="all">
+                    {t.all}
+                  </option>
+                  <option value="GENERAL">
+                    {t.GENERAL}
+                  </option>
+                  <option value="SALES">
+                    {t.SALES}
+                  </option>
+                  <option value="PURCHASES">
+                    {t.PURCHASES}
+                  </option>
+                  <option value="TREASURY">
+                    {t.TREASURY}
+                  </option>
+                  <option value="ACCOUNTING">
+                    {t.ACCOUNTING}
+                  </option>
+                  <option value="INVENTORY">
+                    {t.INVENTORY}
+                  </option>
+                  <option value="CUSTOMER_SERVICE">
+                    {t.CUSTOMER_SERVICE}
+                  </option>
+                </select>
+                <select
+                  value={sortKey}
+                  onChange={(event) =>
+                    setSortKey(
+                      event.target.value as SortKey,
+                    )
+                  }
+                  className="h-9 w-full rounded-lg border bg-background px-3 text-sm sm:w-[145px]"
+                >
+                  <option value="newest">
+                    {t.newest}
+                  </option>
+                  <option value="oldest">
+                    {t.oldest}
+                  </option>
+                  <option value="name">
+                    {t.nameSort}
+                  </option>
+                  <option value="code">
+                    {t.codeSort}
+                  </option>
+                  <option value="status">
+                    {t.statusSort}
+                  </option>
+                </select>
+                <Button
+                  variant="outline"
+                  className={
+                    registerOutlineButtonClass
+                  }
+                  onClick={resetFilters}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  {t.reset}
+                </Button>
               </div>
-              <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)} className="h-10 rounded-xl border bg-muted/30 px-3 text-sm">
-                <option value="all">{t.all}</option>
-                <option value="DRAFT">{t.DRAFT}</option>
-                <option value="ACTIVE">{t.ACTIVE}</option>
-                <option value="INACTIVE">{t.INACTIVE}</option>
-                <option value="ARCHIVED">{t.ARCHIVED}</option>
-              </select>
-              <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value as CategoryFilter)} className="h-10 rounded-xl border bg-muted/30 px-3 text-sm">
-                <option value="all">{t.all}</option>
-                <option value="GENERAL">{t.GENERAL}</option>
-                <option value="SALES">{t.SALES}</option>
-                <option value="PURCHASES">{t.PURCHASES}</option>
-                <option value="TREASURY">{t.TREASURY}</option>
-                <option value="ACCOUNTING">{t.ACCOUNTING}</option>
-                <option value="INVENTORY">{t.INVENTORY}</option>
-                <option value="CUSTOMER_SERVICE">{t.CUSTOMER_SERVICE}</option>
-              </select>
-              <select value={sortKey} onChange={(event) => setSortKey(event.target.value as SortKey)} className="h-10 rounded-xl border bg-muted/30 px-3 text-sm">
-                <option value="newest">{t.newest}</option>
-                <option value="oldest">{t.oldest}</option>
-                <option value="name">{t.nameSort}</option>
-                <option value="code">{t.codeSort}</option>
-                <option value="status">{t.statusSort}</option>
-              </select>
-              <Button variant="outline" className="h-10 rounded-xl bg-muted/30" onClick={resetFilters}>
-                <RotateCcw className="h-4 w-4" />
-                {t.reset}
-              </Button>
-            </div>
-            <div className="overflow-hidden rounded-2xl border bg-background">
+            </DataRegisterToolbar>
+            <div className="overflow-hidden rounded-lg border bg-background">
               <div className="w-full overflow-x-auto">
-                <Table className="w-full min-w-[1100px] table-fixed">
+                <Table variant="register" layout="fixed" minWidth="1100px">
                   <TableHeader>
                     <TableRow className="h-11 bg-muted/40 hover:bg-muted/40">
                       <TableHead className={cn("h-11 w-[220px] px-4 text-xs font-semibold text-muted-foreground", alignClass)}>{t.company}</TableHead>
@@ -719,17 +811,22 @@ export default function SystemWhatsAppTemplatesPage() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={8}>
-                          <div className="flex min-h-[260px] flex-col items-center justify-center rounded-2xl border border-dashed bg-background px-6 py-10 text-center">
-                            <Inbox className="h-10 w-10 text-muted-foreground" />
-                            <h3 className="mt-4 text-base font-semibold">{hasFilters ? t.noResults : t.noData}</h3>
-                            <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">{hasFilters ? t.noResultsDesc : t.noDataDesc}</p>
-                            {hasFilters ? (
-                              <Button variant="outline" className="mt-4 rounded-xl bg-background" onClick={resetFilters}>
-                                <RotateCcw className="h-4 w-4" />
-                                {t.reset}
-                              </Button>
-                            ) : null}
-                          </div>
+                          <DataRegisterEmptyState
+                            icon={Inbox}
+                            title={
+                              hasFilters
+                                ? t.noResults
+                                : t.noData
+                            }
+                            description={
+                              hasFilters
+                                ? t.noResultsDesc
+                                : t.noDataDesc
+                            }
+                            showReset={hasFilters}
+                            onReset={resetFilters}
+                            resetLabel={t.reset}
+                          />
                         </TableCell>
                       </TableRow>
                     )}

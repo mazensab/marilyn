@@ -1,9 +1,9 @@
 ﻿"use client";
 /* ============================================================
    📂 marilyn_frontend/components/system/activity-profiles/SystemActivityProfilesCenter.tsx
-   🧩 Mhamcloud — System Activity Profiles Center
+   🧩 Marilyn Clinics — System Activity Profiles Center
    ------------------------------------------------------------
-   ✅ Approved Premium Mhamcloud system page pattern
+   ✅ Marilyn Clinics system activity profiles pattern
    ✅ Real API only:
       - GET /api/system/activity-profiles/
       - GET /api/system/activity-profiles/list/
@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
+import { openPrintReport } from "@/lib/print-report";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -159,7 +160,7 @@ const translations = {
     exportEmpty: "لا توجد بيانات للتصدير.",
     printEmpty: "لا توجد بيانات للطباعة.",
     pdfHint: "اختر حفظ كـ PDF من نافذة الطباعة.",
-    reportTitle: "تقرير أنشطة الشركات في Mhamcloud",
+    reportTitle: "تقرير أنشطة الشركات في Marilyn Clinics",
     generatedAt: "تاريخ الإنشاء",
     refreshed: "تم تحديث أنشطة الشركات.",
     unknown: "غير معروف",
@@ -221,7 +222,7 @@ const translations = {
     exportEmpty: "There is no data to export.",
     printEmpty: "There is no data to print.",
     pdfHint: "Choose Save as PDF from the print dialog.",
-    reportTitle: "Mhamcloud Activity Profiles Report",
+    reportTitle: "Marilyn Clinics Activity Profiles Report",
     generatedAt: "Generated at",
     refreshed: "Activity profiles refreshed.",
     unknown: "Unknown",
@@ -608,51 +609,37 @@ export function SystemActivityProfilesCenter({ mode = "overview" }: { mode?: Pag
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Mhamcloud-activity-profiles-${new Date().toISOString().slice(0, 10)}.xls`;
+    link.download = `marilyn-activity-profiles-${new Date().toISOString().slice(0, 10)}.xls`;
     document.body.appendChild(link);
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
   }
-  function openPrintWindow(modeName: "print" | "pdf") {
+  async function openPrintWindow(
+    modeName: "print" | "pdf",
+  ) {
     const rows = exportRows();
     if (!rows.length) {
       toast.error(t.printEmpty);
       return;
     }
-    if (modeName === "pdf") toast.info(t.pdfHint);
-    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1200,height=800");
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <!doctype html>
-      <html dir="${dir}" lang="${locale}">
-        <head>
-          <meta charset="utf-8" />
-          <title>${escapeHtml(t.reportTitle)}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 24px; color: #0f172a; }
-            h1 { margin: 0 0 8px; font-size: 24px; }
-            p { color: #64748b; }
-            table { width: 100%; border-collapse: collapse; margin-top: 18px; }
-            th, td {
-              border: 1px solid #cbd5e1;
-              padding: 8px;
-              font-size: 12px;
-              text-align: ${dir === "rtl" ? "right" : "left"};
-              vertical-align: top;
-            }
-            th { background: #f1f5f9; font-weight: 700; }
-          </style>
-        </head>
-        <body>
-          <h1>${escapeHtml(t.reportTitle)}</h1>
-          <p>${escapeHtml(t.generatedAt)}: ${escapeHtml(new Date().toLocaleString())}</p>
-          ${buildTableHtml(rows)}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    window.setTimeout(() => printWindow.print(), 250);
+    if (modeName === "pdf") {
+      toast.info(t.pdfHint);
+    }
+    const opened = await openPrintReport({
+      locale,
+      title: t.reportTitle,
+      subtitle: pageSubtitle,
+      tableHtml: buildTableHtml(rows),
+      recordsCount: rows.length,
+    });
+    if (!opened) {
+      toast.error(
+        locale === "ar"
+          ? "تعذر فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم أعد المحاولة."
+          : "The print window could not be opened. Allow pop-ups and try again.",
+      );
+    }
   }
   if (loading) return <ActivityProfilesSkeleton />;
   if (error) {
@@ -706,11 +693,11 @@ export function SystemActivityProfilesCenter({ mode = "overview" }: { mode?: Pag
                   <FileSpreadsheet className="h-4 w-4" />
                   {t.exportExcel}
                 </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => openPrintWindow("print")}>
+                <Button variant="outline" className="rounded-xl bg-background" onClick={() => void openPrintWindow("print")}>
                   <Printer className="h-4 w-4" />
                   {t.print}
                 </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => openPrintWindow("pdf")}>
+                <Button variant="outline" className="rounded-xl bg-background" onClick={() => void openPrintWindow("pdf")}>
                   <FileText className="h-4 w-4" />
                   {t.pdf}
                 </Button>

@@ -4,6 +4,10 @@ import { SiteHeader } from "@/components/layout/header"
 import { AppSidebar } from "@/components/layout/sidebar/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
+// system_workspace_white_floor_v1=true
+// system_workspace_sticky_header_fix_v1=true
+// system_workspace_sticky_header_opaque_layer_v2=true
+// system_workspace_sticky_header_transparent_layer_v3=true
 
 type DashboardFrameProps = {
   children: ReactNode
@@ -20,40 +24,20 @@ export default function DashboardFrame({
 
   return (
     <div
-      className={cn(
-        "relative min-h-svh overflow-x-hidden text-foreground",
-        isSystem
-          ? "bg-[#e9e1d7] dark:bg-slate-950"
-          : "bg-white dark:bg-slate-950",
-      )}
+      className="relative min-h-svh overflow-x-clip bg-white text-foreground dark:bg-slate-950"
     >
-      {isSystem ? (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(255,255,255,0.92),transparent_31%),radial-gradient(circle_at_88%_76%,rgba(206,180,138,0.20),transparent_34%),linear-gradient(145deg,#eee7de_0%,#e7ded3_44%,#f0ebe4_100%)] dark:hidden" />
-          <div className="absolute -left-24 top-[-5rem] h-[30rem] w-[11rem] rotate-[38deg] rounded-full bg-white/50 blur-2xl dark:hidden" />
-          <div className="absolute left-[10%] top-[-8rem] h-[32rem] w-[5rem] rotate-[38deg] rounded-full bg-white/35 blur-xl dark:hidden" />
-          <div className="absolute right-[4%] top-0 h-full w-px bg-white/40 dark:hidden" />
-          <div className="absolute right-[5.5%] top-0 h-full w-px bg-[#c6b8a5]/25 dark:hidden" />
-          <div className="absolute right-[7%] top-0 h-full w-px bg-white/40 dark:hidden" />
-          <div className="absolute -bottom-20 -left-16 h-72 w-72 rounded-full border-[44px] border-white/25 blur-[1px] dark:hidden" />
-          <div className="absolute -bottom-36 right-[-5rem] h-96 w-96 rounded-full bg-[#d8c2a4]/20 blur-3xl dark:hidden" />
-        </div>
-      ) : null}
 
       <SidebarProvider>
         {isSystem ? (
           <div
             className={cn(
-              "relative z-10 mx-auto flex min-h-svh w-full max-w-none flex-col overflow-x-hidden",
+              "relative z-10 mx-auto flex min-h-svh w-full max-w-none flex-col overflow-x-clip",
               compact
                 ? "px-2 pb-2 pt-2"
                 : "px-3 pb-4 pt-3 md:px-5 md:pb-5 xl:px-7 xl:pb-7",
             )}
           >
-            <div className="sticky top-2 z-50 isolate">
+            <div className="sticky top-0 z-50 isolate bg-transparent py-2">
               <SiteHeader sidebarType="system" />
             </div>
 

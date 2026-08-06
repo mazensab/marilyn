@@ -1,6 +1,6 @@
 // ============================================================
 // 📂 app/company/accounting/cost-centers/page.tsx
-// 🧠 PrimeyAcc | Company Accounting Cost Centers
+// 🧠 Marilyn Clinics | Company Accounting Cost Centers
 // ------------------------------------------------------------
 // ✅ Approved company dashboard premium pattern
 // ✅ Real API only
@@ -74,6 +74,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  printManagedWindow as printMarilynWindow,
+  writeManagedPrintDocument as writeMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
 type StatusFilter = "all" | "ACTIVE" | "INACTIVE";
@@ -844,19 +849,19 @@ export default function CompanyAccountingCostCentersPage() {
       toast.error(t.printEmpty);
       return;
     }
-    const popup = window.open("", "_blank", "width=1500,height=950");
+    const popup = openMarilynPrintWindow("", "_blank", "width=1500,height=950");
     if (!popup) {
       toast.error(t.printBlocked);
       return;
     }
     popup.opener = null;
     popup.document.open();
-    popup.document.write(buildCostCentersDocument("print"));
+    writeMarilynPrintDocument(popup, buildCostCentersDocument("print"));
     popup.document.close();
     popup.onafterprint = () => popup.close();
     window.setTimeout(() => {
       popup.focus();
-      popup.print();
+      printMarilynWindow(popup);
     }, 300);
     toast.success(t.printReady);
   }

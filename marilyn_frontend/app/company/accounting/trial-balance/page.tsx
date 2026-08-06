@@ -1,8 +1,8 @@
 // ============================================================
 // 📂 app/company/accounting/trial-balance/page.tsx
-// 🧠 Mhamcloud | Company Accounting Trial Balance
+// 🧠 Marilyn Clinics | Company Accounting Trial Balance
 // ------------------------------------------------------------
-// ✅ PrimeyAcc Approved Design
+// ✅ Marilyn Clinics Approved Design
 // ✅ Real API only
 // ✅ Full report + table print / Excel
 // ✅ Company name from whoami
@@ -66,6 +66,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  printManagedWindow as printMarilynWindow,
+  writeManagedPrintDocument as writeMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
@@ -986,7 +991,7 @@ export default function CompanyAccountingTrialBalancePage() {
   }
 
   function printTrialBalance(scope: ExportScope) {
-    const printWindow = window.open("", "_blank");
+    const printWindow = openMarilynPrintWindow("", "_blank");
 
     if (!printWindow) {
       toast.error(t.popupBlocked);
@@ -994,12 +999,12 @@ export default function CompanyAccountingTrialBalancePage() {
     }
 
     printWindow.document.open();
-    printWindow.document.write(buildTrialBalanceDocument(scope));
+    writeMarilynPrintDocument(printWindow, buildTrialBalanceDocument(scope));
     printWindow.document.close();
     printWindow.focus();
 
     window.setTimeout(() => {
-      printWindow.print();
+      printMarilynWindow(printWindow);
     }, 250);
 
     toast.success(t.printReady);

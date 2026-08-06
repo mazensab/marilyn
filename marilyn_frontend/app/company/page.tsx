@@ -2,9 +2,9 @@
 
 /* ============================================================
    📂 marilyn_frontend/app/company/page.tsx
-   🧠 PrimeyAcc — Company Dashboard
+   🧠 Marilyn Clinics — Company Dashboard
    ------------------------------------------------------------
-   ✅ PrimeyAcc Approved Design
+   ✅ Marilyn Clinics Approved Design
    ✅ Real company APIs only
    ✅ Correct receipt/payment/treasury data
    ✅ Clickable document rows and ⋮ actions
@@ -41,6 +41,12 @@ import {
   WalletCards,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  openManagedPrintUrl,
+  openManagedPrintWindow,
+  printManagedWindow,
+  writeManagedPrintDocument,
+} from "@/lib/managed-print-window";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1446,7 +1452,7 @@ function openPrintWindow(
    * لا نضع noopener داخل window.open لأن Chromium قد يعيد null
    * رغم إنشاء نافذة about:blank.
    */
-  const win = window.open(
+  const win = openManagedPrintWindow(
     "",
     "_blank",
     "width=1400,height=900",
@@ -1461,7 +1467,7 @@ function openPrintWindow(
 
   win.document.open();
 
-  win.document.write(`
+  writeManagedPrintDocument(win,`
     <!doctype html>
     <html dir="${direction}" lang="${locale}">
       <head>
@@ -1597,7 +1603,7 @@ function openPrintWindow(
 
   win.setTimeout(() => {
     win.focus();
-    win.print();
+    printManagedWindow(win);
   }, 350);
 
   return true;
@@ -1938,7 +1944,7 @@ export default function CompanyDashboardPage() {
     (row: VoucherRecord) => {
       const href = voucherHref(row);
       const separator = href.includes("?") ? "&" : "?";
-      const printWindow = window.open(
+      const printWindow = openManagedPrintUrl(
         `${href}${separator}print=voucher`,
         "_blank",
         "width=1400,height=900",

@@ -1,7 +1,7 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/accounting/page.tsx
-   🧠 PrimeyAcc — Company General Accounting Dashboard
+   🧠 Marilyn Clinics — Company General Accounting Dashboard
    ------------------------------------------------------------
    ✅ Approved Premium company/system dashboard pattern
    ✅ Real API only, no fake demo data
@@ -85,6 +85,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  printManagedWindow as printMarilynWindow,
+  writeManagedPrintDocument as writeMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
 type ApiResponse = ApiRecord | ApiRecord[];
@@ -1798,7 +1803,7 @@ export default function CompanyAccountingPage() {
     reportRows: JournalRecord[],
     includeSummary: boolean,
   ) {
-    const printWindow = window.open(
+    const printWindow = openMarilynPrintWindow(
       "",
       "_blank",
       "width=1400,height=900",
@@ -1813,7 +1818,7 @@ export default function CompanyAccountingPage() {
     }
     printWindow.opener = null;
     printWindow.document.open();
-    printWindow.document.write(
+    writeMarilynPrintDocument(printWindow,
       buildAccountingReport(
         title,
         reportRows,
@@ -1827,7 +1832,7 @@ export default function CompanyAccountingPage() {
       printWindow.close();
     };
     window.setTimeout(() => {
-      printWindow.print();
+      printMarilynWindow(printWindow);
     }, 250);
   }
   function exportExcel() {

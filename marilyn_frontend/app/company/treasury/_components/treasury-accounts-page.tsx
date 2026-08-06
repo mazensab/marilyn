@@ -1,7 +1,7 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/treasury/_components/treasury-accounts-page.tsx
-   🧠 PrimeyAcc — Company Treasury Accounts Shared Page
+   🧠 Marilyn Clinics — Company Treasury Accounts Shared Page
    ------------------------------------------------------------
    ✅ Approved Premium company operational pattern
    ✅ Real API only, no fake demo data
@@ -87,6 +87,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  writeAutoManagedPrintDocument as writeAutoMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 type Locale = "ar" | "en";
 type PageVariant = "cashboxes" | "bankAccounts";
 type ApiRecord = Record<string, unknown>;
@@ -1385,7 +1389,7 @@ export function TreasuryAccountsPage({ variant }: { variant: PageVariant }) {
                 <script>
                   window.onload = function () {
                     window.focus();
-                    window.print();
+                    window.__MARILYN_PRINT_READY__ = true;
                   };
                   window.onafterprint = function () {
                     window.close();
@@ -1435,7 +1439,7 @@ export function TreasuryAccountsPage({ variant }: { variant: PageVariant }) {
       toast.warning(t.printEmpty);
       return;
     }
-    const printWindow = window.open(
+    const printWindow = openMarilynPrintWindow(
       "",
       "_blank",
       "width=1400,height=900",
@@ -1449,7 +1453,7 @@ export function TreasuryAccountsPage({ variant }: { variant: PageVariant }) {
       return;
     }
     printWindow.opener = null;
-    printWindow.document.write(
+    writeAutoMarilynPrintDocument(printWindow,
       approvedAccountReportDocument(true),
     );
     printWindow.document.close();

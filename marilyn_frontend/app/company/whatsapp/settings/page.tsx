@@ -1,7 +1,7 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/whatsapp/settings/page.tsx
-   💬 Mhamcloud — Company WhatsApp Settings Page
+   💬 Marilyn Clinics — Company WhatsApp Settings Page
    ------------------------------------------------------------
    ✅ Standalone route page, no internal tabs
    ✅ Approved Premium system page pattern
@@ -38,6 +38,11 @@ import {
   Wifi,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  openManagedPrintWindow,
+  printManagedWindow,
+  writeManagedPrintDocument,
+} from "@/lib/managed-print-window";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -134,7 +139,7 @@ type QuickLink = {
   icon: React.ComponentType<{ className?: string }>;
 };
 const API_ENDPOINT = "/api/company/whatsapp/connection/";
-const DEFAULT_TEST_BODY = "Mhamcloud company WhatsApp test message.";
+const DEFAULT_TEST_BODY = "Marilyn Clinics company WhatsApp test message.";
 const translations = {
   ar: {
     title: "إعدادات واتساب الشركة",
@@ -472,7 +477,7 @@ function buildForm(connection: CompanyConnection | null): ConnectionForm {
     provider: connection?.provider || "WEB_SESSION",
     is_enabled: connection?.isEnabled ?? false,
     is_active: connection?.isActive ?? false,
-    business_name: connection?.businessName || "Mhamcloud Support",
+    business_name: connection?.businessName || "Marilyn Clinics Support",
     phone_number: connection?.phoneNumber || "",
     phone_number_id: connection?.phoneNumberId || "",
     business_account_id: connection?.businessAccountId || "",
@@ -873,7 +878,7 @@ export default function CompanyWhatsAppSettingsPage() {
       toast.info(t.pdfHint);
     }
 
-    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    const printWindow = openManagedPrintWindow("", "_blank", "noopener,noreferrer");
 
     if (!printWindow) {
       toast.error(t.actionError);
@@ -940,7 +945,7 @@ export default function CompanyWhatsAppSettingsPage() {
       : "This report does not include secret keys or tokens.";
 
     printWindow.document.open();
-    printWindow.document.write(`<!doctype html>
+    writeManagedPrintDocument(printWindow,`<!doctype html>
 <html lang="${isArabic ? "ar" : "en"}" dir="${dir}">
 <head>
   <meta charset="utf-8" />
@@ -1015,17 +1020,18 @@ export default function CompanyWhatsAppSettingsPage() {
   <table><tbody>${settingsHtml}</tbody></table>
 
   <div class="note">${escapeHtml(note)}</div>
-  <div class="footer">PrimeyAcc</div>
+  <div class="footer">Marilyn Clinics</div>
 
   <script>
     window.addEventListener("load", function () {
       window.focus();
-      window.print();
+      window.__MARILYN_PRINT_READY__ = true;
     });
   </script>
 </body>
 </html>`);
     printWindow.document.close();
+    printManagedWindow(printWindow, 300);
   }
 
   async function copyPairingCode() {

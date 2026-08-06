@@ -2,7 +2,7 @@
 
 /* ============================================================
    📂 marilyn_frontend/app/company/accounting/chart-of-accounts/page.tsx
-   🧠 PrimeyAcc — Company Chart of Accounts
+   🧠 Marilyn Clinics — Company Chart of Accounts
    ------------------------------------------------------------
    ✅ Approved Premium company/system page pattern
    ✅ Real API only, no fake demo data
@@ -93,6 +93,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  writeAutoManagedPrintDocument as writeAutoMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
@@ -1716,7 +1720,7 @@ const [locale, setLocale] = React.useState<Locale>("ar");
             window.addEventListener("load", function () {
               window.setTimeout(function () {
                 window.focus();
-                window.print();
+                window.__MARILYN_PRINT_READY__ = true;
               }, 250);
             });
           </script>
@@ -1730,7 +1734,7 @@ const [locale, setLocale] = React.useState<Locale>("ar");
       return;
     }
 
-    const printWindow = window.open("", "_blank", "width=1200,height=900");
+    const printWindow = openMarilynPrintWindow("", "_blank", "width=1200,height=900");
     if (!printWindow) {
       toast.error(
         locale === "ar"
@@ -1742,7 +1746,7 @@ const [locale, setLocale] = React.useState<Locale>("ar");
 
     printWindow.opener = null;
     printWindow.document.open();
-    printWindow.document.write(buildAccountsPrintDocument(includeSummary));
+    writeAutoMarilynPrintDocument(printWindow, buildAccountsPrintDocument(includeSummary));
     printWindow.document.close();
     toast.success(locale === "ar" ? "تم تجهيز صفحة الطباعة." : "Print page is ready.");
   }

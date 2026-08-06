@@ -1,9 +1,9 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/treasury/_components/treasury-payment-vouchers-page.tsx
-   🧠 PrimeyAcc — Company Treasury Payment Vouchers Shared Page
+   🧠 Marilyn Clinics — Company Treasury Payment Vouchers Shared Page
    ------------------------------------------------------------
-   ✅ PrimeyAcc Approved Design
+   ✅ Marilyn Clinics Approved Design
    ✅ Real API only, no fake demo data
    ✅ Company scoped API through backend session
    ✅ Receipt vouchers and payment vouchers pages
@@ -93,6 +93,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  writeAutoManagedPrintDocument as writeAutoMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 type Locale = "ar" | "en";
 type VoucherVariant = "receipt" | "payment";
 type CounterpartyType = "CUSTOMER" | "SUPPLIER" | "EMPLOYEE" | "OTHER";
@@ -3059,7 +3063,7 @@ export function TreasuryPaymentVouchersPage({
               ? `<script>
                   window.onload = () => {
                     window.focus();
-                    window.print();
+                    window.__MARILYN_PRINT_READY__ = true;
                   };
                   window.onafterprint = () => window.close();
                 <\/script>`
@@ -3101,13 +3105,13 @@ export function TreasuryPaymentVouchersPage({
       toast.warning(t.printEmpty);
       return;
     }
-    const popup = window.open("", "_blank", "width=1400,height=900");
+    const popup = openMarilynPrintWindow("", "_blank", "width=1400,height=900");
     if (!popup) {
       toast.error(t.apiUnsupported);
       return;
     }
     popup.opener = null;
-    popup.document.write(buildReportDocument("print", includeSummary));
+    writeAutoMarilynPrintDocument(popup, buildReportDocument("print", includeSummary));
     popup.document.close();
     toast.success(
       locale === "ar"
@@ -3125,7 +3129,7 @@ export function TreasuryPaymentVouchersPage({
   }
 
   function printVoucher(row: VoucherRecord) {
-    const printWindow = window.open(
+    const printWindow = openMarilynPrintWindow(
       `${voucherDetailHref(variant, row)}?print=voucher`,
       "_blank",
     );

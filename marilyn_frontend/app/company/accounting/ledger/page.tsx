@@ -1,7 +1,7 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/accounting/ledger/page.tsx
-   🧠 PrimeyAcc — Company Ledger Report
+   🧠 Marilyn Clinics — Company Ledger Report
    ------------------------------------------------------------
    ✅ Approved Premium pattern
    ✅ Real API only
@@ -66,6 +66,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  printManagedWindow as printMarilynWindow,
+  writeManagedPrintDocument as writeMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
 type ReportType = "accounts" | "general";
@@ -1053,7 +1058,7 @@ export default function CompanyAccountingLedgerPage() {
         toast.error(t.printEmpty);
         return;
       }
-      const printWindow = window.open("", "_blank");
+      const printWindow = openMarilynPrintWindow("", "_blank");
       if (!printWindow) {
         toast.error(
           locale === "ar"
@@ -1063,14 +1068,14 @@ export default function CompanyAccountingLedgerPage() {
         return;
       }
       printWindow.document.open();
-      printWindow.document.write(buildLedgerDocument(mode));
+      writeMarilynPrintDocument(printWindow, buildLedgerDocument(mode));
       printWindow.document.close();
       printWindow.onafterprint = () => {
         printWindow.close();
       };
       window.setTimeout(() => {
         printWindow.focus();
-        printWindow.print();
+        printMarilynWindow(printWindow);
       }, 300);
       toast.success(
         mode === "full"

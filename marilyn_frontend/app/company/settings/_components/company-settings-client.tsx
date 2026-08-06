@@ -7,10 +7,14 @@
  * ✅ SAR icon from public/currency/sar.svg
  */
 "use client";
+// unified_organization_user_entry=true
+// unified_organization_user_edit_route=true
+// dedicated_organization_user_edit_route=true
 
 import type { ComponentType } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Building2,
   CheckCircle2,
@@ -31,6 +35,7 @@ import {
   UsersRound,
   XCircle,
   FileSpreadsheet,
+  Eye,
   MoreVertical,
   Pencil,
   Power,
@@ -40,6 +45,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { openPrintReport } from "@/lib/print-report";
+import {
+  openManagedPrintWindow,
+  printManagedWindow,
+  writeManagedPrintDocument,
+} from "@/lib/managed-print-window";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
@@ -53,6 +64,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DataRegisterEmptyState,
+  DataRegisterSearch,
+  DataRegisterToolbar,
+  registerBrandButtonClass,
+  registerOutlineButtonClass,
+} from "@/components/ui/data-register";
 import {
   Dialog,
   DialogContent,
@@ -84,6 +102,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SystemKpiCard } from "@/components/ui/system-kpi-card";
+import { AccessManagementTabs } from "@/components/system/access-management-tabs";
 import {
   Table,
   TableBody,
@@ -235,6 +255,8 @@ function formatEnglishDateTime(value: Date) {
   const minutes = String(value.getMinutes()).padStart(2, "0");
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
+
+type SettingsWorkspace = "company" | "system";
 function PageShell({
   title,
   description,
@@ -1128,9 +1150,14 @@ function ProfileSectionCard({
     </UiCard>
   );
 }
-export function CompanyProfilePage() {
+export function CompanyProfilePage({
+  workspace = "company",
+}: {
+  workspace?: SettingsWorkspace;
+}) {
   const locale = useLocale();
   const rtl = locale === "ar";
+  const isSystemWorkspace = workspace === "system";
   const [form, setForm] = useState<CompanyProfileForm>(emptyCompanyProfile);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState("");
@@ -1281,28 +1308,50 @@ export function CompanyProfilePage() {
     <main
       data-primey-profile-approved="true"
       dir={rtl ? "rtl" : "ltr"}
-      className="min-h-screen bg-background px-4 py-6 text-foreground sm:px-6 lg:px-8"
+      className="min-h-screen w-full bg-transparent px-3 py-5 text-foreground sm:px-4 lg:px-5"
     >
-      <div className="mx-auto max-w-[1500px] space-y-6">
-        <header className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+      <div className="w-full space-y-5">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#cbbda9]/55 bg-white/55 px-3 py-1 text-xs font-medium text-[#8f6a37] shadow-sm dark:bg-white/[0.04]">
               <Building2 className="h-3.5 w-3.5" />
-              {rtl ? "إعدادات الشركة" : "Company settings"}
+              {isSystemWorkspace
+                ? rtl
+                  ? "إدارة المنشأة"
+                  : "Organization management"
+                : rtl
+                  ? "إعدادات الشركة"
+                  : "Company settings"}
             </div>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              {rtl ? "ملف الشركة" : "Company profile"}
+            <h1 className="text-3xl font-bold tracking-tight">
+              {isSystemWorkspace
+                ? rtl
+                  ? "ملف المنشأة"
+                  : "Organization profile"
+                : rtl
+                  ? "ملف الشركة"
+                  : "Company profile"}
             </h1>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
-              {rtl
-                ? "تحديث بيانات الشركة الرسمية ومعلومات التواصل والشعار والعنوان الوطني."
-                : "Update official company information, contact details, logo, and national address."}
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+              {isSystemWorkspace
+                ? rtl
+                  ? "تحديث بيانات Marilyn Clinics الرسمية ومعلومات التواصل والشعار والعنوان الوطني."
+                  : "Update Marilyn Clinics official information, contact details, logo, and national address."
+                : rtl
+                  ? "تحديث بيانات الشركة الرسمية ومعلومات التواصل والشعار والعنوان الوطني."
+                  : "Update official company information, contact details, logo, and national address."}
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-              <span className="rounded-full border bg-background px-3 py-1">
-                {rtl ? "مساحة الشركة" : "Company workspace"}
+              <span className="rounded-full border border-[#cbbda9]/55 bg-white/55 px-3 py-1 text-[#8f6a37] shadow-sm dark:bg-white/[0.04]">
+                {isSystemWorkspace
+                  ? rtl
+                    ? "الإدارة المركزية"
+                    : "Central administration"
+                  : rtl
+                    ? "مساحة الشركة"
+                    : "Company workspace"}
               </span>
-              <span className="rounded-full border bg-background px-3 py-1">
+              <span className="rounded-full border border-[#cbbda9]/55 bg-white/55 px-3 py-1 text-[#8f6a37] shadow-sm dark:bg-white/[0.04]">
                 {rtl ? "بيانات رسمية" : "Official information"}
               </span>
             </div>
@@ -1312,9 +1361,15 @@ export function CompanyProfilePage() {
               asChild
               type="button"
               variant="outline"
-              className="rounded-xl"
+              className="bg-background [&_svg]:text-[#a57b3d]"
             >
-              <Link href="/company/settings">
+              <Link
+                href={
+                  isSystemWorkspace
+                    ? "/system/settings"
+                    : "/company/settings"
+                }
+              >
                 <Settings2 className="h-4 w-4" />
                 {rtl ? "مركز الإعدادات" : "Settings center"}
               </Link>
@@ -1322,7 +1377,7 @@ export function CompanyProfilePage() {
             <Button
               type="button"
               variant="outline"
-              className="rounded-xl"
+              className="bg-background [&_svg]:text-[#a57b3d]"
               disabled={loading || saving}
               onClick={() => void load()}
             >
@@ -1335,7 +1390,7 @@ export function CompanyProfilePage() {
             </Button>
             <Button
               type="button"
-              className="rounded-xl"
+              variant="brand"
               disabled={loading || saving}
               onClick={() => void save()}
             >
@@ -1357,7 +1412,7 @@ export function CompanyProfilePage() {
         {loading ? (
           <div className="space-y-6">
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-              <UiCard className="rounded-2xl border bg-card shadow-none">
+              <UiCard className="rounded-lg border bg-card shadow-none">
                 <CardContent className="space-y-5 p-6">
                   <Skeleton className="h-6 w-40" />
                   <div className="grid gap-4 md:grid-cols-2">
@@ -1375,7 +1430,7 @@ export function CompanyProfilePage() {
                   </div>
                 </CardContent>
               </UiCard>
-              <UiCard className="rounded-2xl border bg-card shadow-none">
+              <UiCard className="rounded-lg border bg-card shadow-none">
                 <CardContent className="flex min-h-[320px] flex-col items-center justify-center gap-4 p-6">
                   <Skeleton className="h-32 w-32 rounded-3xl" />
                   <Skeleton className="h-10 w-36 rounded-xl" />
@@ -1383,7 +1438,7 @@ export function CompanyProfilePage() {
                 </CardContent>
               </UiCard>
             </section>
-            <UiCard className="rounded-2xl border bg-card shadow-none">
+            <UiCard className="rounded-lg border bg-card shadow-none">
               <CardContent className="space-y-5 p-6">
                 <Skeleton className="h-6 w-36" />
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -1405,21 +1460,29 @@ export function CompanyProfilePage() {
         ) : (
           <div className="space-y-6">
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-              <UiCard className="h-full overflow-hidden rounded-2xl border bg-card shadow-none">
+              <UiCard className="group h-full overflow-hidden rounded-lg border bg-card shadow-none transition hover:-translate-y-0.5 hover:border-[#b58c4d]/35 hover:shadow-sm">
                 <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
                   <div className="min-w-0">
                     <CardTitle className="text-base font-bold tracking-tight">
-                      {rtl
-                        ? "بيانات الشركة"
-                        : "Company information"}
+                      {isSystemWorkspace
+                        ? rtl
+                          ? "بيانات المنشأة"
+                          : "Organization information"
+                        : rtl
+                          ? "بيانات الشركة"
+                          : "Company information"}
                     </CardTitle>
                     <CardDescription className="mt-1 text-sm leading-6">
-                      {rtl
-                        ? "البيانات النظامية ووسائل التواصل المعتمدة للشركة."
-                        : "Official registration and contact information for the company."}
+                      {isSystemWorkspace
+                        ? rtl
+                          ? "البيانات النظامية ووسائل التواصل المعتمدة للمنشأة."
+                          : "Official registration and contact information for the organization."
+                        : rtl
+                          ? "البيانات النظامية ووسائل التواصل المعتمدة للشركة."
+                          : "Official registration and contact information for the company."}
                     </CardDescription>
                   </div>
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-background text-muted-foreground">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-[#cbbda9]/55 bg-white/70 text-[#a57b3d] shadow-sm transition group-hover:border-[#b58c4d]/40 group-hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] group-hover:text-white dark:bg-white/[0.06]">
                     <Building2 className="h-5 w-5" />
                   </span>
                 </CardHeader>
@@ -1427,9 +1490,13 @@ export function CompanyProfilePage() {
                   <div className="grid gap-4 md:grid-cols-2">
                     <TextInput
                       label={
-                        rtl
-                          ? "اسم الشركة"
-                          : "Company name"
+                        isSystemWorkspace
+                          ? rtl
+                            ? "اسم المنشأة"
+                            : "Organization name"
+                          : rtl
+                            ? "اسم الشركة"
+                            : "Company name"
                       }
                       value={form.name}
                       onChange={(value) =>
@@ -1503,21 +1570,29 @@ export function CompanyProfilePage() {
                   </div>
                 </CardContent>
               </UiCard>
-              <UiCard className="h-full overflow-hidden rounded-2xl border bg-card shadow-none">
+              <UiCard className="group h-full overflow-hidden rounded-lg border bg-card shadow-none transition hover:-translate-y-0.5 hover:border-[#b58c4d]/35 hover:shadow-sm">
                 <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
                   <div className="min-w-0">
                     <CardTitle className="text-base font-bold tracking-tight">
-                      {rtl
-                        ? "شعار الشركة"
-                        : "Company logo"}
+                      {isSystemWorkspace
+                        ? rtl
+                          ? "شعار المنشأة"
+                          : "Organization logo"
+                        : rtl
+                          ? "شعار الشركة"
+                          : "Company logo"}
                     </CardTitle>
                     <CardDescription className="mt-1 text-sm leading-6">
-                      {rtl
-                        ? "يظهر في المستندات وصفحات الشركة."
-                        : "Displayed in company pages and documents."}
+                      {isSystemWorkspace
+                        ? rtl
+                          ? "يظهر في المستندات وصفحات المنشأة."
+                          : "Displayed in organization pages and documents."
+                        : rtl
+                          ? "يظهر في المستندات وصفحات الشركة."
+                          : "Displayed in company pages and documents."}
                     </CardDescription>
                   </div>
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-background text-muted-foreground">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-[#cbbda9]/55 bg-white/70 text-[#a57b3d] shadow-sm transition group-hover:border-[#b58c4d]/40 group-hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] group-hover:text-white dark:bg-white/[0.06]">
                     <Building2 className="h-5 w-5" />
                   </span>
                 </CardHeader>
@@ -1552,7 +1627,7 @@ export function CompanyProfilePage() {
                       <Button
                         type="button"
                         variant="outline"
-                        className="rounded-xl"
+                        className="bg-background [&_svg]:text-[#a57b3d]"
                         onClick={() =>
                           document
                             .getElementById(
@@ -1588,7 +1663,7 @@ export function CompanyProfilePage() {
                 </CardContent>
               </UiCard>
             </section>
-            <UiCard className="overflow-hidden rounded-2xl border bg-card shadow-none">
+            <UiCard className="group overflow-hidden rounded-lg border bg-card shadow-none transition hover:border-[#b58c4d]/35 hover:shadow-sm">
               <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
                 <div className="min-w-0">
                   <CardTitle className="text-base font-bold tracking-tight">
@@ -1602,7 +1677,7 @@ export function CompanyProfilePage() {
                       : "Used in official documents and invoices."}
                   </CardDescription>
                 </div>
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-background text-muted-foreground">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-[#cbbda9]/55 bg-white/70 text-[#a57b3d] shadow-sm transition group-hover:border-[#b58c4d]/40 group-hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] group-hover:text-white dark:bg-white/[0.06]">
                   <Landmark className="h-5 w-5" />
                 </span>
               </CardHeader>
@@ -1703,7 +1778,7 @@ export function CompanyProfilePage() {
                     />
                   </div>
                 </div>
-                <div className="rounded-2xl border bg-muted/20 p-4">
+                <div className="rounded-lg border bg-muted/20 p-4">
                   <p className="text-xs font-semibold text-muted-foreground">
                     {rtl
                       ? "معاينة العنوان"
@@ -1718,11 +1793,11 @@ export function CompanyProfilePage() {
                 </div>
               </CardContent>
             </UiCard>
-            <div className="flex flex-wrap items-center justify-end gap-2 rounded-2xl border bg-card p-4">
+            <div className="flex flex-wrap items-center justify-end gap-2 rounded-lg border bg-card p-4">
               <Button
                 type="button"
                 variant="outline"
-                className="rounded-xl"
+                className="bg-background [&_svg]:text-[#a57b3d]"
                 disabled={saving}
                 onClick={() => void load()}
               >
@@ -1731,7 +1806,7 @@ export function CompanyProfilePage() {
               </Button>
               <Button
                 type="button"
-                className="rounded-xl"
+                variant="brand"
                 disabled={saving}
                 onClick={() => void save()}
               >
@@ -2365,9 +2440,14 @@ function escapeBranchHtml(
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
-export function BranchesPage() {
+export function BranchesPage({
+  workspace = "company",
+}: {
+  workspace?: SettingsWorkspace;
+}) {
   const locale = useLocale();
   const rtl = locale === "ar";
+  const isSystemWorkspace = workspace === "system";
   const t = rtl ? branchesAr : branchesEn;
   const [rows, setRows] =
     useState<ApiRecord[]>([]);
@@ -2902,117 +2982,151 @@ export function BranchesPage() {
       t.exported,
     );
   };
-  const printTable = () => {
-    if (
-      filteredRows.length === 0
-    ) {
+  const printTable = async () => {
+    if (filteredRows.length === 0) {
       return;
     }
-    const printWindow =
-      window.open(
-        "",
-        "_blank",
+    const reportTitle = isSystemWorkspace
+      ? rtl
+        ? "تقرير فروع Marilyn Clinics"
+        : "Marilyn Clinics Branches Report"
+      : rtl
+        ? "تقرير فروع الشركة"
+        : "Company Branches Report";
+    const opened = await openPrintReport({
+      locale,
+      title: reportTitle,
+      subtitle: t.listDescription,
+      branchName: rtl ? "جميع الفروع" : "All branches",
+      tableHtml: buildExportTable(),
+      recordsCount: filteredRows.length,
+    });
+    if (!opened) {
+      toast.error(
+        rtl
+          ? "تعذر فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم أعد المحاولة."
+          : "The print window could not be opened. Allow pop-ups and try again.",
       );
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <!doctype html>
-      <html dir="${
-        rtl ? "rtl" : "ltr"
-      }">
-        <head>
-          <meta charset="utf-8" />
-          <title>${
-            escapeBranchHtml(
-              t.listTitle,
-            )
-          }</title>
-          <style>
-            @page {
-              size:
-                A4 landscape;
-              margin: 12mm;
-            }
-            body {
-              font-family:
-                Tahoma,
-                Arial,
-                sans-serif;
-              color: #000;
-              margin: 0;
-            }
-            h1 {
-              font-size: 20px;
-              margin:
-                0 0 6px;
-            }
-            p {
-              font-size: 12px;
-              margin:
-                0 0 14px;
-            }
-            table {
-              border-collapse:
-                collapse;
-              width: 100%;
-              font-size: 11px;
-            }
-            th,
-            td {
-              border:
-                1px solid #000;
-              padding: 6px;
-              text-align:
-                ${
-                  rtl
-                    ? "right"
-                    : "left"
-                };
-              vertical-align:
-                top;
-            }
-            th {
-              font-weight: 700;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>${
-            escapeBranchHtml(
-              t.listTitle,
-            )
-          }</h1>
-          <p>${
-            escapeBranchHtml(
-              `${
-                t.showing
-              } ${
-                formatInteger(
-                  filteredRows.length,
-                )
-              } ${
-                t.of
-              } ${
-                formatInteger(
-                  rows.length,
-                )
-              }`,
-            )
-          }</p>
-          ${buildExportTable()}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.onafterprint =
-      () =>
-        printWindow.close();
-    window.setTimeout(
-      () =>
-        printWindow.print(),
-      250,
+      return;
+    }
+    toast.success(
+      rtl
+        ? "تم تجهيز تقرير الفروع للطباعة."
+        : "Branches report prepared for printing.",
     );
   };
+  const hasBranchFilters = Boolean(
+    query ||
+      statusFilter !== "all" ||
+      sortKey !== "name",
+  );
+  const branchSummaryCards = [
+    {
+      label: t.totalBranches,
+      value: branchStats.total,
+      hint: t.totalHint,
+      icon: Store,
+    },
+    {
+      label: t.activeBranches,
+      value: branchStats.active,
+      hint: t.activeHint,
+      icon: CheckCircle2,
+    },
+    {
+      label: t.inactiveBranches,
+      value: branchStats.inactive,
+      hint: t.inactiveHint,
+      icon: XCircle,
+    },
+    {
+      label: t.mainBranches,
+      value: branchStats.main,
+      hint: t.mainHint,
+      icon: Building2,
+    },
+  ];
+  const branchToolbarContent = (
+    <>
+      {isSystemWorkspace ? (
+        <DataRegisterSearch
+          value={query}
+          onChange={setQuery}
+          placeholder={t.searchPlaceholder}
+          className="w-full"
+        />
+      ) : (
+        <SearchBox
+          value={query}
+          onChange={setQuery}
+          placeholder={t.searchPlaceholder}
+        />
+      )}
+      <Select
+        value={statusFilter}
+        onValueChange={(value) =>
+          setStatusFilter(
+            value as BranchStatusFilter,
+          )
+        }
+      >
+        <SelectTrigger className="h-9 bg-background shadow-none">
+          <SelectValue
+            placeholder={t.statusFilter}
+          />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">
+            {t.all}
+          </SelectItem>
+          <SelectItem value="active">
+            {t.active}
+          </SelectItem>
+          <SelectItem value="inactive">
+            {t.inactive}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
+        value={sortKey}
+        onValueChange={(value) =>
+          setSortKey(
+            value as BranchSortKey,
+          )
+        }
+      >
+        <SelectTrigger className="h-9 bg-background shadow-none">
+          <SelectValue
+            placeholder={t.sortBy}
+          />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="name">
+            {t.sortName}
+          </SelectItem>
+          <SelectItem value="code">
+            {t.sortCode}
+          </SelectItem>
+          <SelectItem value="status">
+            {t.sortStatus}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={resetFilters}
+        className={
+          isSystemWorkspace
+            ? registerOutlineButtonClass
+            : "h-9 bg-background"
+        }
+      >
+        <RotateCcw className="h-4 w-4" />
+        {t.reset}
+      </Button>
+    </>
+  );
   return (
     <main
       data-primey-branches-approved="true"
@@ -3021,20 +3135,32 @@ export function BranchesPage() {
           ? "rtl"
           : "ltr"
       }
-      className="min-h-screen bg-background px-4 py-6 text-foreground sm:px-6 lg:px-8"
+      className="min-h-screen w-full bg-transparent px-3 py-5 text-foreground sm:px-4 lg:px-5"
     >
-      <div className="mx-auto max-w-[1500px] space-y-6">
-        <header className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <div className="w-full space-y-5">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-4xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#cbbda9]/55 bg-white/55 px-3 py-1 text-xs font-medium text-[#8f6a37] shadow-sm dark:bg-white/[0.04]">
               <Store className="h-3.5 w-3.5" />
-              {t.settings}
+              {isSystemWorkspace
+                ? rtl
+                  ? "إدارة المنشأة"
+                  : "Organization management"
+                : t.settings}
             </div>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              {t.title}
+            <h1 className="text-3xl font-bold tracking-tight">
+              {isSystemWorkspace
+                ? rtl
+                  ? "فروع Marilyn Clinics"
+                  : "Marilyn Clinics branches"
+                : t.title}
             </h1>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
-              {t.description}
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+              {isSystemWorkspace
+                ? rtl
+                  ? "إدارة الفروع ومعلوماتها التشغيلية وحالة التفعيل والفرع الافتراضي."
+                  : "Manage branches, operational information, activation status, and the default branch."
+                : t.description}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -3042,8 +3168,19 @@ export function BranchesPage() {
               asChild
               type="button"
               variant="outline"
+              className={
+                isSystemWorkspace
+                  ? registerOutlineButtonClass
+                  : "bg-background [&_svg]:text-[#a57b3d]"
+              }
             >
-              <Link href="/company/settings">
+              <Link
+                href={
+                  isSystemWorkspace
+                    ? "/system/settings"
+                    : "/company/settings"
+                }
+              >
                 <Settings2 className="h-4 w-4" />
                 {t.settingsCenter}
               </Link>
@@ -3051,6 +3188,11 @@ export function BranchesPage() {
             <Button
               type="button"
               variant="outline"
+              className={
+                isSystemWorkspace
+                  ? registerOutlineButtonClass
+                  : "bg-background [&_svg]:text-[#a57b3d]"
+              }
               onClick={() =>
                 void load()
               }
@@ -3065,6 +3207,12 @@ export function BranchesPage() {
             </Button>
             <Button
               type="button"
+              variant="brand"
+              className={
+                isSystemWorkspace
+                  ? registerBrandButtonClass
+                  : undefined
+              }
               onClick={
                 openCreate
               }
@@ -3079,114 +3227,69 @@ export function BranchesPage() {
           className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
         >
           {loading
-            ? Array.from({
-                length: 4,
-              }).map(
-                (
-                  _,
-                  index,
-                ) => (
-                  <UiCard
-                    key={
-                      `branch-stat-loading-${index}`
-                    }
-                    className="min-h-[150px] rounded-2xl border bg-card shadow-none"
-                  >
-                    <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-3">
-                      <div className="min-w-0 flex-1 space-y-3">
-                        <Skeleton className="h-4 w-28" />
-                        <Skeleton className="h-8 w-20" />
-                      </div>
-                      <Skeleton className="h-10 w-10 rounded-xl" />
-                    </CardHeader>
-                    <CardContent>
-                      <Skeleton className="h-3 w-40" />
-                    </CardContent>
-                  </UiCard>
-                ),
-              )
-            : [
-                {
-                  label:
-                    t.totalBranches,
-                  value:
-                    branchStats.total,
-                  hint:
-                    t.totalHint,
-                  icon: Store,
-                },
-                {
-                  label:
-                    t.activeBranches,
-                  value:
-                    branchStats.active,
-                  hint:
-                    t.activeHint,
-                  icon:
-                    CheckCircle2,
-                },
-                {
-                  label:
-                    t.inactiveBranches,
-                  value:
-                    branchStats.inactive,
-                  hint:
-                    t.inactiveHint,
-                  icon:
-                    XCircle,
-                },
-                {
-                  label:
-                    t.mainBranches,
-                  value:
-                    branchStats.main,
-                  hint:
-                    t.mainHint,
-                  icon:
-                    Building2,
-                },
-              ].map((item) => {
-                const Icon =
-                  item.icon;
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <UiCard
+                  key={`branch-stat-loading-${index}`}
+                  className={
+                    isSystemWorkspace
+                      ? "min-h-[126px] rounded-lg border bg-card shadow-none"
+                      : "group min-h-[150px] overflow-hidden rounded-lg border bg-card shadow-none transition hover:-translate-y-0.5 hover:border-[#b58c4d]/35 hover:shadow-sm"
+                  }
+                >
+                  <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-3">
+                    <div className="min-w-0 flex-1 space-y-3">
+                      <Skeleton className="h-4 w-28" />
+                      <Skeleton className="h-8 w-20" />
+                    </div>
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-3 w-40" />
+                  </CardContent>
+                </UiCard>
+              ))
+            : branchSummaryCards.map((item) => {
+                if (isSystemWorkspace) {
+                  return (
+                    <SystemKpiCard
+                      key={item.label}
+                      title={item.label}
+                      value={item.value}
+                      description={item.hint}
+                      icon={item.icon}
+                    />
+                  );
+                }
+                const Icon = item.icon;
                 return (
                   <UiCard
-                    key={
-                      item.label
-                    }
-                    className="min-h-[150px] rounded-2xl border bg-card shadow-none"
+                    key={item.label}
+                    className="group min-h-[150px] overflow-hidden rounded-lg border bg-card shadow-none transition hover:-translate-y-0.5 hover:border-[#b58c4d]/35 hover:shadow-sm"
                   >
                     <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-3">
                       <div className="min-w-0">
                         <CardDescription className="text-sm">
-                          {
-                            item.label
-                          }
+                          {item.label}
                         </CardDescription>
                         <CardTitle className="mt-2 text-2xl font-bold tracking-tight tabular-nums">
-                          {
-                            formatInteger(
-                              item.value,
-                            )
-                          }
+                          {formatInteger(item.value)}
                         </CardTitle>
                       </div>
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-background text-muted-foreground">
+                      <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-[#cbbda9]/55 bg-white/70 text-[#a57b3d] shadow-sm transition group-hover:border-[#b58c4d]/40 group-hover:bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] group-hover:text-white dark:bg-white/[0.06]">
                         <Icon className="h-5 w-5" />
                       </span>
                     </CardHeader>
                     <CardContent className="pt-1">
                       <p className="text-xs leading-5 text-muted-foreground">
-                        {
-                          item.hint
-                        }
+                        {item.hint}
                       </p>
                     </CardContent>
                   </UiCard>
                 );
               })}
         </section>
-        <UiCard className="overflow-hidden rounded-2xl border bg-card shadow-none">
-          <CardHeader className="flex flex-col gap-4 border-b sm:flex-row sm:items-start sm:justify-between">
+        <UiCard className="overflow-hidden rounded-lg border bg-card shadow-none">
+          <CardHeader className="flex flex-col gap-3 px-5 pt-5 sm:flex-row sm:items-start sm:justify-between sm:px-6">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <CardTitle className="text-base font-bold tracking-tight">
@@ -3213,6 +3316,11 @@ export function BranchesPage() {
               <Button
                 type="button"
                 variant="outline"
+                className={
+                  isSystemWorkspace
+                    ? registerOutlineButtonClass
+                    : "bg-background [&_svg]:text-[#a57b3d]"
+                }
                 onClick={
                   exportExcel
                 }
@@ -3226,9 +3334,14 @@ export function BranchesPage() {
               </Button>
               <Button
                 type="button"
-                variant="outline"
-                onClick={
-                  printTable
+                variant="brand"
+                className={
+                  isSystemWorkspace
+                    ? registerBrandButtonClass
+                    : undefined
+                }
+                onClick={() =>
+                  void printTable()
                 }
                 disabled={
                   filteredRows.length ===
@@ -3240,97 +3353,18 @@ export function BranchesPage() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 p-4 sm:p-5">
-            <div className="grid gap-3 rounded-2xl border bg-background p-3 lg:grid-cols-[minmax(0,1fr)_180px_180px_auto]">
-              <SearchBox
-                value={query}
-                onChange={
-                  setQuery
-                }
-                placeholder={
-                  t.searchPlaceholder
-                }
-              />
-              <Select
-                value={
-                  statusFilter
-                }
-                onValueChange={(
-                  value,
-                ) =>
-                  setStatusFilter(
-                    value as BranchStatusFilter,
-                  )
-                }
-              >
-                <SelectTrigger className="h-11 rounded-xl bg-background">
-                  <SelectValue
-                    placeholder={
-                      t.statusFilter
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">
-                    {t.all}
-                  </SelectItem>
-                  <SelectItem value="active">
-                    {t.active}
-                  </SelectItem>
-                  <SelectItem value="inactive">
-                    {t.inactive}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={sortKey}
-                onValueChange={(
-                  value,
-                ) =>
-                  setSortKey(
-                    value as BranchSortKey,
-                  )
-                }
-              >
-                <SelectTrigger className="h-11 rounded-xl bg-background">
-                  <SelectValue
-                    placeholder={
-                      t.sortBy
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name">
-                    {
-                      t.sortName
-                    }
-                  </SelectItem>
-                  <SelectItem value="code">
-                    {
-                      t.sortCode
-                    }
-                  </SelectItem>
-                  <SelectItem value="status">
-                    {
-                      t.sortStatus
-                    }
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={
-                  resetFilters
-                }
-                className="h-11"
-              >
-                <RotateCcw className="h-4 w-4" />
-                {t.reset}
-              </Button>
-            </div>
+          <CardContent className="space-y-4 px-5 pb-5 sm:px-6">
+            {isSystemWorkspace ? (
+              <DataRegisterToolbar className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px_180px_auto]">
+                {branchToolbarContent}
+              </DataRegisterToolbar>
+            ) : (
+              <div className="grid gap-3 rounded-lg border bg-muted/20 p-3 lg:grid-cols-[minmax(0,1fr)_180px_180px_auto]">
+                {branchToolbarContent}
+              </div>
+            )}
             {loading ? (
-              <div className="space-y-3 rounded-2xl border p-4">
+              <div className="space-y-3 rounded-lg border p-4">
                 {Array.from({
                   length: 5,
                 }).map(
@@ -3349,24 +3383,69 @@ export function BranchesPage() {
               </div>
             ) : filteredRows.length ===
               0 ? (
-              <EmptyState
-                title={
-                  rows.length === 0
-                    ? t.noBranches
-                    : t.noResults
-                }
-                description={
-                  rows.length === 0
-                    ? t.noBranchesDescription
-                    : t.noResultsDescription
-                }
-              />
+              isSystemWorkspace ? (
+                <DataRegisterEmptyState
+                  title={
+                    rows.length === 0
+                      ? t.noBranches
+                      : t.noResults
+                  }
+                  description={
+                    rows.length === 0
+                      ? t.noBranchesDescription
+                      : t.noResultsDescription
+                  }
+                  showReset={hasBranchFilters}
+                  onReset={resetFilters}
+                  resetLabel={t.reset}
+                />
+              ) : (
+                <EmptyState
+                  title={
+                    rows.length === 0
+                      ? t.noBranches
+                      : t.noResults
+                  }
+                  description={
+                    rows.length === 0
+                      ? t.noBranchesDescription
+                      : t.noResultsDescription
+                  }
+                />
+              )
             ) : (
-              <div className="overflow-hidden rounded-2xl border">
+              <div className="overflow-hidden rounded-lg border bg-background">
                 <div className="overflow-x-auto">
-                  <Table className="min-w-[980px]">
+                  <Table
+                    variant={
+                      isSystemWorkspace
+                        ? "register"
+                        : undefined
+                    }
+                    layout={
+                      isSystemWorkspace
+                        ? "fixed"
+                        : undefined
+                    }
+                    minWidth={
+                      isSystemWorkspace
+                        ? "1120px"
+                        : undefined
+                    }
+                    className={
+                      isSystemWorkspace
+                        ? undefined
+                        : "min-w-[1120px] table-fixed"
+                    }
+                  >
                     <TableHeader>
-                      <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableRow
+                        className={
+                          isSystemWorkspace
+                            ? undefined
+                            : "h-11 bg-muted/40 hover:bg-muted/40"
+                        }
+                      >
                         <TableHead className="sticky start-0 z-20 min-w-[220px] bg-muted/30 text-start">
                           {
                             t.branch
@@ -3416,14 +3495,14 @@ export function BranchesPage() {
                                 ) ||
                                 index
                               }
-                              className="cursor-pointer"
+                              className="group h-[62px] cursor-pointer hover:bg-muted/35"
                               onClick={() =>
                                 openEdit(
                                   row,
                                 )
                               }
                             >
-                              <TableCell className="sticky start-0 z-10 bg-card">
+                              <TableCell className="sticky start-0 z-10 h-[62px] bg-background px-4 group-hover:bg-muted/35">
                                 <p className="font-semibold text-foreground">
                                   {
                                     getBranchName(
@@ -3782,6 +3861,7 @@ export function BranchesPage() {
             </Button>
             <Button
               type="button"
+              variant="brand"
               onClick={() =>
                 void save()
               }
@@ -3931,6 +4011,30 @@ const COMPANY_USER_ROLES = [
   "VIEWER",
 ] as const;
 
+function getCompanyUserAccountId(
+  row: ApiRecord,
+): string {
+  const user = asRecord(row.user);
+  return (
+    getText(
+      user,
+      [
+        "id",
+        "uuid",
+        "pk",
+        "user_id",
+      ],
+    ) ||
+    getText(
+      row,
+      [
+        "user_id",
+        "account_id",
+        "auth_user_id",
+      ],
+    )
+  );
+}
 function getCompanyUserName(row: ApiRecord): string {
   const user = asRecord(row.user);
   return (
@@ -4044,9 +4148,15 @@ function escapeCompanyUsersHtml(value: unknown): string {
     .replaceAll("'", "&#039;");
 }
 
-export function CompanyUsersPage() {
+export function CompanyUsersPage({
+  workspace = "company",
+}: {
+  workspace?: SettingsWorkspace;
+}) {
   const locale = useLocale();
   const rtl = locale === "ar";
+  const isSystemWorkspace = workspace === "system";
+  const router = useRouter();
   const [rows, setRows] = useState<ApiRecord[]>([]);
   const [branches, setBranches] = useState<ApiRecord[]>([]);
   const [query, setQuery] = useState("");
@@ -4122,6 +4232,11 @@ export function CompanyUsersPage() {
         save: "حفظ",
         saving: "جاري الحفظ...",
         cancel: "إلغاء",
+        openDetails: "فتح التفاصيل",
+        detailsUnavailable:
+          "تعذر تحديد معرف حساب المستخدم لفتح التفاصيل.",
+        editUnavailable:
+          "تعذر تحديد معرف مستخدم المنشأة لفتح صفحة التعديل.",
         edit: "تعديل",
         activate: "تفعيل",
         deactivate: "تعطيل",
@@ -4205,6 +4320,11 @@ export function CompanyUsersPage() {
         save: "Save",
         saving: "Saving...",
         cancel: "Cancel",
+        openDetails: "Open details",
+        detailsUnavailable:
+          "The user account ID could not be resolved.",
+        editUnavailable:
+          "The facility user ID could not be resolved for editing.",
         edit: "Edit",
         activate: "Activate",
         deactivate: "Deactivate",
@@ -4376,11 +4496,50 @@ export function CompanyUsersPage() {
   };
 
   const openCreate = () => {
+    if (isSystemWorkspace) {
+      router.push(
+        "/system/users/create?scope=organization",
+      );
+      return;
+    }
     resetForm();
     setDialogOpen(true);
   };
 
+  const openDetails = (
+    row: ApiRecord,
+  ) => {
+    const userId =
+      getCompanyUserAccountId(row);
+    if (!userId) {
+      toast.error(
+        t.detailsUnavailable,
+      );
+      return;
+    }
+    router.push(
+      `/system/users/${encodeURIComponent(
+        userId,
+      )}`,
+    );
+  };
   const edit = (row: ApiRecord) => {
+    if (isSystemWorkspace) {
+      const membershipId =
+        getRowId(row);
+      if (!membershipId) {
+        toast.error(
+          t.editUnavailable,
+        );
+        return;
+      }
+      router.push(
+        `/system/users/organization/${encodeURIComponent(
+          membershipId,
+        )}/edit`,
+      );
+      return;
+    }
     const user = asRecord(row.user);
     const branchRecord = asRecord(row.branch);
     setEditingId(getRowId(row));
@@ -4621,25 +4780,81 @@ export function CompanyUsersPage() {
     toast.success(t.exported);
   };
 
-  const printTable = () => {
+  const printTableHtml = () => {
+    const headers = [
+      t.user,
+      t.email,
+      t.phone,
+      t.role,
+      t.branch,
+      t.status,
+      t.createdAt,
+    ];
+    return `<table>
+      <thead>
+        <tr>${headers
+          .map(
+            (header) =>
+              `<th>${escapeCompanyUsersHtml(header)}</th>`,
+          )
+          .join("")}</tr>
+      </thead>
+      <tbody>${reportRows
+        .map(
+          (row) =>
+            `<tr>${row
+              .map(
+                (cell) =>
+                  `<td>${escapeCompanyUsersHtml(cell)}</td>`,
+              )
+              .join("")}</tr>`,
+        )
+        .join("")}</tbody>
+    </table>`;
+  };
+  const printTable = async () => {
     if (!reportRows.length) {
       toast.warning(t.noResults);
       return;
     }
-    const popup = window.open("", "_blank", "width=1200,height=850");
-    if (!popup) {
-      toast.error(rtl ? "تعذر فتح نافذة الطباعة." : "Could not open print window.");
+    const selectedBranchName =
+      branchFilter === "all"
+        ? rtl
+          ? "جميع الفروع"
+          : "All branches"
+        : getCompanyUserBranchName(
+            {
+              branch_id: branchFilter,
+            },
+            branches,
+          ) ||
+          (rtl
+            ? "الفرع المحدد"
+            : "Selected branch");
+    const opened = await openPrintReport({
+      locale,
+      title: isSystemWorkspace
+        ? rtl
+          ? "تقرير مستخدمي المنشأة والفروع — Marilyn Clinics"
+          : "Marilyn Clinics Organization and Branch Users Report"
+        : t.tableTitle,
+      subtitle: isSystemWorkspace
+        ? rtl
+          ? "قائمة موحدة لمستخدمي المنشأة والفروع والأدوار وحالة التفعيل."
+          : "Unified organization and branch users with roles and access status."
+        : t.tableDescription,
+      branchName: selectedBranchName,
+      tableHtml: printTableHtml(),
+      recordsCount: reportRows.length,
+    });
+    if (!opened) {
+      toast.error(
+        rtl
+          ? "تعذر فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم أعد المحاولة."
+          : "The print window could not be opened. Allow pop-ups and try again.",
+      );
       return;
     }
-    popup.document.open();
-    popup.document.write(reportHtml("print"));
-    popup.document.close();
-    popup.opener = null;
-    popup.onload = () => {
-      popup.focus();
-      popup.print();
-    };
-    popup.onafterprint = () => popup.close();
     toast.success(t.printReady);
   };
 
@@ -4677,25 +4892,39 @@ export function CompanyUsersPage() {
   return (
     <main
       dir={rtl ? "rtl" : "ltr"}
-      className="min-h-screen bg-background px-4 py-6 text-foreground sm:px-6 lg:px-8"
+      className="min-h-screen w-full bg-transparent px-3 py-5 text-foreground sm:px-4 lg:px-5"
     >
-      <div className="mx-auto max-w-[1500px] space-y-6">
-        <header className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <div className="w-full space-y-5">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-4xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
-              <UsersRound className="h-3.5 w-3.5" />
-              {t.badge}
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#cbbda9]/55 bg-white/55 px-3 py-1 text-xs font-medium text-[#8f6a37] shadow-sm dark:bg-white/[0.04]">
+              <UsersRound className="h-3.5 w-3.5 text-[#a57b3d]" />
+              {isSystemWorkspace
+                ? rtl
+                  ? "الإدارة المركزية"
+                  : "Central administration"
+                : t.badge}
             </div>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              {t.title}
+            <h1 className="text-3xl font-bold tracking-tight">
+              {isSystemWorkspace
+                ? rtl
+                  ? "مستخدمو المنشأة والفروع"
+                  : "Organization and branch users"
+                : t.title}
             </h1>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
-              {t.description}
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+              {isSystemWorkspace
+                ? rtl
+                  ? "إدارة مستخدمي Marilyn Clinics وربط الأدوار والصلاحيات بنطاق الفروع."
+                  : "Manage Marilyn Clinics users and connect roles and access to branch scope."
+                : t.description}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" onClick={openCreate}>
+            <Button
+              variant="brand" type="button" onClick={openCreate}
+              className="h-9 px-3">
               <Plus className="h-4 w-4" />
               {t.addUser}
             </Button>
@@ -4704,7 +4933,8 @@ export function CompanyUsersPage() {
               variant="outline"
               onClick={() => void load({ notify: true })}
               disabled={refreshing}
-            >
+
+              className="h-9 bg-background px-3 shadow-none [&_svg]:text-[#a57b3d]">
               {refreshing ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -4712,8 +4942,19 @@ export function CompanyUsersPage() {
               )}
               {t.refresh}
             </Button>
-            <Button asChild type="button" variant="outline">
-              <Link href="/company/settings">
+            <Button
+              asChild
+              type="button"
+              variant="outline"
+              className="h-9 bg-background px-3 shadow-none [&_svg]:text-[#a57b3d]"
+            >
+              <Link
+                href={
+                  isSystemWorkspace
+                    ? "/system/settings"
+                    : "/company/settings"
+                }
+              >
                 <Settings2 className="h-4 w-4" />
                 {t.settingsCenter}
               </Link>
@@ -4726,14 +4967,14 @@ export function CompanyUsersPage() {
             ? Array.from({ length: 4 }).map((_, index) => (
                 <UiCard
                   key={`company-user-stat-loading-${index}`}
-                  className="min-h-[150px] rounded-2xl border bg-card shadow-none"
+                  className="group min-h-[150px] overflow-hidden rounded-lg border bg-card shadow-none transition hover:-translate-y-0.5 hover:border-[#b58c4d]/35 hover:shadow-sm"
                 >
-                  <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-3">
+                  <CardHeader className="flex min-h-[116px] flex-row items-start justify-between gap-3 space-y-0 pb-3">
                     <div className="min-w-0 flex-1 space-y-3">
                       <Skeleton className="h-4 w-28" />
                       <Skeleton className="h-8 w-16" />
                     </div>
-                    <Skeleton className="h-10 w-10 rounded-xl" />
+                    <Skeleton className="h-11 w-11 rounded-full" />
                   </CardHeader>
                   <CardContent>
                     <Skeleton className="h-3 w-40" />
@@ -4741,13 +4982,18 @@ export function CompanyUsersPage() {
                 </UiCard>
               ))
             : summaryCards.map((item) => {
+                if (isSystemWorkspace) {
+                  return (
+                    <SystemKpiCard key={item.label} title={item.label} value={item.value} description={item.hint} icon={item.icon} />
+                  );
+                }
                 const Icon = item.icon;
                 return (
                   <UiCard
                     key={item.label}
-                    className="min-h-[150px] rounded-2xl border bg-card shadow-none"
+                    className="group min-h-[150px] overflow-hidden rounded-lg border bg-card shadow-none transition hover:-translate-y-0.5 hover:border-[#b58c4d]/35 hover:shadow-sm"
                   >
-                    <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-3">
+                    <CardHeader className="flex min-h-[116px] flex-row items-start justify-between gap-3 space-y-0 pb-3">
                       <div className="min-w-0">
                         <CardDescription className="text-sm">
                           {item.label}
@@ -4756,7 +5002,7 @@ export function CompanyUsersPage() {
                           {formatInteger(item.value)}
                         </CardTitle>
                       </div>
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-background text-muted-foreground">
+                      <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-[#dccdb8] bg-white/80 text-[#a57b3d] shadow-sm transition group-hover:border-[#b58c4d]/45 group-hover:bg-[#fffaf2] dark:bg-white/[0.06]">
                         <Icon className="h-5 w-5" />
                       </span>
                     </CardHeader>
@@ -4770,12 +5016,21 @@ export function CompanyUsersPage() {
               })}
         </section>
 
-        <section className="overflow-hidden rounded-2xl border bg-card shadow-none">
-          <div className="flex flex-col gap-4 border-b px-5 py-5 sm:px-6 lg:flex-row lg:items-start lg:justify-between">
+        {isSystemWorkspace ? <AccessManagementTabs active="organization" counts={{ organization: userStats.total }} /> : null}
+
+        <section className="overflow-hidden rounded-lg border bg-card shadow-none">
+          <div className="flex flex-col gap-4 px-5 pt-5 sm:px-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-base font-bold tracking-tight">
-                  {t.tableTitle}
+                <h2 className="flex items-center gap-2 text-base font-bold tracking-tight">
+                  {isSystemWorkspace ? (
+                    <UsersRound className="h-4 w-4 text-[#a57b3d]" />
+                  ) : null}
+                  {isSystemWorkspace
+                    ? rtl
+                      ? "قائمة مستخدمي المنشأة والفروع"
+                      : "Organization and branch user list"
+                    : t.tableTitle}
                 </h2>
                 <Badge
                   variant="outline"
@@ -4785,7 +5040,11 @@ export function CompanyUsersPage() {
                 </Badge>
               </div>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {t.tableDescription}
+                {isSystemWorkspace
+                    ? rtl
+                      ? "عرض ومتابعة مستخدمي المنشأة مع البحث والتصفية والتصدير حسب الفروع."
+                      : "Review organization users with branch-aware search, filtering, and export."
+                    : t.tableDescription}
               </p>
             </div>
 
@@ -4795,16 +5054,20 @@ export function CompanyUsersPage() {
                 variant="outline"
                 onClick={exportExcel}
                 disabled={!filteredRows.length}
-              >
+
+              className="h-9 bg-background px-3 shadow-none [&_svg]:text-[#a57b3d]">
                 <FileSpreadsheet className="h-4 w-4" />
                 {t.exportExcel}
               </Button>
               <Button
                 type="button"
-                variant="outline"
-                onClick={printTable}
+                variant="brand"
+                onClick={() =>
+                  void printTable()
+                }
                 disabled={!filteredRows.length}
-              >
+
+              className="h-9 px-3">
                 <Printer className="h-4 w-4" />
                 {t.print}
               </Button>
@@ -4952,9 +5215,9 @@ export function CompanyUsersPage() {
                 ))}
               </div>
             ) : filteredRows.length ? (
-              <div className="overflow-hidden rounded-xl border bg-background">
+              <div className="overflow-hidden rounded-lg border bg-background">
                 <div className="overflow-x-auto">
-                  <Table className="min-w-[1050px] table-fixed">
+                  <Table variant="register" className="min-w-[1050px] table-fixed">
                     <TableHeader>
                       <TableRow className="h-11 bg-muted/40 hover:bg-muted/40">
                         <TableHead className="sticky start-0 z-20 w-[220px] bg-muted/40 px-4 text-start text-xs font-semibold">
@@ -4990,7 +5253,11 @@ export function CompanyUsersPage() {
                           <TableRow
                             key={getRowId(row) || `company-user-${index}`}
                             className="group h-[66px] cursor-pointer transition-colors hover:bg-muted/35"
-                            onClick={() => edit(row)}
+                            onClick={() =>
+                              isSystemWorkspace
+                                ? openDetails(row)
+                                : edit(row)
+                            }
                           >
                             <TableCell className="sticky start-0 z-10 h-[66px] bg-background px-4 group-hover:bg-muted/35">
                               <p className="truncate font-semibold text-foreground">
@@ -5046,6 +5313,19 @@ export function CompanyUsersPage() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="min-w-44">
+                                  {isSystemWorkspace ? (
+                                    <>
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          openDetails(row)
+                                        }
+                                      >
+                                        <Eye className="h-4 w-4" />
+                                        {t.openDetails}
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                    </>
+                                  ) : null}
                                   <DropdownMenuItem onClick={() => edit(row)}>
                                     <Pencil className="h-4 w-4" />
                                     {t.edit}
@@ -6171,7 +6451,7 @@ export function CompanyPermissionsPage() {
         </head>
         <body>
           <div class="report-header">
-            <div class="brand">PrimeyAcc</div>
+            <div class="brand">Marilyn Clinics</div>
             <h1>${escapeReportHtml(
               reportTitle,
             )}</h1>
@@ -6336,7 +6616,7 @@ export function CompanyPermissionsPage() {
       );
       return;
     }
-    const popup = window.open(
+    const popup = openManagedPrintWindow(
       "",
       "_blank",
       "width=1400,height=900",
@@ -6351,7 +6631,7 @@ export function CompanyPermissionsPage() {
     }
     popup.opener = null;
     popup.document.open();
-    popup.document.write(
+    writeManagedPrintDocument(popup,
       buildReportDocument("print"),
     );
     popup.document.close();
@@ -6360,7 +6640,7 @@ export function CompanyPermissionsPage() {
     };
     window.setTimeout(() => {
       popup.focus();
-      popup.print();
+      printManagedWindow(popup);
     }, 250);
   };
   const summaryCards = [

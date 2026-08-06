@@ -259,7 +259,7 @@ export function NavUser() {
     if (isAgentArea) return "/agent/commissions";
     if (isCompanyArea) return "/company/billing";
 
-    return "/system/platform-payments";
+    return "/system/billing";
   }, [isCompanyArea, isCustomerArea, isAgentArea]);
 
   const notificationsHref = useMemo(() => {

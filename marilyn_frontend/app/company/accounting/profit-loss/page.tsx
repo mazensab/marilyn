@@ -1,6 +1,6 @@
 // ============================================================
 // 📂 app/company/accounting/profit-loss/page.tsx
-// 🧠 Mhamcloud | Company Accounting Income Statement
+// 🧠 Marilyn Clinics | Company Accounting Income Statement
 // ------------------------------------------------------------
 // ✅ Approved company dashboard premium pattern
 // ✅ Real API only
@@ -63,6 +63,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  printManagedWindow as printMarilynWindow,
+  writeManagedPrintDocument as writeMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
 type SectionFilter = "ALL" | "REVENUE" | "EXPENSE";
@@ -841,21 +846,21 @@ export default function CompanyIncomeStatementPage() {
       toast.error(t.printEmpty);
       return;
     }
-    const popup = window.open("", "_blank", "width=1200,height=900");
+    const popup = openMarilynPrintWindow("", "_blank", "width=1200,height=900");
     if (!popup) {
       toast.error(t.printBlocked);
       return;
     }
     popup.opener = null;
     popup.document.open();
-    popup.document.write(
+    writeMarilynPrintDocument(popup,
       buildIncomeStatementDocument("print", includeSummary, title),
     );
     popup.document.close();
     popup.onafterprint = () => popup.close();
     window.setTimeout(() => {
       popup.focus();
-      popup.print();
+      printMarilynWindow(popup);
     }, 300);
     toast.success(t.printReady);
   }

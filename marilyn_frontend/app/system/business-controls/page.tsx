@@ -1,9 +1,9 @@
 ﻿"use client";
 /* ============================================================
    📂 marilyn_frontend/app/system/business-controls/page.tsx
-   🧩 Mhamcloud — System Business Controls Center
+   🧩 Marilyn Clinics — System Business Controls Center
    ------------------------------------------------------------
-   ✅ Premium PrimeyCare admin pattern adapted for Mhamcloud
+   ✅ Premium PrimeyCare admin pattern adapted for Marilyn Clinics
    ✅ System business controls module center page
    ✅ Real API only: GET /api/system/business-controls/
    ✅ KPI cards + quick actions + business controls tables
@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
+import { openPrintReport } from "@/lib/print-report";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -185,7 +186,7 @@ const translations = {
     exportEmpty: "لا توجد بيانات للتصدير.",
     printEmpty: "لا توجد بيانات للطباعة.",
     pdfHint: "اختر حفظ كـ PDF من نافذة الطباعة.",
-    reportTitle: "تقرير ضوابط الأعمال في Mhamcloud",
+    reportTitle: "تقرير ضوابط الأعمال في Marilyn Clinics",
     generatedAt: "تاريخ الإنشاء",
     refreshed: "تم تحديث ضوابط الأعمال.",
     unknown: "غير معروف",
@@ -265,7 +266,7 @@ const translations = {
     exportEmpty: "There is no data to export.",
     printEmpty: "There is no data to print.",
     pdfHint: "Choose Save as PDF from the print dialog.",
-    reportTitle: "Mhamcloud Business Controls Report",
+    reportTitle: "Marilyn Clinics Business Controls Report",
     generatedAt: "Generated at",
     refreshed: "Business controls refreshed.",
     unknown: "Unknown",
@@ -773,51 +774,42 @@ export default function SystemBusinessControlsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Mhamcloud-business-controls-${new Date().toISOString().slice(0, 10)}.xls`;
+    link.download = `marilyn-business-controls-${new Date().toISOString().slice(0, 10)}.xls`;
     document.body.appendChild(link);
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
   }
-  function openPrintWindow(mode: "print" | "pdf") {
-    const exportRows = buildExportRows(filteredRows, locale);
+  async function openPrintWindow(
+    mode: "print" | "pdf",
+  ) {
+    const exportRows = buildExportRows(
+      filteredRows,
+      locale,
+    );
     if (!exportRows.length) {
       toast.error(t.printEmpty);
       return;
     }
-    if (mode === "pdf") toast.info(t.pdfHint);
-    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1200,height=800");
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <!doctype html>
-      <html dir="${dir}" lang="${locale}">
-        <head>
-          <meta charset="utf-8" />
-          <title>${escapeHtml(t.reportTitle)}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 24px; color: #0f172a; }
-            h1 { margin: 0 0 8px; font-size: 24px; }
-            p { color: #64748b; }
-            table { width: 100%; border-collapse: collapse; margin-top: 18px; }
-            th, td {
-              border: 1px solid #cbd5e1;
-              padding: 8px;
-              font-size: 12px;
-              text-align: ${dir === "rtl" ? "right" : "left"};
-              vertical-align: top;
-            }
-            th { background: #f1f5f9; font-weight: 700; }
-          </style>
-          <script>window.onload = function () { window.print(); };</script>
-        </head>
-        <body>
-          <h1>${escapeHtml(t.reportTitle)}</h1>
-          <p>${escapeHtml(t.generatedAt)}: ${escapeHtml(new Date().toLocaleString())}</p>
-          ${buildTableHtml(exportHeaders(), exportRows)}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    if (mode === "pdf") {
+      toast.info(t.pdfHint);
+    }
+    const opened = await openPrintReport({
+      locale,
+      title: t.reportTitle,
+      tableHtml: buildTableHtml(
+        exportHeaders(),
+        exportRows,
+      ),
+      recordsCount: exportRows.length,
+    });
+    if (!opened) {
+      toast.error(
+        locale === "ar"
+          ? "تعذر فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم أعد المحاولة."
+          : "The print window could not be opened. Allow pop-ups and try again.",
+      );
+    }
   }
   if (loading) return <BusinessControlsSkeleton />;
   if (error) {
@@ -866,11 +858,11 @@ export default function SystemBusinessControlsPage() {
                     <Activity className="ms-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => openPrintWindow("pdf")}>
+                <Button variant="outline" className="rounded-xl bg-background" onClick={() => void openPrintWindow("pdf")}>
                   {t.pdf}
                   <FileText className="ms-2 h-4 w-4" />
                 </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => openPrintWindow("print")}>
+                <Button variant="outline" className="rounded-xl bg-background" onClick={() => void openPrintWindow("print")}>
                   {t.print}
                   <Printer className="ms-2 h-4 w-4" />
                 </Button>

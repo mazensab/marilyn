@@ -2,11 +2,11 @@
 
 /* ============================================================
    📂 marilyn_frontend/app/system/roles/page.tsx
-   🏢 PrimeyAcc — System Roles Catalog
+   🏢 Marilyn Clinics — System Roles Catalog
 
    ------------------------------------------------------------
 
-   ✅ Approved Premium PrimeyAcc system page pattern
+   ✅ Approved Premium Marilyn Clinics system page pattern
 
    ✅ Real API only: GET /api/system/roles/
 
@@ -81,6 +81,11 @@ import {
 } from "lucide-react";
 
 import { toast } from "sonner";
+import { Activity } from "lucide-react";
+import { AccessManagementTabs } from "@/components/system/access-management-tabs";
+import {
+  printCurrentPage,
+} from "@/lib/managed-print-window";
 
 import { Badge } from "@/components/ui/badge";
 
@@ -101,6 +106,8 @@ import {
 } from "@/components/ui/card";
 
 import { Input } from "@/components/ui/input";
+import { DataRegisterToolbar, registerBrandButtonClass, registerOutlineButtonClass } from "@/components/ui/data-register";
+import { SystemKpiCard } from "@/components/ui/system-kpi-card";
 
 import {
 
@@ -298,7 +305,7 @@ function scopeLabel(scope: string | undefined, locale: Locale) {
 
   if (scope === "company") {
 
-    return textByLocale(locale, "الشركات", "Company");
+    return textByLocale(locale, "المنشأة والفروع", "Organization");
 
   }
 
@@ -733,7 +740,7 @@ export default function SystemRolesPage() {
 
     link.href = url;
 
-    link.download = "primeyacc-system-roles.xls";
+    link.download = "marilyn-system-roles.xls";
 
     document.body.appendChild(link);
 
@@ -749,7 +756,7 @@ export default function SystemRolesPage() {
 
   const printPage = () => {
 
-    window.print();
+    printCurrentPage();
 
   };
 
@@ -775,7 +782,7 @@ export default function SystemRolesPage() {
 
     locale,
 
-    "عرض وتحليل أدوار النظام والشركات وصلاحيات كل دور من API الحقيقي.",
+    "عرض وتحليل أدوار النظام والمنشأة والفروع وصلاحيات كل دور من API الحقيقي.",
 
     "View and analyze system and company roles with permissions from the real API.",
 
@@ -787,335 +794,30 @@ export default function SystemRolesPage() {
 
       dir={direction}
 
-      className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8 print:bg-white"
+      className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8 print:bg-white"
 
     >
 
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-5">
 
-        <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-4xl"><div className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-[#9a7139]"><KeyRound className="h-4 w-4" />{textByLocale(locale, "الإدارة والصلاحيات", "Access management")}</div><h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1><p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">{pageDescription}</p><div className="mt-3 inline-flex items-center gap-2 text-xs text-muted-foreground"><Activity className="h-3.5 w-3.5 text-emerald-600" />{textByLocale(locale, "متصل بواجهة الأدوار", "Connected to roles API")}</div></div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2"><Button variant="outline" className={registerOutlineButtonClass} onClick={() => void loadCatalog("refresh")} disabled={refreshing || loading}>{refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}{textByLocale(locale, "تحديث", "Refresh")}</Button><Button variant="outline" className={registerOutlineButtonClass} onClick={exportExcel}><FileSpreadsheet className="h-4 w-4" />Excel</Button><Button variant="brand" className={registerBrandButtonClass} onClick={printPage}><Printer className="h-4 w-4" />{textByLocale(locale, "طباعة", "Print")}</Button></div>
+        </header>
 
-          <div className="relative p-6 sm:p-8">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><SystemKpiCard title={textByLocale(locale, "إجمالي الأدوار", "Total roles")} value={totals.total} description={textByLocale(locale, "من واجهة النظام الحقيقية", "From the live API")} icon={KeyRound} /><SystemKpiCard title={textByLocale(locale, "أدوار النظام", "System roles")} value={totals.system} description={textByLocale(locale, "أدوار الإدارة المركزية", "Central system roles")} icon={UsersRound} /><SystemKpiCard title={textByLocale(locale, "أدوار المنشأة", "Organization roles")} value={totals.company} description={textByLocale(locale, "أدوار المنشأة والفروع", "Organization and branch roles")} icon={Building2} /><SystemKpiCard title={textByLocale(locale, "المستخدمون والعضويات", "Users and memberships")} value={totals.systemUsers + totals.companyMemberships} description={textByLocale(locale, "الارتباطات الفعلية بالأدوار", "Live role assignments")} icon={TableProperties} /></section>
 
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/80 via-primary/30 to-transparent" />
+                <AccessManagementTabs active="roles" counts={{ roles: totals.total }} />
 
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <Card className="overflow-hidden rounded-lg border bg-card shadow-none">
 
-              <div className="max-w-4xl">
-
-                <Badge variant="outline" className="w-fit rounded-full bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
-
-                  <KeyRound className="me-1.5 h-3.5 w-3.5" />
-
-                  {textByLocale(locale, "\u0646\u0638\u0627\u0645 PrimeyAcc", "PrimeyAcc System")}
-
-                </Badge>
-
-                <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-
-                  {pageTitle}
-
-                </h1>
-
-                <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">
-
-                  {pageDescription}
-
-                </p>
-
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-
-                <Button asChild className="rounded-xl">
-
-                  <Link href="/system/permissions">
-
-                    <ShieldCheck className="me-2 h-4 w-4" />
-
-                    {textByLocale(locale, "\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a", "Permissions")}
-
-                  </Link>
-
-                </Button>
-
-                <Button type="button" variant="outline" className="rounded-xl bg-background" onClick={printPage}>
-
-                  PDF
-
-                  <FileSpreadsheet className="ms-2 h-4 w-4" />
-
-                </Button>
-
-                <Button type="button" variant="outline" className="rounded-xl bg-background" onClick={printPage}>
-
-                  {textByLocale(locale, "\u0637\u0628\u0627\u0639\u0629", "Print")}
-
-                  <Printer className="ms-2 h-4 w-4" />
-
-                </Button>
-
-                <Button type="button" variant="outline" className="rounded-xl bg-background" onClick={exportExcel}>
-
-                  {textByLocale(locale, "\u062a\u0635\u062f\u064a\u0631 Excel", "Export Excel")}
-
-                  <FileSpreadsheet className="ms-2 h-4 w-4" />
-
-                </Button>
-
-                <Button
-
-                  type="button"
-
-                  variant="outline"
-
-                  className="rounded-xl bg-background"
-
-                  onClick={() => void loadCatalog("refresh")}
-
-                  disabled={refreshing || loading}
-
-                >
-
-                  {textByLocale(locale, "\u062a\u062d\u062f\u064a\u062b", "Refresh")}
-
-                  {refreshing ? (
-
-                    <Loader2 className="ms-2 h-4 w-4 animate-spin" />
-
-                  ) : (
-
-                    <RefreshCw className="ms-2 h-4 w-4" />
-
-                  )}
-
-                </Button>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </section>
-
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-
-          {[
-
-            {
-
-              title: textByLocale(locale, "\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0623\u062f\u0648\u0627\u0631", "Total Roles"),
-
-              value: totals.total,
-
-              icon: KeyRound,
-
-            },
-
-            {
-
-              title: textByLocale(locale, "\u0623\u062f\u0648\u0627\u0631 \u0627\u0644\u0646\u0638\u0627\u0645", "System Roles"),
-
-              value: totals.system,
-
-              icon: UsersRound,
-
-            },
-
-            {
-
-              title: textByLocale(locale, "\u0623\u062f\u0648\u0627\u0631 \u0627\u0644\u0634\u0631\u0643\u0627\u062a", "Company Roles"),
-
-              value: totals.company,
-
-              icon: Building2,
-
-            },
-
-            {
-
-              title: textByLocale(locale, "\u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u0648\u0646 \u0648\u0627\u0644\u0639\u0636\u0648\u064a\u0627\u062a", "Users & Memberships"),
-
-              value: totals.systemUsers + totals.companyMemberships,
-
-              icon: TableProperties,
-
-            },
-
-          ].map((item) => {
-
-            const Icon = item.icon;
-
-            return (
-
-              <Card
-
-                key={item.title}
-
-                className="overflow-hidden rounded-2xl border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-
-              >
-
-                <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2">
-
-                  <div className="min-w-0">
-
-                    <CardDescription className="truncate text-sm">{item.title}</CardDescription>
-
-                    <CardTitle className="mt-2 text-2xl font-bold tracking-tight tabular-nums">
-
-                      {loading ? <Skeleton className="h-8 w-16" /> : formatNumber(item.value)}
-
-                    </CardTitle>
-
-                  </div>
-
-                  <span className="rounded-2xl bg-primary/10 p-2.5 text-primary">
-
-                    <Icon className="h-5 w-5" />
-
-                  </span>
-
-                </CardHeader>
-
-                <CardContent className="pt-0">
-
-                  <p className="line-clamp-2 text-xs text-muted-foreground">
-
-                    {textByLocale(locale, "\u0645\u0646 \u0648\u0627\u062c\u0647\u0627\u062a \u0627\u0644\u0646\u0638\u0627\u0645 \u0627\u0644\u062d\u0642\u064a\u0642\u064a\u0629", "From real system APIs")}
-
-                  </p>
-
-                </CardContent>
-
-              </Card>
-
-            );
-
-          })}
-
-        </section>
-
-        <Card className="rounded-2xl shadow-sm">
-
-          <CardHeader>
-
-            <CardTitle>{textByLocale(locale, "\u0627\u062e\u062a\u0635\u0627\u0631\u0627\u062a \u0648\u062d\u062f\u0629 \u0627\u0644\u0623\u062f\u0648\u0627\u0631", "Roles shortcuts")}</CardTitle>
-
-            <CardDescription>
-
-              {textByLocale(locale, "\u062a\u0646\u0642\u0644 \u0633\u0631\u064a\u0639 \u0628\u064a\u0646 \u0635\u0641\u062d\u0627\u062a \u0627\u0644\u062d\u0648\u0643\u0645\u0629 \u0628\u0646\u0641\u0633 \u0646\u0645\u0637 \u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u0646\u0635\u0629.", "Quick navigation between governance pages using the platform management pattern.")}
-
-            </CardDescription>
-
-          </CardHeader>
-
-          <CardContent>
-
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-
-              {[
-
-                {
-
-                  href: "/system/permissions",
-
-                  title: textByLocale(locale, "\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a", "Permissions"),
-
-                  description: textByLocale(locale, "\u0639\u0631\u0636 \u0643\u062a\u0627\u0644\u0648\u062c \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0646\u0638\u0627\u0645 \u0648\u0627\u0644\u0634\u0631\u0643\u0627\u062a.", "View system and company permissions catalog."),
-
-                  icon: ShieldCheck,
-
-                },
-
-                {
-
-                  href: "/system/users/permissions",
-
-                  title: textByLocale(locale, "\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u064a\u0646", "User permissions"),
-
-                  description: textByLocale(locale, "\u0645\u0631\u0627\u062c\u0639\u0629 \u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0648\u0639\u0636\u0648\u064a\u0627\u062a \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u064a\u0646.", "Review user permissions and memberships."),
-
-                  icon: TableProperties,
-
-                },
-
-                {
-
-                  href: "/system/business-controls",
-
-                  title: textByLocale(locale, "\u0636\u0648\u0627\u0628\u0637 \u0627\u0644\u0623\u0639\u0645\u0627\u0644", "Business controls"),
-
-                  description: textByLocale(locale, "\u0645\u0631\u0627\u062c\u0639\u0629 \u0636\u0648\u0627\u0628\u0637 \u0627\u0644\u062a\u062f\u0642\u064a\u0642 \u0648\u0627\u0644\u062a\u062d\u0643\u0645.", "Review audit and control settings."),
-
-                  icon: CheckCircle2,
-
-                },
-
-                {
-
-                  href: "/system",
-
-                  title: textByLocale(locale, "\u0644\u0648\u062d\u0629 \u0627\u0644\u0646\u0638\u0627\u0645", "System dashboard"),
-
-                  description: textByLocale(locale, "\u0627\u0644\u0639\u0648\u062f\u0629 \u0625\u0644\u0649 \u0644\u0648\u062d\u0629 \u062a\u062d\u0643\u0645 \u0627\u0644\u0646\u0638\u0627\u0645 \u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629.", "Return to the main system dashboard."),
-
-                  icon: LayoutDashboard,
-
-                },
-
-              ].map((action) => {
-
-                const Icon = action.icon;
-
-                return (
-
-                  <Link key={action.href} href={action.href}>
-
-                    <Card className="group h-full rounded-2xl border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-
-                      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-
-                        <div className="min-w-0">
-
-                          <CardTitle className="text-base">{action.title}</CardTitle>
-
-                          <CardDescription className="mt-2 line-clamp-2">{action.description}</CardDescription>
-
-                        </div>
-
-                        <span className="rounded-2xl bg-primary/10 p-2.5 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-
-                          <Icon className="h-5 w-5" />
-
-                        </span>
-
-                      </CardHeader>
-
-                    </Card>
-
-                  </Link>
-
-                );
-
-              })}
-
-            </div>
-
-          </CardContent>
-
-        </Card>
-
-        <Card className="w-full rounded-2xl shadow-sm">
-
-          <CardHeader className="gap-3">
+          <CardHeader className="px-5 pt-5 sm:px-6">
 
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
 
               <div>
 
-                <CardTitle>{textByLocale(locale, "\u062c\u062f\u0648\u0644 \u0627\u0644\u0623\u062f\u0648\u0627\u0631", "Roles table")}</CardTitle>
+                <CardTitle className="flex items-center gap-2 text-base font-bold tracking-tight"><KeyRound className="h-4 w-4 text-[#a57b3d]" />{textByLocale(locale, "\u062c\u062f\u0648\u0644 \u0627\u0644\u0623\u062f\u0648\u0627\u0631", "Roles table")}</CardTitle>
 
                 <CardDescription className="mt-2">
 
@@ -1135,9 +837,9 @@ export default function SystemRolesPage() {
 
           </CardHeader>
 
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 px-5 pb-5 sm:px-6">
 
-            <div className="flex flex-col gap-3 rounded-2xl border bg-muted/20 p-3 lg:flex-row lg:items-center lg:justify-between print:hidden">
+            <DataRegisterToolbar className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 lg:flex-row lg:items-center lg:justify-between print:hidden">
 
               <div className="relative min-w-0 flex-1">
 
@@ -1171,7 +873,7 @@ export default function SystemRolesPage() {
 
                   <SelectItem value="system">{textByLocale(locale, "\u0627\u0644\u0646\u0638\u0627\u0645", "System")}</SelectItem>
 
-                  <SelectItem value="company">{textByLocale(locale, "\u0627\u0644\u0634\u0631\u0643\u0627\u062a", "Company")}</SelectItem>
+                  <SelectItem value="company">{textByLocale(locale, "\u0627\u0644\u0645\u0646\u0634\u0623\u0629 \u0648\u0627\u0644\u0641\u0631\u0648\u0639", "Organization")}</SelectItem>
 
                 </SelectContent>
 
@@ -1207,7 +909,7 @@ export default function SystemRolesPage() {
 
               </Button>
 
-            </div>
+            </DataRegisterToolbar>
 
             {error ? (
 
@@ -1293,11 +995,11 @@ export default function SystemRolesPage() {
 
             ) : (
 
-              <div className="overflow-hidden rounded-2xl border bg-background">
+              <div className="overflow-hidden rounded-lg border bg-background">
 
                 <div className="w-full overflow-x-auto">
 
-                  <Table className="w-full min-w-[980px] table-fixed">
+                  <Table variant="register" className="w-full min-w-[980px] table-fixed">
 
                     <TableHeader>
 

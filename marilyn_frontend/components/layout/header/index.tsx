@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useSidebar } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
+import { SYSTEM_WORKSPACE_ROUTES } from "@/lib/system-workspace-navigation"
 
 type AppLocale = "ar" | "en"
 
@@ -144,7 +145,7 @@ export function SiteHeader({
           )}
         >
           <Link
-            href="/system"
+            href={SYSTEM_WORKSPACE_ROUTES.dashboard}
             className={cn(
               "col-start-1 row-start-1 flex min-w-0",
               "shrink-0 justify-self-start rounded-2xl",
@@ -153,8 +154,8 @@ export function SiteHeader({
             )}
             aria-label={
               isArabic
-                ? "\u0627\u0644\u0627\u0646\u062a\u0642\u0627\u0644 \u0625\u0644\u0649 \u0644\u0648\u062d\u0629 \u0627\u0644\u0646\u0638\u0627\u0645"
-                : "Open system dashboard"
+                ? "الانتقال إلى لوحة الإدارة المركزية"
+                : "Open central administration dashboard"
             }
           >
             <Image

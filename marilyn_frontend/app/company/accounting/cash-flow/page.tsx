@@ -1,8 +1,8 @@
 // ============================================================
 // 📂 app/company/accounting/cash-flow/page.tsx
-// 🧠 Mhamcloud | Company Accounting Cash Flow Statement
+// 🧠 Marilyn Clinics | Company Accounting Cash Flow Statement
 // ------------------------------------------------------------
-// ✅ PrimeyAcc Approved Design
+// ✅ Marilyn Clinics Approved Design
 // ✅ Real API only
 // ✅ Cash Flow Statement / قائمة التدفقات النقدية
 // ✅ Operating / Investing / Financing sections
@@ -31,6 +31,11 @@ import {
   WalletCards,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  openManagedPrintWindow,
+  printManagedWindow,
+  writeManagedPrintDocument,
+} from "@/lib/managed-print-window";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -888,21 +893,21 @@ export default function CompanyCashFlowPage() {
       toast.error(t.printEmpty);
       return;
     }
-    const popup = window.open("", "_blank", "width=1300,height=900");
+    const popup = openManagedPrintWindow("", "_blank", "width=1300,height=900");
     if (!popup) {
       toast.error(t.printBlocked);
       return;
     }
     popup.opener = null;
     popup.document.open();
-    popup.document.write(
+    writeManagedPrintDocument(popup,
       buildCashFlowDocument("print", includeSummary, title),
     );
     popup.document.close();
     popup.onafterprint = () => popup.close();
     window.setTimeout(() => {
       popup.focus();
-      popup.print();
+      printManagedWindow(popup);
     }, 300);
     toast.success(t.printReady);
   }

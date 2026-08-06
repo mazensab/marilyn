@@ -1,8 +1,8 @@
 // ============================================================
 // 📂 app/company/accounting/journal-entries/page.tsx
-// 🧠 PrimeyAcc — Company Journal Entries
+// 🧠 Marilyn Clinics — Company Journal Entries
 // ------------------------------------------------------------
-// ✅ PrimeyAcc Approved Design
+// ✅ Marilyn Clinics Approved Design
 // ✅ Real API only
 // ✅ Tenant scoped by backend session
 // ✅ Cost centers from DB only
@@ -85,6 +85,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  printCurrentPage as printMarilynCurrentPage,
+  printManagedWindow as printMarilynWindow,
+  writeManagedPrintDocument as writeMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
 type EntryStatus = "DRAFT" | "POSTED" | "CANCELLED" | "REVERSED" | string;
@@ -1448,19 +1454,19 @@ export default function CompanyJournalEntriesPage() {
       toast.error(t.printEmpty);
       return;
     }
-    const popup = window.open("", "_blank", "width=1400,height=900");
+    const popup = openMarilynPrintWindow("", "_blank", "width=1400,height=900");
     if (!popup) {
       toast.error(t.printBlocked);
       return;
     }
     popup.opener = null;
     popup.document.open();
-    popup.document.write(buildRegisterReportDocument("print"));
+    writeMarilynPrintDocument(popup, buildRegisterReportDocument("print"));
     popup.document.close();
     popup.onafterprint = () => popup.close();
     popup.setTimeout(() => {
       popup.focus();
-      popup.print();
+      printMarilynWindow(popup);
     }, 300);
     toast.success(t.printReady);
   }
@@ -1474,7 +1480,7 @@ export default function CompanyJournalEntriesPage() {
     const printUrl = `/company/accounting/journal-entries/${encodeURIComponent(
       entryKey,
     )}?print=1`;
-    const popup = window.open(
+    const popup = openMarilynPrintWindow(
       printUrl,
       "_blank",
       "width=1100,height=900",
@@ -1518,7 +1524,7 @@ export default function CompanyJournalEntriesPage() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button onClick={() => window.print()}>
+            <Button onClick={() => printMarilynCurrentPage()}>
               <Printer className="h-4 w-4" />
               {t.print}
             </Button>

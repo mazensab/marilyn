@@ -1,7 +1,7 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/_components/company-party-detail-page.tsx
-   🧠 PrimeyAcc — Company Party Detail
+   🧠 Marilyn Clinics — Company Party Detail
    ------------------------------------------------------------
    ✅ Approved company design
    ✅ Shared customer/supplier detail page
@@ -97,6 +97,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  writeAutoManagedPrintDocument as writeAutoMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 
 type Locale = "ar" | "en";
 type PartyKind = "customer" | "supplier";
@@ -1649,14 +1653,14 @@ export function CompanyPartyDetailPage({ kind }: { kind: PartyKind }) {
   }
 
   function openPrintReport(titleText: string, tableHtml: string) {
-    const printWindow = window.open("", "_blank", "width=1400,height=900");
+    const printWindow = openMarilynPrintWindow("", "_blank", "width=1400,height=900");
     if (!printWindow) {
       toast.error(t.printBlocked);
       return;
     }
     const align = locale === "ar" ? "right" : "left";
     printWindow.opener = null;
-    printWindow.document.write(`
+    writeAutoMarilynPrintDocument(printWindow, `
       <!doctype html>
       <html dir="${dir}" lang="${locale}">
         <head>
@@ -1676,7 +1680,7 @@ export function CompanyPartyDetailPage({ kind }: { kind: PartyKind }) {
           )}</p>
           ${tableHtml}
           <script>
-            window.onload = function () { window.focus(); window.print(); };
+            window.onload = function () { window.focus(); window.__MARILYN_PRINT_READY__ = true; };
             window.onafterprint = function () { window.close(); };
           </script>
         </body>
@@ -1725,7 +1729,7 @@ export function CompanyPartyDetailPage({ kind }: { kind: PartyKind }) {
     downloadExcel(
       titleText,
       documentTableHtml(rows),
-      `primeyacc-${kind}-${id}-${suffix}-${new Date().toISOString().slice(0, 10)}.xls`,
+      `marilyn-${kind}-${id}-${suffix}-${new Date().toISOString().slice(0, 10)}.xls`,
     );
   }
 
@@ -1745,7 +1749,7 @@ export function CompanyPartyDetailPage({ kind }: { kind: PartyKind }) {
     downloadExcel(
       titleText,
       ledgerTableHtml(rows),
-      `primeyacc-${kind}-${id}-${suffix}-${new Date().toISOString().slice(0, 10)}.xls`,
+      `marilyn-${kind}-${id}-${suffix}-${new Date().toISOString().slice(0, 10)}.xls`,
     );
   }
 
@@ -2106,7 +2110,7 @@ export function CompanyPartyDetailPage({ kind }: { kind: PartyKind }) {
     downloadExcel(
       reportTitle,
       fullReportHtml(),
-      `primeyacc-${kind}-${id}-full-${new Date()
+      `marilyn-${kind}-${id}-full-${new Date()
         .toISOString()
         .slice(0, 10)}.xls`,
     );

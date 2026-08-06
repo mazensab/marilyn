@@ -37,6 +37,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  printCurrentPage as printMarilynCurrentPage,
+  printManagedWindow as printMarilynWindow,
+  writeManagedPrintDocument as writeMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
@@ -1035,7 +1041,7 @@ export function CompanyJournalEntryDetailPage({
   function printEntryDocument() {
     if (!entry) return;
 
-    const popup = window.open("", "_blank", "width=1100,height=900");
+    const popup = openMarilynPrintWindow("", "_blank", "width=1100,height=900");
 
     if (!popup) {
       toast.error(t.printBlocked);
@@ -1044,14 +1050,14 @@ export function CompanyJournalEntryDetailPage({
 
     popup.opener = null;
     popup.document.open();
-    popup.document.write(buildEntryDocument("print"));
+    writeMarilynPrintDocument(popup, buildEntryDocument("print"));
     popup.document.close();
 
     popup.onafterprint = () => popup.close();
 
     window.setTimeout(() => {
       popup.focus();
-      popup.print();
+      printMarilynWindow(popup);
     }, 300);
   }
 
@@ -1068,12 +1074,12 @@ export function CompanyJournalEntryDetailPage({
     autoPrintStartedRef.current = true;
     const documentHtml = buildEntryDocument("print");
     window.document.open();
-    window.document.write(documentHtml);
+    writeMarilynPrintDocument(window, documentHtml);
     window.document.close();
     window.onafterprint = () => window.close();
     window.setTimeout(() => {
       window.focus();
-      window.print();
+      printMarilynCurrentPage();
     }, 300);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [

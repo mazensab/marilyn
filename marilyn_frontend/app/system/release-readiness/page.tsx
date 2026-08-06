@@ -1,9 +1,9 @@
 "use client";
 /* ============================================================
    ?? marilyn_frontend/app/system/release-readiness/page.tsx
-   ?? Mhamcloud ? System Release Readiness
+   ?? Marilyn Clinics ? System Release Readiness
    ------------------------------------------------------------
-   ? Approved Premium PrimeyCare admin pattern adapted for Mhamcloud
+   ? Approved Premium Marilyn Clinics admin pattern adapted for Marilyn Clinics
    ? Real API only: GET /api/system/release-readiness/
    ? Backend release readiness summary + checks + API contracts
    ? Search, status filter, scope filter, sorting, reset
@@ -17,6 +17,7 @@
    ? No fake demo data
 ============================================================ */
 import * as React from "react";
+import Link from "next/link";
 import {
   Activity,
   ArrowUpDown,
@@ -25,8 +26,11 @@ import {
   ClipboardCheck,
   FileSpreadsheet,
   FileText,
+  KeyRound,
   Layers3,
+  LayoutDashboard,
   Loader2,
+  PlugZap,
   Printer,
   RefreshCw,
   RotateCcw,
@@ -39,6 +43,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
+import { openPrintReport } from "@/lib/print-report";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,6 +70,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { SystemKpiCard } from "@/components/ui/system-kpi-card";
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
 type StatusFilter = "all" | "ready" | "ready_with_warnings" | "blocked" | "passed" | "warning" | "failed";
@@ -100,8 +106,12 @@ const translations = {
   ar: {
     title: "\u062c\u0627\u0647\u0632\u064a\u0629 \u0627\u0644\u0625\u0635\u062f\u0627\u0631",
     subtitle:
-      "\u0645\u0631\u0643\u0632 \u0645\u0631\u0627\u0642\u0628\u0629 \u062c\u0627\u0647\u0632\u064a\u0629 \u0628\u0627\u0643\u0646\u062f Mhamcloud \u0648\u0639\u0642\u0648\u062f API \u0627\u0644\u0645\u0633\u062c\u0644\u0629 \u0645\u0646 \u0645\u0635\u062f\u0631 \u062d\u0642\u064a\u0642\u064a.",
+      "\u0645\u0631\u0643\u0632 \u0645\u0631\u0627\u0642\u0628\u0629 \u062c\u0627\u0647\u0632\u064a\u0629 \u0628\u0627\u0643\u0646\u062f Marilyn Clinics \u0648\u0639\u0642\u0648\u062f API \u0627\u0644\u0645\u0633\u062c\u0644\u0629 \u0645\u0646 \u0645\u0635\u062f\u0631 \u062d\u0642\u064a\u0642\u064a.",
     badge: "\u0625\u062f\u0627\u0631\u0629 \u0627\u0644\u0645\u0646\u0635\u0629",
+    integrations: "مركز التكاملات",
+    apiKeys: "مفاتيح API",
+    apiContracts: "عقود API",
+    dashboard: "لوحة النظام",
     refresh: "\u062a\u062d\u062f\u064a\u062b",
     exportExcel: "\u062a\u0635\u062f\u064a\u0631 Excel",
     print: "\u0637\u0628\u0627\u0639\u0629",
@@ -165,15 +175,19 @@ const translations = {
     exportEmpty: "\u0644\u0627 \u062a\u0648\u062c\u062f \u0628\u064a\u0627\u0646\u0627\u062a \u0644\u0644\u062a\u0635\u062f\u064a\u0631.",
     printEmpty: "\u0644\u0627 \u062a\u0648\u062c\u062f \u0628\u064a\u0627\u0646\u0627\u062a \u0644\u0644\u0637\u0628\u0627\u0639\u0629.",
     pdfHint: "\u0627\u062e\u062a\u0631 \u062d\u0641\u0638 \u0643\u0640 PDF \u0645\u0646 \u0646\u0627\u0641\u0630\u0629 \u0627\u0644\u0637\u0628\u0627\u0639\u0629.",
-    reportTitle: "\u062a\u0642\u0631\u064a\u0631 \u062c\u0627\u0647\u0632\u064a\u0629 \u0625\u0635\u062f\u0627\u0631 Mhamcloud",
+    reportTitle: "\u062a\u0642\u0631\u064a\u0631 \u062c\u0627\u0647\u0632\u064a\u0629 \u0625\u0635\u062f\u0627\u0631 Marilyn Clinics",
     generatedAt: "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0625\u0646\u0634\u0627\u0621",
     refreshed: "\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u062c\u0627\u0647\u0632\u064a\u0629 \u0627\u0644\u0625\u0635\u062f\u0627\u0631.",
     unknown: "\u063a\u064a\u0631 \u0645\u062d\u062f\u062f",
   },
   en: {
     title: "Release Readiness",
-    subtitle: "Live Mhamcloud backend readiness center and registered API contract registry.",
+    subtitle: "Live Marilyn Clinics backend readiness center and registered API contract registry.",
     badge: "Platform management",
+    integrations: "Integrations Center",
+    apiKeys: "API Keys",
+    apiContracts: "API Contracts",
+    dashboard: "System dashboard",
     refresh: "Refresh",
     exportExcel: "Export Excel",
     print: "Print",
@@ -237,7 +251,7 @@ const translations = {
     exportEmpty: "There is no data to export.",
     printEmpty: "There is no data to print.",
     pdfHint: "Choose Save as PDF from the print dialog.",
-    reportTitle: "Mhamcloud Release Readiness Report",
+    reportTitle: "Marilyn Clinics Release Readiness Report",
     generatedAt: "Generated at",
     refreshed: "Release readiness refreshed.",
     unknown: "Unknown",
@@ -358,7 +372,7 @@ function MetricCard({
   title,
   value,
   description,
-  icon: Icon,
+  icon,
 }: {
   title: string;
   value: string | number;
@@ -366,25 +380,17 @@ function MetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <Card className="overflow-hidden rounded-2xl border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2">
-        <div className="min-w-0">
-          <CardDescription className="truncate text-sm">{title}</CardDescription>
-          <CardTitle className="mt-2 text-2xl font-bold tracking-tight tabular-nums">{value}</CardTitle>
-        </div>
-        <div className="rounded-2xl border bg-muted p-3 text-primary">
-          <Icon className="h-5 w-5" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="line-clamp-2 text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
+    <SystemKpiCard
+      title={title}
+      value={value}
+      description={description}
+      icon={icon}
+    />
   );
 }
 function ReleaseReadinessSkeleton() {
   return (
-    <main className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
       <div className="w-full space-y-6">
         <div className="rounded-3xl border bg-card p-6 shadow-sm">
           <Skeleton className="h-5 w-40" />
@@ -578,50 +584,46 @@ export default function SystemReleaseReadinessPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "Mhamcloud-release-readiness.xls";
+    link.download = "marilyn-release-readiness.xls";
     link.click();
     URL.revokeObjectURL(url);
   }
-  function openPrintWindow(mode: "print" | "pdf") {
+  async function openPrintWindow(
+    mode: "print" | "pdf",
+  ) {
     const rows = exportRows();
     if (!rows.length) {
       toast.error(t.printEmpty);
       return;
     }
-    if (mode === "pdf") toast.info(t.pdfHint);
-    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1200,height=800");
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <!doctype html>
-      <html dir="${dir}" lang="${locale}">
-        <head>
-          <meta charset="utf-8" />
-          <title>${escapeHtml(t.reportTitle)}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 24px; color: #0f172a; }
-            h1 { margin: 0 0 8px; }
-            p { color: #475569; }
-            table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 12px; }
-            th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: ${locale === "ar" ? "right" : "left"}; vertical-align: top; }
-            th { background: #f1f5f9; }
-          </style>
-        </head>
-        <body>
-          <h1>${escapeHtml(t.reportTitle)}</h1>
-          <p>${escapeHtml(t.generatedAt)}: ${escapeHtml(new Date().toLocaleString())}</p>
-          <p>${escapeHtml(t.phase)}: ${escapeHtml(phase)} ? ${escapeHtml(t.version)}: ${escapeHtml(contractVersion)}</p>
-          ${buildTableHtml(t.reportTitle, rows)}
-          <script>window.onload = function () { window.print(); };</script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    if (mode === "pdf") {
+      toast.info(t.pdfHint);
+    }
+    const opened = await openPrintReport({
+      locale,
+      title: t.reportTitle,
+      subtitle:
+        `${t.phase}: ${phase} — ` +
+        `${t.version}: ${contractVersion}`,
+      tableHtml: buildTableHtml(
+        t.reportTitle,
+        rows,
+      ),
+      recordsCount: rows.length,
+    });
+    if (!opened) {
+      toast.error(
+        locale === "ar"
+          ? "تعذر فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم أعد المحاولة."
+          : "The print window could not be opened. Allow pop-ups and try again.",
+      );
+    }
   }
   if (loading) return <ReleaseReadinessSkeleton />;
   if (error) {
     return (
-      <main dir={dir} className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
-        <Card className="mx-auto max-w-3xl rounded-3xl border-destructive/30 bg-card shadow-sm">
+      <main dir={dir} className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
+        <Card className="mx-auto max-w-3xl rounded-lg border-destructive/30 bg-card shadow-none">
           <CardHeader className="text-center">
             <div className="mx-auto mb-2 rounded-full bg-destructive/10 p-4 text-destructive">
               <TriangleAlert className="h-8 w-8" />
@@ -641,18 +643,18 @@ export default function SystemReleaseReadinessPage() {
     );
   }
   return (
-    <main dir={dir} className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
+    <main dir={dir} className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
       <div className="w-full space-y-6">
-        <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">
-          <div className="relative p-6 sm:p-8">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/80 via-primary/30 to-transparent" />
+        <section className="overflow-visible rounded-none border-0 bg-transparent shadow-none">
+          <div className="relative p-0">
+            <div className="hidden" />
             <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
               <div className="max-w-4xl">
                 <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
                   <Sparkles className="h-3.5 w-3.5 text-primary" />
                   {t.badge}
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t.title}</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground sm:text-base">{t.subtitle}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Badge variant="outline" className={getStatusClass(readinessStatus)}>
@@ -666,42 +668,104 @@ export default function SystemReleaseReadinessPage() {
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
-                  className="rounded-xl bg-background"
+                  className="rounded-lg bg-background shadow-none"
                   onClick={() => void loadReadiness({ silent: true })}
                   disabled={refreshing}
                 >
                   {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                   {t.refresh}
                 </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={exportExcel}>
+                <Button variant="outline" className="rounded-lg bg-background shadow-none" onClick={exportExcel}>
                   <FileSpreadsheet className="h-4 w-4" />
                   {t.exportExcel}
                 </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => openPrintWindow("print")}>
+                <Button
+                  variant="brand"
+                  className="rounded-lg shadow-none"
+                  onClick={() => void openPrintWindow("print")}
+                >
                   <Printer className="h-4 w-4" />
                   {t.print}
-                </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => openPrintWindow("pdf")}>
-                  <FileText className="h-4 w-4" />
-                  {t.pdf}
                 </Button>
               </div>
             </div>
           </div>
         </section>
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard title={t.overallStatus} value={getStatusLabel(readinessStatus, locale)} description={t.fromLiveApi} icon={ClipboardCheck} />
           <MetricCard title={t.contracts} value={summary.contracts_count || contracts.length} description={`${t.systemContracts}: ${summary.system_scoped_contracts} ? ${t.companyContracts}: ${summary.company_scoped_contracts}`} icon={Layers3} />
           <MetricCard title={t.checks} value={summary.checks_count || checks.length} description={`${t.failedChecks}: ${summary.failed_count} ? ${t.warnings}: ${summary.warning_count}`} icon={Activity} />
           <MetricCard title={t.companyScoped} value={summary.company_scoped_contracts} description={`${t.companyContracts} / ${t.contracts}`} icon={TableProperties} />
         </section>
-        <Card className="rounded-3xl border-border/70 bg-card shadow-sm">
+        <nav
+          aria-label={
+            locale === "ar"
+              ? "تنقل وحدة التكاملات"
+              : "Integrations navigation"
+          }
+          className="flex flex-wrap gap-2"
+        >
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-lg bg-background shadow-none"
+          >
+            <Link href="/system/integrations">
+              <PlugZap className="h-4 w-4" />
+              {t.integrations}
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-lg bg-background shadow-none"
+          >
+            <Link href="/system/integrations/api-keys">
+              <KeyRound className="h-4 w-4" />
+              {t.apiKeys}
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-lg bg-background shadow-none"
+          >
+            <Link href="/system/integrations/api-contracts">
+              <FileText className="h-4 w-4" />
+              {t.apiContracts}
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="brand"
+            className="rounded-lg shadow-none"
+          >
+            <Link
+              href="/system/release-readiness"
+              aria-current="page"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              {t.title}
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-lg bg-background shadow-none"
+          >
+            <Link href="/system">
+              <LayoutDashboard className="h-4 w-4" />
+              {t.dashboard}
+            </Link>
+          </Button>
+        </nav>
+        <Card className="rounded-lg border bg-card shadow-none">
           <CardHeader>
             <CardTitle>{apiTitle}</CardTitle>
             <CardDescription>{t.fromLiveApi}: {API_ENDPOINT}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col gap-3 rounded-2xl border bg-muted/20 p-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-3 md:flex-row md:items-center">
                 <div className="relative min-w-0 flex-1">
                   <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -761,13 +825,13 @@ export default function SystemReleaseReadinessPage() {
               <EmptyState title={t.noResultsTitle} description={t.noResultsDesc} />
             ) : (
               <div className="space-y-6">
-                <div className="rounded-2xl border">
+                <div className="rounded-lg border">
                   <div className="border-b p-4">
                     <h2 className="font-semibold">{t.checksTitle}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{t.checksDesc}</p>
                   </div>
                   <div className="overflow-x-auto">
-                    <Table className="w-full min-w-[900px] table-fixed">
+                    <Table variant="register" className="w-full min-w-[900px] table-fixed">
                       <TableHeader>
                         <TableRow className="h-11 bg-muted/40 hover:bg-muted/40">
                           <TableHead className={`w-[230px] px-4 text-xs font-semibold text-muted-foreground ${alignClass}`}>{t.check}</TableHead>
@@ -797,13 +861,13 @@ export default function SystemReleaseReadinessPage() {
                     </Table>
                   </div>
                 </div>
-                <div className="rounded-2xl border">
+                <div className="rounded-lg border">
                   <div className="border-b p-4">
                     <h2 className="font-semibold">{t.contractsTitle}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">{t.contractsDesc}</p>
                   </div>
                   <div className="overflow-x-auto">
-                    <Table className="w-full min-w-[1100px] table-fixed">
+                    <Table variant="register" className="w-full min-w-[1100px] table-fixed">
                       <TableHeader>
                         <TableRow className="h-11 bg-muted/40 hover:bg-muted/40">
                           <TableHead className={`w-[250px] px-4 text-xs font-semibold text-muted-foreground ${alignClass}`}>

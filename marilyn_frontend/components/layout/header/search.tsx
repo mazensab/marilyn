@@ -2,7 +2,7 @@
 
 /* =====================================================
    📂 components/layout/header/search.tsx
-   🧠 Mhamcloud — Premium Header Search
+   🧠 Marilyn Clinics — Premium Header Search
    -----------------------------------------------------
    ✅ متوافق مع الهيدر الجديد
    ✅ يدعم system / provider / customer / agent
@@ -17,14 +17,10 @@ import { usePathname } from "next/navigation";
 import { Command } from "cmdk";
 import {
   ArrowUpRight,
-  BarChart3,
   Boxes,
-  Briefcase,
-  Building2,
   CreditCard,
   FileText,
   Gift,
-  Globe2,
   Home,
   MessageCircle,
   Package,
@@ -49,6 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { SYSTEM_WORKSPACE_SEARCH_ITEMS } from "@/lib/system-workspace-navigation";
 
 type AppLocale = "ar" | "en";
 type WorkspaceType = "system" | "company" | "center" | "provider" | "customer" | "agent";
@@ -74,184 +71,8 @@ type SearchProps = {
    SEARCH DATA
 ===================================================== */
 
-const systemSearchItems: SearchItem[] = [
-  {
-    title: { ar: "الرئيسية", en: "Home" },
-    href: "/system",
-    icon: Home,
-    description: {
-      ar: "لوحة النظام الرئيسية",
-      en: "System dashboard home",
-    },
-  },
-  {
-    title: { ar: "مقدمو الخدمة", en: "Providers" },
-    href: "/system/providers",
-    aliases: ["/system/centers"],
-    icon: Stethoscope,
-    description: {
-      ar: "إدارة مقدمي الخدمة والشبكة الطبية",
-      en: "Manage providers and medical network",
-    },
-  },
-  {
-    title: { ar: "العملاء", en: "Customers" },
-    href: "/system/customers",
-    icon: Users,
-    description: {
-      ar: "إدارة العملاء",
-      en: "Manage customers",
-    },
-  },
-  {
-    title: { ar: "المندوبون", en: "Agents" },
-    href: "/system/agents",
-    icon: Briefcase,
-    description: {
-      ar: "إدارة المندوبين والعمولات",
-      en: "Manage agents and commissions",
-    },
-  },
-  {
-    title: { ar: "المنتجات والبرامج", en: "Products & Programs" },
-    href: "/system/products",
-    icon: Boxes,
-    description: {
-      ar: "إدارة كتالوج المنتجات والبرامج",
-      en: "Manage products and programs catalog",
-    },
-  },
-  {
-    title: { ar: "الطلبات", en: "Orders" },
-    href: "/system/orders",
-    icon: ShoppingCart,
-    description: {
-      ar: "إدارة الطلبات ودورة التنفيذ",
-      en: "Manage orders and fulfillment lifecycle",
-    },
-  },
-  {
-    title: { ar: "العقود", en: "Contracts" },
-    href: "/system/contracts",
-    icon: FileText,
-    description: {
-      ar: "إدارة عقود مقدمي الخدمة والعروض",
-      en: "Manage provider contracts and offers",
-    },
-  },
-  {
-    title: { ar: "الفواتير", en: "Invoices" },
-    href: "/system/invoices",
-    icon: ReceiptText,
-    description: {
-      ar: "إدارة الفواتير",
-      en: "Manage invoices",
-    },
-  },
-  {
-    title: { ar: "المدفوعات", en: "Payments" },
-    href: "/system/payments",
-    icon: CreditCard,
-    description: {
-      ar: "إدارة المدفوعات والتحصيل",
-      en: "Manage payments and collections",
-    },
-  },
-
-  {
-    title: { ar: "اشتراكات الشركات", en: "Company Subscriptions" },
-    href: "/system/subscriptions",
-    aliases: ["/system/subscriptions/list", "/system/subscriptions/reports"],
-    icon: ReceiptText,
-    description: {
-      ar: "متابعة اشتراكات الشركات وخطط المنصة",
-      en: "Track company subscriptions and platform plans",
-    },
-  },
-  {
-    title: { ar: "مدفوعات المنصة", en: "Platform Payments" },
-    href: "/system/platform-payments",
-    aliases: ["/system/platform-payments/list", "/system/platform-payments/reports"],
-    icon: CreditCard,
-    description: {
-      ar: "مراقبة مدفوعات المنصة والتحصيل",
-      en: "Monitor platform payments and collections",
-    },
-  },
-  {
-    title: { ar: "الخزينة", en: "Treasury" },
-    href: "/system/treasury",
-    icon: Wallet,
-    description: {
-      ar: "إدارة الخزينة والبنوك",
-      en: "Manage treasury and banks",
-    },
-  },
-  {
-    title: { ar: "المحاسبة", en: "Accounting" },
-    href: "/system/accounting",
-    icon: BarChart3,
-    description: {
-      ar: "التقارير والقيود المحاسبية",
-      en: "Accounting reports and journals",
-    },
-  },
-  {
-    title: { ar: "التقارير", en: "Reports" },
-    href: "/system/reports",
-    icon: BarChart3,
-    description: {
-      ar: "مركز تقارير النظام",
-      en: "System reports center",
-    },
-  },
-  {
-    title: { ar: "تقارير الطلبات", en: "Orders Reports" },
-    href: "/system/reports/orders",
-    icon: ShoppingCart,
-    description: {
-      ar: "تقرير الطلبات التشغيلي",
-      en: "Operational orders report",
-    },
-  },
-  {
-    title: { ar: "الإشعارات", en: "Notifications" },
-    href: "/system/notifications",
-    icon: Globe2,
-    description: {
-      ar: "مركز الإشعارات",
-      en: "Notifications center",
-    },
-  },
-  {
-    title: { ar: "واتساب", en: "WhatsApp" },
-    href: "/system/whatsapp",
-    icon: MessageCircle,
-    description: {
-      ar: "إدارة واتساب والرسائل",
-      en: "Manage WhatsApp and messages",
-    },
-  },
-  {
-    title: { ar: "مستخدمو النظام", en: "System Users" },
-    href: "/system/users",
-    icon: ShieldCheck,
-    description: {
-      ar: "إدارة مستخدمي النظام والصلاحيات",
-      en: "Manage system users and permissions",
-    },
-  },
-  {
-    title: { ar: "الإعدادات", en: "Settings" },
-    href: "/system/settings",
-    icon: Settings,
-    description: {
-      ar: "إعدادات النظام",
-      en: "System settings",
-    },
-  },
-];
-
+const systemSearchItems: SearchItem[] =
+  SYSTEM_WORKSPACE_SEARCH_ITEMS;
 const providerSearchItems: SearchItem[] = [
   {
     title: { ar: "الرئيسية", en: "Home" },
@@ -565,7 +386,7 @@ function isItemActive(pathname: string, item: SearchItem): boolean {
 
 function getWorkspaceHeading(workspace: WorkspaceType, isArabic: boolean): string {
   if (workspace === "system") {
-    return isArabic ? "مساحة النظام" : "System Workspace";
+    return isArabic ? "الإدارة المركزية" : "Central Administration";
   }
 
   if (workspace === "customer") {

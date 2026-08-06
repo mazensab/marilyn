@@ -2,7 +2,7 @@
 /*
 ================================================================================
 📂 marilyn_frontend/app/system/whatsapp/page.tsx
-🟢 Mhamcloud — System WhatsApp Main Inbox Route
+🟢 Marilyn Clinics — System WhatsApp Main Inbox Route
 ================================================================================
 ✅ Approved Premium pattern
 ✅ Real API only: /api/system/whatsapp/inbox/

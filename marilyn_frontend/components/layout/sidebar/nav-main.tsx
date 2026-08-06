@@ -19,6 +19,8 @@ import {
   type AuthSession,
 } from "@/components/providers/AuthProvider";
 
+import { SYSTEM_WORKSPACE_NAV_GROUPS } from "@/lib/system-workspace-navigation";
+
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -49,7 +51,6 @@ import {
   ChevronRight,
   CreditCard,
   FileText,
-  Gift,
   Home,
   KeyRound,
   LayoutGrid,
@@ -59,7 +60,6 @@ import {
   Settings,
   ShieldCheck,
   ShoppingCart,
-  Stethoscope,
   UserCog,
   Users,
   Wallet,
@@ -137,184 +137,8 @@ type SidebarAuthSession = Partial<AuthSession>;
 /* =====================================================
    SYSTEM NAV
 ===================================================== */
-
-const systemNavItems: NavGroup[] = [
-  {
-    title: { ar: "منصة Marilyn Clinics", en: "Marilyn Clinics Platform" },
-    items: [
-      {
-        title: { ar: "لوحة النظام", en: "System Dashboard" },
-        href: "/system",
-        icon: Home,
-        permission: PERMISSIONS.SYSTEM_VIEW,
-        workspaces: ["system"],
-      },
-      {
-        title: { ar: "إدارة المنصة", en: "Platform Management" },
-        href: "/system/companies",
-        icon: ShieldCheck,
-        anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS],
-        workspaces: ["system"],
-        items: [
-          {
-            title: { ar: "الشركات", en: "Companies" },
-            href: "/system/companies",
-            icon: Users,
-            anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS],
-            workspaces: ["system"],
-          },
-          {
-            title: { ar: "اشتراكات الشركات", en: "Company Subscriptions" },
-            href: "/system/subscriptions",
-            aliases: ["/system/subscriptions/list", "/system/subscriptions/reports"],
-            icon: Gift,
-            anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.PAYMENTS_VIEW],
-            workspaces: ["system"],
-          },
-          {
-            title: { ar: "\u0628\u0627\u0642\u0627\u062a \u0627\u0644\u0645\u0646\u0635\u0629", en: "Platform Plans" },
-            href: "/system/plans",
-            icon: Gift,
-            anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS],
-            workspaces: ["system"],
-          },
-          {
-            title: { ar: "مدفوعات المنصة", en: "Platform Payments" },
-            href: "/system/platform-payments",
-            aliases: [
-              "/system/platform-payments/list",
-              "/system/platform-payments/reports",
-            ],
-            icon: CreditCard,
-            anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.PAYMENTS_VIEW],
-            workspaces: ["system"],
-          },
-          {
-            title: { ar: "مستخدمو النظام", en: "System Users" },
-            href: "/system/users",
-            icon: UserCog,
-            anyPermissions: [PERMISSIONS.USERS_VIEW, PERMISSIONS.SYSTEM_SETTINGS],
-            workspaces: ["system"],
-          },
-          {
-            title: { ar: "إعدادات النظام", en: "System Settings" },
-            href: "/system/settings",
-            icon: Settings,
-            permission: PERMISSIONS.SYSTEM_SETTINGS,
-            workspaces: ["system"],
-          },
-        ],
-      },
-      {
-        title: { ar: "الجاهزية والربط", en: "Readiness & API" },
-        href: "/system/release-readiness",
-        icon: FileText,
-        anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS],
-        workspaces: ["system"],
-        items: [
-          {
-            title: { ar: "جاهزية الإصدار", en: "Release Readiness" },
-            href: "/system/release-readiness",
-            icon: ShieldCheck,
-            anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS],
-            workspaces: ["system"],
-          },
-          {
-            title: { ar: "أنشطة الشركات", en: "Activity Profiles" },
-            href: "/system/activity-profiles",
-            icon: Stethoscope,
-            anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS],
-            workspaces: ["system"],
-            isNew: true,
-          },
-        ],
-      },
-      {
-        title: { ar: "التكاملات", en: "Integrations" },
-        href: "/system/integrations",
-        icon: Briefcase,
-        anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_INTEGRATION_API_KEYS_VIEW],
-        workspaces: ["system"],
-        items: [
-          {
-            title: { ar: "مركز التكاملات", en: "Integrations Center" },
-            href: "/system/integrations",
-            icon: Briefcase,
-            anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_INTEGRATION_API_KEYS_VIEW],
-            workspaces: ["system"],
-          },
-          {
-            title: { ar: "عقود API", en: "API Contracts" },
-            href: "/system/integrations/api-contracts",
-            aliases: ["/system/api-contracts"],
-            icon: FileText,
-            anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS],
-            workspaces: ["system"],
-          },
-          {
-            title: { ar: "مفاتيح API", en: "API Keys" },
-            href: "/system/integrations/api-keys",
-            icon: KeyRound,
-            anyPermissions: [PERMISSIONS.SYSTEM_INTEGRATION_API_KEYS_VIEW, PERMISSIONS.SYSTEM_VIEW],
-            workspaces: ["system"],
-            isNew: true,
-          },
-        ],
-      },
-      {
-        title: { ar: "الحوكمة والصلاحيات", en: "Governance & Access" },
-        href: "/system/roles",
-        icon: ShieldCheck,
-        anyPermissions: [PERMISSIONS.SYSTEM_VIEW],
-        workspaces: ["system"],
-        items: [
-          { title: { ar: "الأدوار", en: "Roles" }, href: "/system/roles", icon: ShieldCheck, anyPermissions: [PERMISSIONS.SYSTEM_VIEW], workspaces: ["system"] },
-          { title: { ar: "الصلاحيات", en: "Permissions" }, href: "/system/permissions", icon: ShieldCheck, anyPermissions: [PERMISSIONS.SYSTEM_VIEW], workspaces: ["system"] },
-          { title: { ar: "ضوابط الأعمال", en: "Business Controls" }, href: "/system/business-controls", icon: Calculator, anyPermissions: [PERMISSIONS.SYSTEM_VIEW], workspaces: ["system"] },
-          { title: { ar: "خلفيات الأنشطة", en: "Activity Backends" }, href: "/system/activity-backends", icon: Boxes, anyPermissions: [PERMISSIONS.SYSTEM_VIEW], workspaces: ["system"] },
-        ],
-      },
-      {
-        title: { ar: "المستندات والطباعة", en: "Documents & Printing" },
-        href: "/system/documents",
-        icon: FileText,
-        anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS],
-        workspaces: ["system"],
-        items: [
-          { title: { ar: "المستندات", en: "Documents" }, href: "/system/documents", icon: FileText, anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS], workspaces: ["system"] },
-          { title: { ar: "قوالب المستندات", en: "Document Templates" }, href: "/system/documents/templates", icon: FileText, anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS], workspaces: ["system"] },
-          { title: { ar: "إعدادات المستندات", en: "Document Settings" }, href: "/system/documents/settings", icon: Settings, anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS], workspaces: ["system"] },
-          { title: { ar: "تصيير المستندات", en: "Document Rendering" }, href: "/system/documents/rendering", icon: ReceiptText, anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS], workspaces: ["system"] },
-          { title: { ar: "الطباعة الحرارية", en: "Thermal Printing" }, href: "/system/documents/thermal", icon: ReceiptText, anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS], workspaces: ["system"] },
-        ],
-      },
-      {
-        title: { ar: "التواصل والإشعارات", en: "Messaging & Notifications" },
-        href: "/system/notifications",
-        icon: MessageCircle,
-        anyPermissions: [PERMISSIONS.SYSTEM_VIEW],
-        workspaces: ["system"],
-        items: [
-          {
-            title: { ar: "الإشعارات", en: "Notifications" },
-            href: "/system/notifications",
-            icon: BellRing,
-            anyPermissions: [PERMISSIONS.SYSTEM_VIEW],
-            workspaces: ["system"],
-          },
-          {
-            title: { ar: "واتساب", en: "WhatsApp" },
-            href: "/system/whatsapp",
-            icon: MessageCircle,
-            anyPermissions: [PERMISSIONS.SYSTEM_VIEW],
-            workspaces: ["system"],
-          },
-        ],
-      },
-    ],
-  },
-];
-
+const systemNavItems: NavGroup[] =
+  SYSTEM_WORKSPACE_NAV_GROUPS;
 const companyNavItems: NavGroup[] = [
   {
     title: {
@@ -1260,13 +1084,6 @@ function inferPermissionInputByHref(item: NavItem): PermissionCheckInput {
   if (href === "/system") {
     return {
       permission: PERMISSIONS.SYSTEM_VIEW,
-      workspaces: ["system"],
-    };
-  }
-
-  if (href.startsWith("/system/companies")) {
-    return {
-      anyPermissions: [PERMISSIONS.SYSTEM_VIEW, PERMISSIONS.SYSTEM_SETTINGS],
       workspaces: ["system"],
     };
   }

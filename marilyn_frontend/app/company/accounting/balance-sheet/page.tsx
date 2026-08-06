@@ -1,8 +1,8 @@
 // ============================================================
 // 📂 app/company/accounting/balance-sheet/page.tsx
-// 🧠 Mhamcloud | Company Accounting Financial Position
+// 🧠 Marilyn Clinics | Company Accounting Financial Position
 // ------------------------------------------------------------
-// ✅ PrimeyAcc Approved Design
+// ✅ Marilyn Clinics Approved Design
 // ✅ Real API only
 // ✅ Financial Position naming instead of Balance Sheet
 // ✅ Unified table card with filters / Excel / print
@@ -34,6 +34,11 @@ import {
   WalletCards,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  openManagedPrintWindow,
+  printManagedWindow,
+  writeManagedPrintDocument,
+} from "@/lib/managed-print-window";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1180,7 +1185,7 @@ export default function CompanyFinancialPositionPage() {
       return;
     }
 
-    const popup = window.open("", "_blank", "width=1400,height=900");
+    const popup = openManagedPrintWindow("", "_blank", "width=1400,height=900");
 
     if (!popup) {
       toast.error(t.printBlocked);
@@ -1189,7 +1194,7 @@ export default function CompanyFinancialPositionPage() {
 
     popup.opener = null;
     popup.document.open();
-    popup.document.write(
+    writeManagedPrintDocument(popup,
       buildFinancialPositionDocument("print", includeSummary, title),
     );
     popup.document.close();
@@ -1197,7 +1202,7 @@ export default function CompanyFinancialPositionPage() {
 
     window.setTimeout(() => {
       popup.focus();
-      popup.print();
+      printManagedWindow(popup);
     }, 300);
 
     toast.success(t.printReady);

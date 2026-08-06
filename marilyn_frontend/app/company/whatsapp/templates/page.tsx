@@ -1,9 +1,9 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/whatsapp/templates/page.tsx
-   💬 PrimeyAcc — Company WhatsApp Templates
+   💬 Marilyn Clinics — Company WhatsApp Templates
    ------------------------------------------------------------
-   ✅ PrimeyAcc Approved Design
+   ✅ Marilyn Clinics Approved Design
    ✅ Real company API only
    ✅ Shared UI components only
    ✅ Page-level Excel / Print
@@ -35,6 +35,11 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  openManagedPrintWindow,
+  printManagedWindow,
+  writeManagedPrintDocument,
+} from "@/lib/managed-print-window";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -248,7 +253,7 @@ const translations = {
     appliedFilters: "الفلاتر المطبقة",
     noFilter: "بدون فلاتر إضافية",
     currentCompany: "الشركة الحالية",
-    footer: "PrimeyAcc",
+    footer: "Marilyn Clinics",
     unknown: "غير محدد",
     cancel: "إلغاء",
   },
@@ -353,7 +358,7 @@ const translations = {
     appliedFilters: "Applied Filters",
     noFilter: "No additional filters",
     currentCompany: "Current Company",
-    footer: "PrimeyAcc",
+    footer: "Marilyn Clinics",
     unknown: "Unknown",
     cancel: "Cancel",
   },
@@ -1544,7 +1549,7 @@ export default function CompanyWhatsAppTemplatesPage() {
                 <script>
                   window.onload = function () {
                     window.focus();
-                    window.print();
+                    window.__MARILYN_PRINT_READY__ = true;
                   };
                   window.onafterprint = function () {
                     window.close();
@@ -1600,7 +1605,7 @@ export default function CompanyWhatsAppTemplatesPage() {
       toast.warning(t.printEmpty);
       return;
     }
-    const popup = window.open(
+    const popup = openManagedPrintWindow(
       "",
       "_blank",
       "width=1400,height=900",
@@ -1611,13 +1616,14 @@ export default function CompanyWhatsAppTemplatesPage() {
     }
     popup.opener = null;
     popup.document.open();
-    popup.document.write(
+    writeManagedPrintDocument(popup,
       buildReportDocument(
         "print",
         scope,
       ),
     );
     popup.document.close();
+    printManagedWindow(popup, 300);
     toast.success(t.printReady);
   }
   async function updateTemplateStatus() {

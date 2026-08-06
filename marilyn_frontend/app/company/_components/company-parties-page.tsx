@@ -1,7 +1,7 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/_components/company-parties-page.tsx
-   🧠 PrimeyAcc — Company Customers & Suppliers Shared Page
+   🧠 Marilyn Clinics — Company Customers & Suppliers Shared Page
    ------------------------------------------------------------
    ✅ Approved Premium company pattern
    ✅ Real API only, no fake demo data
@@ -54,6 +54,11 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  openManagedPrintWindow,
+  printManagedWindow,
+  writeManagedPrintDocument,
+} from "@/lib/managed-print-window";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -2025,7 +2030,7 @@ export function CompanyPartiesPage({ variant }: { variant: PageVariant }) {
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download =
-      `primeyacc-company-${variant}-${new Date()
+      `marilyn-company-${variant}-${new Date()
         .toISOString()
         .slice(0, 10)}.xls`;
     document.body.appendChild(anchor);
@@ -2089,7 +2094,7 @@ export function CompanyPartiesPage({ variant }: { variant: PageVariant }) {
         `,
       )
       .join("");
-    const printWindow = window.open(
+    const printWindow = openManagedPrintWindow(
       "",
       "_blank",
       "width=1400,height=900",
@@ -2099,7 +2104,7 @@ export function CompanyPartiesPage({ variant }: { variant: PageVariant }) {
       return;
     }
     printWindow.opener = null;
-    printWindow.document.write(`
+    writeManagedPrintDocument(printWindow,`
       <!doctype html>
       <html dir="${dir}" lang="${locale}">
         <head>
@@ -2237,7 +2242,7 @@ export function CompanyPartiesPage({ variant }: { variant: PageVariant }) {
           <script>
             window.onload = function () {
               window.focus();
-              window.print();
+              window.__MARILYN_PRINT_READY__ = true;
             };
             window.onafterprint = function () {
               window.close();
@@ -2247,6 +2252,7 @@ export function CompanyPartiesPage({ variant }: { variant: PageVariant }) {
       </html>
     `);
     printWindow.document.close();
+    printManagedWindow(printWindow, 300);
     toast.success(t.printReady);
   }
   if (loading) {

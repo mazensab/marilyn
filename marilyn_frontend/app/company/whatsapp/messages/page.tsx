@@ -1,9 +1,9 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/whatsapp/messages/page.tsx
-   💬 PrimeyAcc — Company WhatsApp Message Logs
+   💬 Marilyn Clinics — Company WhatsApp Message Logs
    ------------------------------------------------------------
-   ✅ PrimeyAcc approved design
+   ✅ Marilyn Clinics approved design
    ✅ Real company API
    ✅ Page-level Excel / Print
    ✅ Table-level Excel / Print
@@ -34,6 +34,11 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  openManagedPrintWindow,
+  printManagedWindow,
+  writeManagedPrintDocument,
+} from "@/lib/managed-print-window";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -182,7 +187,7 @@ const translations = {
     appliedFilters: "الفلاتر المطبقة",
     noFilter: "بدون فلاتر إضافية",
     companyLabel: "الشركة",
-    footer: "PrimeyAcc",
+    footer: "Marilyn Clinics",
     unknown: "غير معروف",
   },
   en: {
@@ -264,7 +269,7 @@ const translations = {
     appliedFilters: "Applied Filters",
     noFilter: "No additional filters",
     companyLabel: "Company",
-    footer: "PrimeyAcc",
+    footer: "Marilyn Clinics",
     unknown: "Unknown",
   },
 } as const;
@@ -1024,7 +1029,7 @@ export default function CompanyWhatsAppMessagesPage() {
       toast.error(t.printEmpty);
       return;
     }
-    const printWindow = window.open(
+    const printWindow = openManagedPrintWindow(
       "",
       "_blank",
       "width=1280,height=860,scrollbars=yes",
@@ -1035,11 +1040,11 @@ export default function CompanyWhatsAppMessagesPage() {
     }
     printWindow.opener = null;
     printWindow.document.open();
-    printWindow.document.write(buildReportHtml(scope, false));
+    writeManagedPrintDocument(printWindow,buildReportHtml(scope, false));
     printWindow.document.close();
     window.setTimeout(() => {
       printWindow.focus();
-      printWindow.print();
+      printManagedWindow(printWindow);
     }, 350);
   }
   if (loading) {

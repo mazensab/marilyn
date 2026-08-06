@@ -23,6 +23,40 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  async redirects() {
+    return [
+      {
+        source: "/system/companies/:id/users/create",
+        destination: "/system/users/organization",
+        permanent: true,
+      },
+      {
+        source: "/system/companies/reports",
+        destination: "/system/reports",
+        permanent: true,
+      },
+      {
+        source: "/system/companies/list",
+        destination: "/system/branches",
+        permanent: true,
+      },
+      {
+        source: "/system/companies/create",
+        destination: "/system/branches",
+        permanent: true,
+      },
+      {
+        source: "/system/companies/:id",
+        destination: "/system/organization",
+        permanent: true,
+      },
+      {
+        source: "/system/companies",
+        destination: "/system/organization",
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     if (!isDevelopment) {
       return []
@@ -80,34 +114,6 @@ const nextConfig: NextConfig = {
         {
           source: "/api/providers/:provider_id/",
           destination: `${djangoBaseUrl}/api/providers/:provider_id/`,
-        },
-
-        // ======================================================
-        // 📦 SYSTEM PLANS
-        // ======================================================
-        {
-          source: "/api/system/plans/admin",
-          destination: `${djangoBaseUrl}/api/system/plans/admin/`,
-        },
-        {
-          source: "/api/system/plans/admin/",
-          destination: `${djangoBaseUrl}/api/system/plans/admin/`,
-        },
-        {
-          source: "/api/system/plans/create",
-          destination: `${djangoBaseUrl}/api/system/plans/create/`,
-        },
-        {
-          source: "/api/system/plans/create/",
-          destination: `${djangoBaseUrl}/api/system/plans/create/`,
-        },
-        {
-          source: "/api/system/plans/:plan_id/update",
-          destination: `${djangoBaseUrl}/api/system/plans/:plan_id/update/`,
-        },
-        {
-          source: "/api/system/plans/:plan_id/update/",
-          destination: `${djangoBaseUrl}/api/system/plans/:plan_id/update/`,
         },
 
         // ======================================================

@@ -1,4 +1,5 @@
 "use client";
+// appointments_center_hr_spirit=true
 /* ============================================================
    📂 marilyn_frontend/app/company/_components/company-appointments-page.tsx
    🩺 Marilyn Clinics — Company Appointments Center
@@ -14,12 +15,12 @@
    ✅ No external UI dependencies
 ============================================================ */
 import * as React from "react";
-import Link from "next/link";
 import {
   useParams,
   useRouter,
 } from "next/navigation";
 import {
+  Activity,
   ArrowLeft,
   ArrowUpDown,
   CalendarClock,
@@ -36,13 +37,18 @@ import {
   Printer,
   RefreshCw,
   RotateCcw,
-  Search,
+  Sparkles,
   Stethoscope,
   TriangleAlert,
   UserRound,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  openManagedPrintWindow,
+  printManagedWindow,
+  writeManagedPrintDocument,
+} from "@/lib/managed-print-window";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,7 +61,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import {
+  DataRegisterDatePicker,
+  DataRegisterEmptyState,
+  DataRegisterSearch,
+  DataRegisterToolbar,
+  registerBrandButtonClass,
+  registerOutlineButtonClass,
+} from "@/components/ui/data-register";
 import {
   Card,
   CardContent,
@@ -63,6 +76,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { SystemKpiCard } from "@/components/ui/system-kpi-card";
+import { AppointmentCenterTabs } from "@/components/system/appointment-center-tabs";
 import {
   Dialog,
   DialogContent,
@@ -78,12 +93,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -162,6 +171,8 @@ type DataColumn<T> = {
   key: string;
   label: string;
   className?: string;
+  sticky?: "start" | "end";
+  align?: "start" | "center" | "end";
   render: (row: T) => React.ReactNode;
 };
 type ExportColumn<T> = {
@@ -186,6 +197,8 @@ const translations = {
     title: "المواعيد والحجوزات",
     subtitle:
       "مركز تشغيل مواعيد المرضى ومتابعة الحجز من الجدولة والتأكيد حتى الحضور والإكمال أو الإلغاء.",
+    connected:
+      "متصل بواجهات المواعيد والحجوزات الطبية الحقيقية",
     detailTitle: "تفاصيل الموعد",
     detailSubtitle:
       "عرض بيانات الحجز والمريض والممارس والخدمة ودورة حياة الموعد.",
@@ -193,15 +206,15 @@ const translations = {
     newAppointment: "إضافة موعد",
     reschedule: "إعادة الجدولة",
     refresh: "تحديث",
-    export: "تصدير Excel",
+    export: "Excel",
     print: "طباعة",
     reset: "إعادة ضبط",
     search: "بحث",
     searchPlaceholder:
       "ابحث برقم الموعد أو المريض أو الممارس أو الخدمة...",
     all: "الكل",
-    from: "من تاريخ",
-    to: "إلى تاريخ",
+    from: "من تاريخ الموعد",
+    to: "إلى تاريخ الموعد",
     newest: "الأحدث",
     oldest: "الأقدم",
     total: "إجمالي المواعيد",
@@ -307,6 +320,8 @@ const translations = {
     title: "Appointments & Reservations",
     subtitle:
       "Operate patient appointments and follow each booking from scheduling and confirmation through attendance, completion, or cancellation.",
+    connected:
+      "Connected to live medical appointment APIs",
     detailTitle: "Appointment Details",
     detailSubtitle:
       "View booking, patient, practitioner, service, and lifecycle information.",
@@ -314,15 +329,15 @@ const translations = {
     newAppointment: "New appointment",
     reschedule: "Reschedule",
     refresh: "Refresh",
-    export: "Export Excel",
+    export: "Excel",
     print: "Print",
     reset: "Reset",
     search: "Search",
     searchPlaceholder:
       "Search by appointment, patient, practitioner, or service...",
     all: "All",
-    from: "From date",
-    to: "To date",
+    from: "Appointment date from",
+    to: "Appointment date to",
     newest: "Newest",
     oldest: "Oldest",
     total: "Total appointments",
@@ -1063,75 +1078,18 @@ function normalizeAppointment(
 }
 function appointmentHref(
   appointment: AppointmentRecord,
+  basePath = "/company/appointments",
 ) {
-  return `/company/appointments/${encodeURIComponent(
-    appointment.id,
-  )}`;
+  const identifier =
+    appointment.appointmentNumber ||
+    appointment.id;
+  return identifier
+    ? `${basePath}/${encodeURIComponent(
+        identifier,
+      )}`
+    : basePath;
 }
-function DatePickerField({
-  label,
-  value,
-  onChange,
-  locale,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  locale: Locale;
-}) {
-  const [open, setOpen] =
-    React.useState(false);
-  const selected = value
-    ? new Date(`${value}T12:00:00`)
-    : undefined;
-  return (
-    <Popover
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          aria-label={label}
-          title={label}
-          className="h-9 w-full justify-start bg-background px-3 text-start font-normal shadow-none sm:w-[150px]"
-        >
-          <CalendarDays className="me-2 h-4 w-4 shrink-0 text-muted-foreground" />
-          <span
-            dir="ltr"
-            lang="en"
-            className="truncate tabular-nums"
-          >
-            {value || label}
-          </span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-auto p-0"
-        align={
-          locale === "ar"
-            ? "end"
-            : "start"
-        }
-      >
-        <Calendar
-          mode="single"
-          selected={selected}
-          onSelect={(date) => {
-            onChange(
-              date
-                ? isoDate(date)
-                : "",
-            );
-            setOpen(false);
-          }}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
-  );
-}
+
 function StatusBadge({
   status,
   locale,
@@ -1152,49 +1110,6 @@ function StatusBadge({
         locale,
       )}
     </Badge>
-  );
-}
-function KpiCard({
-  title,
-  value,
-  description,
-  href,
-  icon: Icon,
-}: {
-  title: string;
-  value: number;
-  description: string;
-  href: string;
-  icon: React.ComponentType<{
-    className?: string;
-  }>;
-}) {
-  return (
-    <Card className="group overflow-hidden rounded-lg border bg-card shadow-none transition hover:-translate-y-0.5 hover:border-foreground/20 hover:shadow-sm">
-      <Link
-        href={href}
-        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2">
-          <div className="min-w-0">
-            <CardDescription className="truncate text-sm">
-              {title}
-            </CardDescription>
-            <CardTitle className="mt-2 text-2xl font-bold tracking-tight tabular-nums">
-              {formatInteger(value)}
-            </CardTitle>
-          </div>
-          <span className="rounded-lg border bg-background p-2.5 text-muted-foreground transition group-hover:border-foreground/20 group-hover:text-foreground">
-            <Icon className="h-5 w-5" />
-          </span>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <p className="line-clamp-2 text-xs text-muted-foreground">
-            {description}
-          </p>
-        </CardContent>
-      </Link>
-    </Card>
   );
 }
 function PageSkeleton() {
@@ -1241,46 +1156,6 @@ function PageSkeleton() {
     </div>
   );
 }
-function EmptyTableState({
-  title,
-  description,
-  showReset,
-  onReset,
-  resetLabel,
-}: {
-  title: string;
-  description: string;
-  showReset: boolean;
-  onReset: () => void;
-  resetLabel: string;
-}) {
-  return (
-    <div className="flex min-h-64 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-      <div className="rounded-full bg-muted p-4 text-muted-foreground">
-        <Search className="h-6 w-6" />
-      </div>
-      <div>
-        <h3 className="text-sm font-semibold text-foreground">
-          {title}
-        </h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {description}
-        </p>
-      </div>
-      {showReset ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onReset}
-        >
-          <RotateCcw className="h-4 w-4" />
-          {resetLabel}
-        </Button>
-      ) : null}
-    </div>
-  );
-}
 function DataTable<T extends { id: string }>({
   rows,
   allRowsCount,
@@ -1312,17 +1187,16 @@ function DataTable<T extends { id: string }>({
     <div className="space-y-3">
       <div className="overflow-hidden rounded-lg border bg-background">
         <div className="overflow-x-auto">
-          <Table className="min-w-[1120px] table-fixed">
+          <Table variant="register" layout="fixed" minWidth="1120px">
             <TableHeader>
-              <TableRow className="h-11 bg-muted/40 hover:bg-muted/40">
+              <TableRow>
                 {columns.map(
                   (column) => (
                     <TableHead
                       key={column.key}
-                      className={cn(
-                        "h-11 whitespace-nowrap px-4 text-start text-xs font-semibold text-muted-foreground",
-                        column.className,
-                      )}
+                      sticky={column.sticky}
+                      contentAlign={column.align}
+                      className={column.className}
                     >
                       {column.label}
                     </TableHead>
@@ -1338,7 +1212,7 @@ function DataTable<T extends { id: string }>({
                   return (
                     <TableRow
                       key={row.id}
-                      className="h-[64px] cursor-pointer transition-colors hover:bg-muted/35"
+                      interactive
                       onClick={(event) => {
                         const target =
                           event.target as HTMLElement;
@@ -1356,8 +1230,10 @@ function DataTable<T extends { id: string }>({
                         (column) => (
                           <TableCell
                             key={column.key}
+                            sticky={column.sticky}
+                            contentAlign={column.align}
                             className={cn(
-                              "h-[64px] overflow-hidden px-4 text-start align-middle",
+                              "overflow-hidden",
                               column.className,
                             )}
                           >
@@ -1374,7 +1250,7 @@ function DataTable<T extends { id: string }>({
                     colSpan={columns.length}
                     className="h-72"
                   >
-                    <EmptyTableState
+                    <DataRegisterEmptyState
                       title={
                         hasFilters
                           ? noResultsTitle
@@ -1385,13 +1261,9 @@ function DataTable<T extends { id: string }>({
                           ? noResultsDescription
                           : emptyDescription
                       }
-                      showReset={
-                        hasFilters
-                      }
+                      showReset={hasFilters}
                       onReset={onReset}
-                      resetLabel={
-                        t.reset
-                      }
+                      resetLabel={t.reset}
                     />
                   </TableCell>
                 </TableRow>
@@ -1554,7 +1426,7 @@ function openPrintWindow(
   html: string,
   locale: Locale,
 ) {
-  const win = window.open(
+  const win = openManagedPrintWindow(
     "",
     "_blank",
     "width=1400,height=900",
@@ -1568,7 +1440,7 @@ function openPrintWindow(
   const alignment =
     locale === "ar" ? "right" : "left";
   win.document.open();
-  win.document.write(`
+  writeManagedPrintDocument(win,`
     <!doctype html>
     <html
       dir="${direction}"
@@ -1641,7 +1513,7 @@ function openPrintWindow(
   };
   win.setTimeout(() => {
     win.focus();
-    win.print();
+    printManagedWindow(win);
   }, 350);
   return true;
 }
@@ -1873,7 +1745,17 @@ function LifecycleDialogs({
     </>
   );
 }
-export function CompanyAppointmentsPage() {
+export function CompanyAppointmentsPage({
+  workspace = "company",
+}: {
+  workspace?: "company" | "system";
+} = {}) {
+  const isSystemWorkspace =
+    workspace === "system";
+  const appointmentsBasePath =
+    isSystemWorkspace
+      ? "/system/appointments"
+      : "/company/appointments";
   const router = useRouter();
   const [locale, setLocale] =
     React.useState<Locale>("ar");
@@ -2423,6 +2305,7 @@ export function CompanyAppointmentsPage() {
           key: "appointment",
           label: t.appointment,
           className: "w-[190px]",
+          sticky: "start",
           render: (row) => (
             <div className="min-w-0">
               <span
@@ -2545,8 +2428,9 @@ export function CompanyAppointmentsPage() {
         {
           key: "actions",
           label: t.actions,
-          className:
-            "sticky left-0 z-10 w-[92px] bg-background",
+          className: "w-[92px]",
+          sticky: "end",
+          align: "center",
           render: (row) => (
             <div
               className="flex items-center justify-center"
@@ -2586,9 +2470,7 @@ export function CompanyAppointmentsPage() {
                   <DropdownMenuItem
                     onSelect={() =>
                       router.push(
-                        appointmentHref(
-                          row,
-                        ),
+                        appointmentHref(row, appointmentsBasePath),
                       )
                     }
                   >
@@ -2652,6 +2534,7 @@ export function CompanyAppointmentsPage() {
       ],
       [
         actionId,
+        appointmentsBasePath,
         locale,
         requestTransition,
         router,
@@ -2674,28 +2557,28 @@ export function CompanyAppointmentsPage() {
       title: t.total,
       value: stats.total,
       description: t.totalDesc,
-      href: "/company/appointments",
+      href: appointmentsBasePath,
       icon: CalendarClock,
     },
     {
       title: t.today,
       value: stats.today,
       description: t.todayDesc,
-      href: "/company/appointments",
+      href: appointmentsBasePath,
       icon: CalendarDays,
     },
     {
       title: t.upcoming,
       value: stats.upcoming,
       description: t.upcomingDesc,
-      href: "/company/appointments",
+      href: appointmentsBasePath,
       icon: Clock3,
     },
     {
       title: t.awaiting,
       value: stats.awaiting,
       description: t.awaitingDesc,
-      href: "/company/appointments",
+      href: appointmentsBasePath,
       icon: CircleDot,
     },
   ];
@@ -2703,7 +2586,11 @@ export function CompanyAppointmentsPage() {
     return (
       <main
         dir={dir}
-        className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8"
+        className={
+          isSystemWorkspace
+            ? "min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8"
+            : "min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8"
+        }
       >
         <PageSkeleton />
       </main>
@@ -2713,7 +2600,11 @@ export function CompanyAppointmentsPage() {
     return (
       <main
         dir={dir}
-        className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8"
+        className={
+          isSystemWorkspace
+            ? "min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8"
+            : "min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8"
+        }
       >
         <Card className="mx-auto max-w-[900px] rounded-lg border-destructive/30 bg-card shadow-none">
           <CardHeader className="text-center">
@@ -2748,38 +2639,53 @@ export function CompanyAppointmentsPage() {
   return (
     <main
       dir={dir}
-      className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8"
+      className={
+          isSystemWorkspace
+            ? "min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8"
+            : "min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8"
+        }
     >
-      <div className="mx-auto max-w-[1500px] space-y-5">
+      <div className={
+          isSystemWorkspace
+            ? "w-full space-y-5"
+            : "mx-auto max-w-[1500px] space-y-5"
+        }>
         <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="min-w-0 space-y-1 text-start">
-            <Badge
-              variant="outline"
-              className="mb-2 rounded-full bg-background px-3 py-1 text-xs"
-            >
-              <Stethoscope className="me-1.5 h-3.5 w-3.5" />
-              {t.badge}
-            </Badge>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
+          <div className="max-w-4xl">
+            {isSystemWorkspace ? (
+              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-[#9a7139]">
+                <Sparkles className="h-3.5 w-3.5" />
+                {locale === "ar"
+                  ? "الإدارة المركزية"
+                  : "Central administration"}
+              </div>
+            ) : (
+              <Badge
+                variant="outline"
+                className="mb-2 gap-2 rounded-full bg-background px-3 py-1 text-xs shadow-sm"
+              >
+                <Stethoscope className="h-3.5 w-3.5" />
+                {t.badge}
+              </Badge>
+            )}
+            <h1 className="text-3xl font-bold tracking-tight">
               {t.title}
             </h1>
-            <p className="max-w-4xl text-sm leading-6 text-muted-foreground">
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
               {t.subtitle}
             </p>
+            {isSystemWorkspace ? (
+              <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                <Activity className="h-4 w-4 text-emerald-500" />
+                {t.connected}
+              </p>
+            ) : null}
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <Button
               type="button"
-              onClick={() =>
-                setCreateOpen(true)
-              }
-            >
-              <Plus className="h-4 w-4" />
-              {t.newAppointment}
-            </Button>
-            <Button
-              type="button"
               variant="outline"
+              className={registerOutlineButtonClass}
               onClick={() =>
                 void loadAppointments({
                   silent: true,
@@ -2798,6 +2704,7 @@ export function CompanyAppointmentsPage() {
             <Button
               type="button"
               variant="outline"
+              className={registerOutlineButtonClass}
               onClick={exportExcel}
             >
               <FileSpreadsheet className="h-4 w-4" />
@@ -2805,11 +2712,23 @@ export function CompanyAppointmentsPage() {
             </Button>
             <Button
               type="button"
-              variant="outline"
+              variant="brand"
+              className={registerBrandButtonClass}
               onClick={printPage}
             >
               <Printer className="h-4 w-4" />
               {t.print}
+            </Button>
+            <Button
+              type="button"
+              variant="brand"
+              className={registerBrandButtonClass}
+              onClick={() =>
+                setCreateOpen(true)
+              }
+            >
+              <Plus className="h-4 w-4" />
+              {t.newAppointment}
             </Button>
           </div>
         </header>
@@ -2842,17 +2761,27 @@ export function CompanyAppointmentsPage() {
         ) : null}
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {kpis.map((card) => (
-            <KpiCard
+            <SystemKpiCard
               key={card.title}
               {...card}
             />
           ))}
         </div>
+        {isSystemWorkspace ? (
+          <AppointmentCenterTabs
+            active="appointments"
+            locale={locale}
+            counts={{
+              appointments: stats.total,
+            }}
+          />
+        ) : null}
         <Card className="overflow-hidden rounded-lg border bg-card shadow-none">
           <CardHeader className="px-5 pt-5 sm:px-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <CardTitle>
+                <CardTitle className="flex items-center gap-2 text-base font-bold tracking-tight">
+                  <CalendarClock className="h-4 w-4 text-[#a57b3d]" />
                   {t.tableTitle}
                 </CardTitle>
                 <CardDescription className="mt-1">
@@ -2863,6 +2792,7 @@ export function CompanyAppointmentsPage() {
                 <Button
                   type="button"
                   variant="outline"
+                  className={registerOutlineButtonClass}
                   onClick={exportExcel}
                 >
                   <FileSpreadsheet className="h-4 w-4" />
@@ -2870,7 +2800,8 @@ export function CompanyAppointmentsPage() {
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="brand"
+                  className={registerBrandButtonClass}
                   onClick={printPage}
                 >
                   <Printer className="h-4 w-4" />
@@ -2880,23 +2811,14 @@ export function CompanyAppointmentsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4 px-5 pb-5 sm:px-6">
-            <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 lg:flex-row lg:items-center lg:justify-between">
+            <DataRegisterToolbar className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                <div className="relative w-full sm:w-[330px]">
-                  <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={search}
-                    onChange={(event) =>
-                      setSearch(
-                        event.target.value,
-                      )
-                    }
-                    placeholder={
-                      t.searchPlaceholder
-                    }
-                    className="h-9 bg-background ps-9 shadow-none"
-                  />
-                </div>
+                <DataRegisterSearch
+                  value={search}
+                  onChange={setSearch}
+                  placeholder={t.searchPlaceholder}
+                  className="w-full sm:w-[330px]"
+                />
                 <Select
                   value={status}
                   onValueChange={(value) =>
@@ -2927,13 +2849,13 @@ export function CompanyAppointmentsPage() {
                     )}
                   </SelectContent>
                 </Select>
-                <DatePickerField
+                <DataRegisterDatePicker
                   label={t.from}
                   value={dateFrom}
                   onChange={setDateFrom}
                   locale={locale}
                 />
-                <DatePickerField
+                <DataRegisterDatePicker
                   label={t.to}
                   value={dateTo}
                   onChange={setDateTo}
@@ -2950,7 +2872,7 @@ export function CompanyAppointmentsPage() {
                   }
                 >
                   <SelectTrigger className="h-9 bg-background shadow-none sm:w-[160px]">
-                    <ArrowUpDown className="h-4 w-4" />
+                    <ArrowUpDown className="h-4 w-4 text-[#a57b3d]" />
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="max-h-[min(70vh,520px)] overflow-y-auto overscroll-contain">
@@ -2965,18 +2887,19 @@ export function CompanyAppointmentsPage() {
                 <Button
                   type="button"
                   variant="outline"
+                  className={registerOutlineButtonClass}
                   onClick={resetFilters}
                 >
                   <RotateCcw className="h-4 w-4" />
                   {t.reset}
                 </Button>
               </div>
-            </div>
+            </DataRegisterToolbar>
             <DataTable
               rows={filteredRows}
               allRowsCount={rows.length}
               columns={columns}
-              rowHref={appointmentHref}
+              rowHref={(row) => appointmentHref(row, appointmentsBasePath)}
               emptyTitle={t.noDataTitle}
               emptyDescription={
                 t.noDataDesc
@@ -3005,7 +2928,7 @@ export function CompanyAppointmentsPage() {
             });
             if (appointmentId) {
               router.push(
-                `/company/appointments/${encodeURIComponent(
+                `${appointmentsBasePath}/${encodeURIComponent(
                   appointmentId,
                 )}`,
               );

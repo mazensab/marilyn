@@ -2,7 +2,7 @@
 
 /* ============================================================
    📂 marilyn_frontend/app/company/notifications/page.tsx
-   🧠 Mhamcloud — Company Notifications Center
+   🧠 Marilyn Clinics — Company Notifications Center
    ------------------------------------------------------------
    ✅ Approved Premium system page pattern
    ✅ Company workspace only
@@ -42,6 +42,11 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  openManagedPrintWindow,
+  printManagedWindow,
+  writeManagedPrintDocument,
+} from "@/lib/managed-print-window";
 
 import {
   AlertDialog,
@@ -1287,7 +1292,7 @@ export default function CompanyNotificationsPage() {
       return;
     }
 
-    const printWindow = window.open("", "_blank");
+    const printWindow = openManagedPrintWindow("", "_blank");
 
     if (!printWindow) {
       toast.error(t.popupBlocked);
@@ -1295,7 +1300,7 @@ export default function CompanyNotificationsPage() {
     }
 
     printWindow.document.open();
-    printWindow.document.write(
+    writeManagedPrintDocument(printWindow,
       buildNotificationsDocument(mode),
     );
     printWindow.document.close();
@@ -1306,7 +1311,7 @@ export default function CompanyNotificationsPage() {
 
     window.setTimeout(() => {
       printWindow.focus();
-      printWindow.print();
+      printManagedWindow(printWindow);
     }, 300);
 
     toast.success(

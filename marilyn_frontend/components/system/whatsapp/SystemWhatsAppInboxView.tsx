@@ -1,8 +1,10 @@
 "use client";
+// whatsapp_marilyn_identity_cleanup=true
+// communications_surfaces_hr_practitioner_spirit_v2=true
 /*
 ================================================================================
 📂 marilyn_frontend/components/system/whatsapp/SystemWhatsAppInboxView.tsx
-🟢 Mhamcloud — System WhatsApp Inbox Premium View
+🟢 Marilyn Clinics — System WhatsApp Inbox Premium View
 ================================================================================
 ✅ Approved Premium pattern matching system companies page
 ✅ Real API only: /api/system/whatsapp/inbox/
@@ -12,21 +14,20 @@
 ✅ No "لوحة النظام / العودة إلى لوحة النظام الرئيسية" card
 ✅ System WhatsApp conversations + messages + reply
 ✅ Supports LID/JID reply through backend Phase 3
+✅ whatsapp_inbox_hr_practitioner_spirit=true
 ================================================================================
 */
 import * as React from "react";
-import Link from "next/link";
 import {
+  Activity,
   AlertCircle,
   CheckCircle2,
-  FileText,
   Inbox,
   Loader2,
   MessageCircle,
   RefreshCw,
   Search,
   SendHorizontal,
-  Settings2,
   UserRound,
   Wifi,
 } from "lucide-react";
@@ -40,6 +41,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  registerBrandButtonClass,
+  registerOutlineButtonClass,
+} from "@/components/ui/data-register";
+import { SystemKpiCard } from "@/components/ui/system-kpi-card";
+import { CommunicationsCenterTabs } from "@/components/system/communications-center-tabs";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -124,18 +131,12 @@ type InboxReplyPayload = {
   conversation?: InboxConversation;
 };
 type StatusFilter = "all" | "OPEN" | "CLOSED" | "ARCHIVED" | "SPAM";
-type QuickAction = {
-  title: string;
-  description: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-};
 const API_ROOT = "/api/system/whatsapp/inbox/";
 const translations = {
   ar: {
     badge: "التواصل والإشعارات",
     title: "صندوق محادثات واتساب النظام",
-    desc: "متابعة المحادثات الواردة والرد عليها مباشرة من داخل Mhamcloud باستخدام اتصال واتساب الرسمي للنظام.",
+    desc: "متابعة المحادثات الواردة والرد عليها مباشرة من داخل نظام Marilyn Clinics باستخدام اتصال واتساب الرسمي.",
     settings: "إعدادات واتساب",
     settingsDesc: "إدارة الاتصال، QR، Pairing Code، وحالة الجلسة.",
     templates: "قوالب واتساب",
@@ -190,7 +191,7 @@ const translations = {
   en: {
     badge: "Communication & Notifications",
     title: "System WhatsApp Inbox",
-    desc: "Monitor inbound conversations and reply directly from Mhamcloud using the official system WhatsApp connection.",
+    desc: "Monitor inbound conversations and reply directly from the Marilyn Clinics system using the official WhatsApp connection.",
     settings: "WhatsApp Settings",
     settingsDesc: "Manage connection, QR, Pairing Code, and session status.",
     templates: "WhatsApp Templates",
@@ -382,62 +383,11 @@ function statusClass(status: string | undefined): string {
   if (value === "SPAM") return "border-rose-200 bg-rose-50 text-rose-700";
   return "border-slate-200 bg-slate-50 text-slate-700";
 }
-function KpiCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-}: {
-  title: string;
-  value: number;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-}) {
-  return (
-    <Card className="overflow-hidden rounded-2xl border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2">
-        <div className="min-w-0">
-          <CardDescription className="truncate text-sm">{title}</CardDescription>
-          <CardTitle className="mt-2 text-2xl font-bold tracking-tight tabular-nums">
-            {formatInteger(value)}
-          </CardTitle>
-        </div>
-        <span className="rounded-2xl bg-primary/10 p-2.5 text-primary">
-          <Icon className="h-5 w-5" />
-        </span>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <p className="line-clamp-2 text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-function QuickActionCard({ action }: { action: QuickAction }) {
-  const Icon = action.icon;
-  return (
-    <Card className="group rounded-2xl border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <Link
-        href={action.href}
-        className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-          <div className="min-w-0">
-            <CardTitle className="text-base">{action.title}</CardTitle>
-            <CardDescription className="mt-2 line-clamp-2">{action.description}</CardDescription>
-          </div>
-          <span className="rounded-2xl bg-primary/10 p-2.5 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-            <Icon className="h-5 w-5" />
-          </span>
-        </CardHeader>
-      </Link>
-    </Card>
-  );
-}
 function InboxSkeleton({ locale }: { locale: Locale }) {
   const dir = locale === "ar" ? "rtl" : "ltr";
   return (
-    <main className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8" dir={dir}>
-      <div className="w-full space-y-6">
+    <main className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8" dir={dir}>
+      <div className="w-full space-y-5">
         <div className="rounded-3xl border bg-card p-6 shadow-sm">
           <Skeleton className="h-5 w-40" />
           <Skeleton className="mt-3 h-8 w-72" />
@@ -582,125 +532,103 @@ export default function SystemWhatsAppInboxView() {
       setSending(false);
     }
   }
-  const quickActions: QuickAction[] = [
-    {
-      title: t.settings,
-      description: t.settingsDesc,
-      href: "/system/whatsapp/settings",
-      icon: Settings2,
-    },
-    {
-      title: t.templates,
-      description: t.templatesDesc,
-      href: "/system/whatsapp/templates",
-      icon: FileText,
-    },
-    {
-      title: t.logs,
-      description: t.logsDesc,
-      href: "/system/whatsapp/messages",
-      icon: SendHorizontal,
-    },
-  ];
   if (loadingConversations && conversations.length === 0) {
     return <InboxSkeleton locale={locale} />;
   }
   return (
-    <main className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8" dir={dir}>
-      <div className="w-full space-y-6">
-        <Card className="overflow-hidden rounded-3xl border-border/70 bg-card shadow-sm">
-          <CardHeader className="gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className={cn("min-w-0 space-y-3", alignClass)}>
-              <Badge variant="outline" className="w-fit rounded-full px-3 py-1">
-                <MessageCircle className="h-3.5 w-3.5" />
-                {t.badge}
-              </Badge>
-              <div>
-                <CardTitle className="text-3xl font-bold tracking-tight md:text-4xl">
-                  {t.title}
-                </CardTitle>
-                <CardDescription className="mt-3 max-w-3xl text-sm leading-7">
-                  {t.desc}
-                </CardDescription>
-              </div>
+    <main className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8" dir={dir}>
+      <div className="w-full space-y-5">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className={cn("max-w-4xl", alignClass)}>
+            <div className="mb-2 flex items-center gap-2 text-xs font-medium text-[#9a7139]">
+              <MessageCircle className="h-3.5 w-3.5 text-[#a57b3d]" />
+              {t.badge}
             </div>
-            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-              <Button
-                type="button"
-                onClick={handleRefresh}
-                disabled={loadingConversations || loadingMessages}
-                className="rounded-lg"
-              >
-                {loadingConversations || loadingMessages ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-                {t.refresh}
-              </Button>
-              <Button asChild variant="outline" className="rounded-lg bg-card">
-                <Link href="/system/whatsapp/messages">
-                  <SendHorizontal className="h-4 w-4" />
-                  {t.logs}
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="rounded-lg bg-card">
-                <Link href="/system/whatsapp/templates">
-                  <FileText className="h-4 w-4" />
-                  {t.templates}
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="rounded-lg bg-card">
-                <Link href="/system/whatsapp/settings">
-                  <Settings2 className="h-4 w-4" />
-                  {t.settings}
-                </Link>
-              </Button>
-            </div>
-          </CardHeader>
-        </Card>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {t.title}
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+              {t.desc}
+            </p>
+            <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+              <Activity className="h-4 w-4 text-emerald-500" />
+              {t.fromLiveApi}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className={registerOutlineButtonClass}
+              onClick={handleRefresh}
+              disabled={
+                loadingConversations
+                || loadingMessages
+              }
+            >
+              {loadingConversations || loadingMessages ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {t.refresh}
+            </Button>
+          </div>
+        </header>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <KpiCard
+          <SystemKpiCard
             title={t.total}
-            value={summary.total_conversations || conversations.length || 0}
+            value={
+              summary.total_conversations
+              || conversations.length
+              || 0
+            }
             description={t.fromLiveApi}
             icon={Inbox}
           />
-          <KpiCard
+          <SystemKpiCard
             title={t.unread}
-            value={summary.unread_conversations || 0}
+            value={
+              summary.unread_conversations
+              || 0
+            }
             description={t.fromLiveApi}
             icon={AlertCircle}
           />
-          <KpiCard
+          <SystemKpiCard
             title={t.resolved}
-            value={summary.resolved_conversations || 0}
+            value={
+              summary.resolved_conversations
+              || 0
+            }
             description={t.fromLiveApi}
             icon={CheckCircle2}
           />
-          <KpiCard
+          <SystemKpiCard
             title={t.openCount}
-            value={summary.open_conversations || 0}
+            value={
+              summary.open_conversations
+              || 0
+            }
             description={t.fromLiveApi}
             icon={Wifi}
           />
         </div>
-        <Card className="rounded-2xl border-border/70 bg-card shadow-sm">
-          <CardHeader className={alignClass}>
-            <CardTitle className="text-lg">{t.actionsTitle}</CardTitle>
-            <CardDescription>{t.actionsDesc}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-3">
-            {quickActions.map((action) => (
-              <QuickActionCard key={action.href} action={action} />
-            ))}
-          </CardContent>
-        </Card>
+        <CommunicationsCenterTabs
+          active="whatsapp"
+          locale={locale}
+          counts={{
+            whatsapp:
+              summary.total_conversations
+              || conversations.length
+              || 0,
+          }}
+        />
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-          <Card className="rounded-2xl border-border/70 bg-card shadow-sm">
+          <Card className="rounded-lg bg-card shadow-none">
             {!selectedConversation ? (
               <CardContent className="flex min-h-[640px] flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-                <div className="rounded-full bg-muted p-4 text-muted-foreground">
+                <div className="flex size-12 items-center justify-center rounded-full border border-[#cbbda9]/55 bg-[#fbf8f2] text-[#a57b3d] shadow-sm">
                   <MessageCircle className="h-7 w-7" />
                 </div>
                 <div>
@@ -745,7 +673,7 @@ export default function SystemWhatsAppInboxView() {
                       type="button"
                       variant="outline"
                       onClick={() => void loadMessages(selectedConversation.id)}
-                      className="rounded-lg bg-card"
+                      className={registerOutlineButtonClass}
                     >
                       {loadingMessages ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -763,7 +691,7 @@ export default function SystemWhatsAppInboxView() {
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="flex min-h-[420px] flex-col items-center justify-center gap-3 text-center">
-                      <div className="rounded-full bg-muted p-4 text-muted-foreground">
+                      <div className="flex size-12 items-center justify-center rounded-full border border-[#cbbda9]/55 bg-[#fbf8f2] text-[#a57b3d] shadow-sm">
                         <MessageCircle className="h-6 w-6" />
                       </div>
                       <h3 className="text-sm font-semibold text-foreground">{t.emptyMessages}</h3>
@@ -781,7 +709,7 @@ export default function SystemWhatsAppInboxView() {
                               className={cn(
                                 "max-w-[78%] rounded-2xl border px-4 py-3 shadow-sm",
                                 outbound
-                                  ? "border-primary bg-primary text-primary-foreground"
+                                  ? "border-[#b58c4d] bg-[#b58c4d] text-white"
                                   : "border-border bg-card",
                               )}
                             >
@@ -810,14 +738,15 @@ export default function SystemWhatsAppInboxView() {
                       placeholder={t.messagePlaceholder}
                       rows={3}
                       className={cn(
-                        "min-h-24 flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm leading-7 outline-none transition focus:border-primary",
+                        "min-h-24 flex-1 resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm leading-7 outline-none transition focus:border-[#b58c4d]",
                         alignClass,
                       )}
                     />
                     <Button
                       type="submit"
                       disabled={sending || !reply.trim()}
-                      className="min-h-12 rounded-lg px-5"
+                      variant="brand"
+                      className={registerBrandButtonClass}
                     >
                       {sending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -831,7 +760,7 @@ export default function SystemWhatsAppInboxView() {
               </>
             )}
           </Card>
-          <Card className="rounded-2xl border-border/70 bg-card shadow-sm">
+          <Card className="rounded-lg bg-card shadow-none">
             <CardHeader className={alignClass}>
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -840,47 +769,88 @@ export default function SystemWhatsAppInboxView() {
                     {formatInteger(summary.total_conversations || conversations.length || 0)} {t.conversationCount}
                   </CardDescription>
                 </div>
-                <span className="rounded-2xl bg-primary/10 p-2.5 text-primary">
+                <span className="flex size-10 items-center justify-center rounded-full border border-[#cbbda9]/55 bg-[#fbf8f2] text-[#a57b3d] shadow-sm">
                   <Inbox className="h-5 w-5" />
                 </span>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <form onSubmit={handleSearch} className="space-y-3">
-                <div className="relative">
+              <form
+                onSubmit={handleSearch}
+                className="flex flex-col gap-2 sm:flex-row sm:items-center"
+              >
+                <div className="relative min-w-0 flex-1">
                   <Search
                     className={cn(
-                      "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground",
-                      locale === "ar" ? "right-3" : "left-3",
+                      "absolute top-1/2 h-4 w-4 -translate-y-1/2 text-[#a57b3d]",
+                      locale === "ar"
+                        ? "right-3"
+                        : "left-3",
                     )}
                   />
                   <Input
                     value={searchInput}
-                    onChange={(event) => setSearchInput(event.target.value)}
+                    onChange={(event) =>
+                      setSearchInput(
+                        event.target.value,
+                      )
+                    }
                     placeholder={t.searchPlaceholder}
                     className={cn(
-                      "h-11 rounded-xl",
-                      locale === "ar" ? "pr-10 text-right" : "pl-10 text-left",
+                      "h-9 rounded-lg",
+                      locale === "ar"
+                        ? "pr-10 text-right"
+                        : "pl-10 text-left",
                     )}
                   />
                 </div>
-                <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-2">
-                  <Button type="submit" className="h-11 rounded-lg px-5">
-                    {t.search}
-                  </Button>
-                  <Select value={status} onValueChange={(value) => setStatus(value as StatusFilter)}>
-                    <SelectTrigger className="h-11 rounded-xl">
-                      <SelectValue placeholder={t.all} />
-                    </SelectTrigger>
-                    <SelectContent align={locale === "ar" ? "end" : "start"}>
-                      <SelectItem value="all">{t.all}</SelectItem>
-                      <SelectItem value="OPEN">{t.open}</SelectItem>
-                      <SelectItem value="CLOSED">{t.closed}</SelectItem>
-                      <SelectItem value="ARCHIVED">{t.archived}</SelectItem>
-                      <SelectItem value="SPAM">{t.spam}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select
+                  value={status}
+                  onValueChange={(value) =>
+                    setStatus(
+                      value as StatusFilter,
+                    )
+                  }
+                >
+                  <SelectTrigger className="h-9 w-full rounded-lg sm:w-[135px]">
+                    <SelectValue
+                      placeholder={t.all}
+                    />
+                  </SelectTrigger>
+                  <SelectContent
+                    align={
+                      locale === "ar"
+                        ? "end"
+                        : "start"
+                    }
+                  >
+                    <SelectItem value="all">
+                      {t.all}
+                    </SelectItem>
+                    <SelectItem value="OPEN">
+                      {t.open}
+                    </SelectItem>
+                    <SelectItem value="CLOSED">
+                      {t.closed}
+                    </SelectItem>
+                    <SelectItem value="ARCHIVED">
+                      {t.archived}
+                    </SelectItem>
+                    <SelectItem value="SPAM">
+                      {t.spam}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="submit"
+                  variant="brand"
+                  className={
+                    registerBrandButtonClass
+                  }
+                >
+                  <Search className="h-4 w-4" />
+                  {t.search}
+                </Button>
               </form>
               <div className="flex max-h-[650px] flex-col gap-3 overflow-y-auto pe-1">
                 {loadingConversations ? (
@@ -897,7 +867,7 @@ export default function SystemWhatsAppInboxView() {
                   ))
                 ) : conversations.length === 0 ? (
                   <div className="flex min-h-64 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-                    <div className="rounded-full bg-muted p-4 text-muted-foreground">
+                    <div className="flex size-12 items-center justify-center rounded-full border border-[#cbbda9]/55 bg-[#fbf8f2] text-[#a57b3d] shadow-sm">
                       <Inbox className="h-6 w-6" />
                     </div>
                     <div>
@@ -917,11 +887,11 @@ export default function SystemWhatsAppInboxView() {
                         type="button"
                         onClick={() => setSelectedId(conversation.id)}
                         className={cn(
-                          "rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:shadow-md",
+                          "rounded-lg border p-4 transition hover:border-[#b58c4d]/50 hover:shadow-sm",
                           alignClass,
                           isActive
-                            ? "border-primary/60 bg-muted shadow-sm"
-                            : "border-border/70 bg-card shadow-sm",
+                            ? "border-[#b58c4d]/70 bg-[#fbf8f2] shadow-sm"
+                            : "border-border/70 bg-card shadow-none",
                         )}
                       >
                         <div className="flex items-start justify-between gap-3">

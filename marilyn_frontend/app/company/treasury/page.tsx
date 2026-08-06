@@ -1,7 +1,7 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/treasury/page.tsx
-   🧠 PrimeyAcc — Company Treasury & Payments Dashboard
+   🧠 Marilyn Clinics — Company Treasury & Payments Dashboard
    ------------------------------------------------------------
    ✅ Approved Premium company dashboard pattern
    ✅ Real API only, no fake demo data
@@ -76,6 +76,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  writeAutoManagedPrintDocument as writeAutoMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
 type ApiResponse = ApiRecord | ApiRecord[];
@@ -1867,7 +1871,7 @@ export default function CompanyTreasuryPage() {
                 <script>
                   window.onload = function () {
                     window.focus();
-                    window.print();
+                    window.__MARILYN_PRINT_READY__ = true;
                   };
                   window.onafterprint = function () {
                     window.close();
@@ -1929,7 +1933,7 @@ export default function CompanyTreasuryPage() {
       toast.warning(t.printEmpty);
       return;
     }
-    const printWindow = window.open(
+    const printWindow = openMarilynPrintWindow(
       "",
       "_blank",
       "width=1400,height=900",
@@ -1943,7 +1947,7 @@ export default function CompanyTreasuryPage() {
       return;
     }
     printWindow.opener = null;
-    printWindow.document.write(
+    writeAutoMarilynPrintDocument(printWindow,
       approvedTreasuryReportDocument(
         reportTitle,
         sections,

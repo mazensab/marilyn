@@ -1,9 +1,9 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/payments/page.tsx
-   🧠 PrimeyAcc — Company Payments Center Page
+   🧠 Marilyn Clinics — Company Payments Center Page
    ------------------------------------------------------------
-   ✅ PrimeyAcc Approved Design
+   ✅ Marilyn Clinics Approved Design
    ✅ Real API only, no fake demo data
    ✅ Company scoped APIs through backend session
    ✅ Unified receipts + payments monitoring center
@@ -79,6 +79,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  writeAutoManagedPrintDocument as writeAutoMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
 type PaymentKind = "receipt" | "payment";
@@ -1443,7 +1447,7 @@ export default function CompanyPaymentsPage() {
               ? `<script>
                   window.onload = () => {
                     window.focus();
-                    window.print();
+                    window.__MARILYN_PRINT_READY__ = true;
                   };
                   window.onafterprint = () => window.close();
                 <\/script>`
@@ -1485,13 +1489,13 @@ export default function CompanyPaymentsPage() {
       toast.warning(t.printEmpty);
       return;
     }
-    const popup = window.open("", "_blank", "width=1400,height=900");
+    const popup = openMarilynPrintWindow("", "_blank", "width=1400,height=900");
     if (!popup) {
       toast.error(t.errorDesc);
       return;
     }
     popup.opener = null;
-    popup.document.write(buildReportDocument("print", includeSummary));
+    writeAutoMarilynPrintDocument(popup, buildReportDocument("print", includeSummary));
     popup.document.close();
     toast.success(
       locale === "ar"
@@ -1509,7 +1513,7 @@ export default function CompanyPaymentsPage() {
   }
 
   function printVoucher(row: PaymentRecord) {
-    const printWindow = window.open(
+    const printWindow = openMarilynPrintWindow(
       `${paymentDetailHref(row)}?print=voucher`,
       "_blank",
     );

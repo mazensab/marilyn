@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 /* ============================================================
    📂 marilyn_frontend/app/system/api-contracts/page.tsx
-   🔗 Mhamcloud — System API Contracts Registry
+   🔗 Marilyn Clinics — System API Contracts Registry
    ------------------------------------------------------------
-   ✅ Approved Premium Mhamcloud system page pattern
+   ✅ Marilyn Clinics system API contracts pattern
    ✅ Real API only: GET /api/system/release-readiness/
    ✅ Reads API contracts from data.contracts
    ✅ KPI cards + filters + contracts table
@@ -26,10 +26,11 @@ import {
   FileSpreadsheet,
   FileText,
   Globe2,
+  KeyRound,
   Inbox,
   Layers3,
   Loader2,
-  Network,
+  PlugZap,
   Printer,
   RefreshCw,
   RotateCcw,
@@ -41,6 +42,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
+import { openPrintReport } from "@/lib/print-report";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,6 +69,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { SystemKpiCard } from "@/components/ui/system-kpi-card";
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
 type ScopeFilter = "all" | "system" | "company" | "other";
@@ -98,8 +101,10 @@ const translations = {
   ar: {
     title: "عقود API",
     subtitle:
-      "سجل عقود API المسجلة في Mhamcloud للنظام والشركات من مصدر جاهزية الإصدار الحقيقي.",
+      "سجل عقود API المسجلة في Marilyn Clinics للنظام والشركات من مصدر جاهزية الإصدار الحقيقي.",
     badge: "الجاهزية والربط",
+    integrations: "مركز التكاملات",
+    apiKeys: "مفاتيح API",
     refresh: "تحديث",
     exportExcel: "تصدير Excel",
     print: "طباعة",
@@ -154,7 +159,7 @@ const translations = {
     exportEmpty: "لا توجد بيانات للتصدير.",
     printEmpty: "لا توجد بيانات للطباعة.",
     pdfHint: "اختر حفظ كـ PDF من نافذة الطباعة.",
-    reportTitle: "تقرير عقود API في Mhamcloud",
+    reportTitle: "تقرير عقود API في Marilyn Clinics",
     generatedAt: "تاريخ الإنشاء",
     refreshed: "تم تحديث عقود API.",
     unknown: "غير معروف",
@@ -162,8 +167,10 @@ const translations = {
   en: {
     title: "API Contracts",
     subtitle:
-      "Mhamcloud registered API contract registry for system and company endpoints from the live release-readiness source.",
+      "Marilyn Clinics registered API contract registry for system and company endpoints from the live release-readiness source.",
     badge: "Readiness & API",
+    integrations: "Integrations Center",
+    apiKeys: "API Keys",
     refresh: "Refresh",
     exportExcel: "Export Excel",
     print: "Print",
@@ -218,7 +225,7 @@ const translations = {
     exportEmpty: "There is no data to export.",
     printEmpty: "There is no data to print.",
     pdfHint: "Choose Save as PDF from the print dialog.",
-    reportTitle: "Mhamcloud API Contracts Report",
+    reportTitle: "Marilyn Clinics API Contracts Report",
     generatedAt: "Generated at",
     refreshed: "API contracts refreshed.",
     unknown: "Unknown",
@@ -366,7 +373,7 @@ function MetricCard({
   title,
   value,
   description,
-  icon: Icon,
+  icon,
 }: {
   title: string;
   value: string | number;
@@ -374,27 +381,17 @@ function MetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <Card className="rounded-2xl border-border/70 bg-card shadow-sm">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="mt-3 truncate text-3xl font-bold tabular-nums">
-              {typeof value === "number" ? formatInteger(value) : value}
-            </p>
-            <p className="mt-4 text-xs text-muted-foreground">{description}</p>
-          </div>
-          <div className="rounded-2xl bg-muted p-3 text-primary">
-            <Icon className="h-5 w-5" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <SystemKpiCard
+      title={title}
+      value={value}
+      description={description}
+      icon={icon}
+    />
   );
 }
 function ApiContractsSkeleton() {
   return (
-    <main className="min-h-screen bg-muted/30 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-transparent px-4 py-6 sm:px-6 lg:px-8">
       <div className="space-y-6">
         <Card className="rounded-3xl">
           <CardHeader className="space-y-4">
@@ -611,57 +608,44 @@ export default function SystemApiContractsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Mhamcloud-api-contracts-${new Date().toISOString().slice(0, 10)}.xls`;
+    link.download = `marilyn-api-contracts-${new Date().toISOString().slice(0, 10)}.xls`;
     document.body.appendChild(link);
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
   }
-  function openPrintWindow(mode: "print" | "pdf") {
+  async function openPrintWindow(
+    mode: "print" | "pdf",
+  ) {
     const rows = exportRows();
     if (!rows.length) {
       toast.error(t.printEmpty);
       return;
     }
-    if (mode === "pdf") toast.info(t.pdfHint);
-    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1200,height=800");
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <!doctype html>
-      <html dir="${dir}" lang="${locale}">
-        <head>
-          <meta charset="utf-8" />
-          <title>${escapeHtml(t.reportTitle)}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 24px; color: #0f172a; }
-            h1 { margin: 0 0 8px; font-size: 24px; }
-            p { color: #64748b; }
-            table { width: 100%; border-collapse: collapse; margin-top: 18px; }
-            th, td {
-              border: 1px solid #cbd5e1;
-              padding: 8px;
-              font-size: 12px;
-              text-align: ${dir === "rtl" ? "right" : "left"};
-              vertical-align: top;
-            }
-            th { background: #f1f5f9; font-weight: 700; }
-          </style>
-        </head>
-        <body>
-          <h1>${escapeHtml(t.reportTitle)}</h1>
-          <p>${escapeHtml(t.generatedAt)}: ${escapeHtml(new Date().toLocaleString())}</p>
-          <p>${escapeHtml(t.phase)}: ${escapeHtml(phase)} — ${escapeHtml(t.contractVersion)}: ${escapeHtml(contractVersion)}</p>
-          ${buildTableHtml(rows)}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    window.setTimeout(() => printWindow.print(), 250);
+    if (mode === "pdf") {
+      toast.info(t.pdfHint);
+    }
+    const opened = await openPrintReport({
+      locale,
+      title: t.reportTitle,
+      subtitle:
+        `${t.phase}: ${phase} — ` +
+        `${t.contractVersion}: ${contractVersion}`,
+      tableHtml: buildTableHtml(rows),
+      recordsCount: rows.length,
+    });
+    if (!opened) {
+      toast.error(
+        locale === "ar"
+          ? "تعذر فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم أعد المحاولة."
+          : "The print window could not be opened. Allow pop-ups and try again.",
+      );
+    }
   }
   if (loading) return <ApiContractsSkeleton />;
   if (error) {
     return (
-      <main dir={dir} className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
+      <main dir={dir} className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
         <Card className="mx-auto max-w-3xl rounded-3xl border-destructive/30 bg-card shadow-sm">
           <CardHeader className="text-center">
             <div className="mx-auto mb-2 rounded-full bg-destructive/10 p-4 text-destructive">
@@ -682,18 +666,18 @@ export default function SystemApiContractsPage() {
     );
   }
   return (
-    <main dir={dir} className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
+    <main dir={dir} className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
       <div className="w-full space-y-6">
-        <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">
-          <div className="relative p-6 sm:p-8">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/80 via-primary/30 to-transparent" />
+        <section className="overflow-visible rounded-none border-0 bg-transparent shadow-none">
+          <div className="relative p-0">
+            <div className="hidden" />
             <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
               <div className="max-w-4xl">
                 <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
                   <Sparkles className="h-3.5 w-3.5 text-primary" />
                   {t.badge}
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t.title}</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">{t.subtitle}</p>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   <Badge variant="outline" className="rounded-full bg-background">
@@ -707,36 +691,98 @@ export default function SystemApiContractsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="outline"
-                  className="rounded-xl bg-background"
+                  className="rounded-lg bg-background shadow-none"
                   onClick={() => void loadContracts({ silent: true })}
                   disabled={refreshing}
                 >
                   {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                   {t.refresh}
                 </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={exportExcel}>
+                <Button variant="outline" className="rounded-lg bg-background shadow-none" onClick={exportExcel}>
                   <FileSpreadsheet className="h-4 w-4" />
                   {t.exportExcel}
                 </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => openPrintWindow("print")}>
+                <Button
+                  variant="brand"
+                  className="rounded-lg shadow-none"
+                  onClick={() => void openPrintWindow("print")}
+                >
                   <Printer className="h-4 w-4" />
                   {t.print}
-                </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => openPrintWindow("pdf")}>
-                  <FileText className="h-4 w-4" />
-                  {t.pdf}
                 </Button>
               </div>
             </div>
           </div>
         </section>
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard title={t.totalContracts} value={summary.contractsCount || contracts.length} description={t.fromLiveApi} icon={Layers3} />
           <MetricCard title={t.systemContracts} value={summary.systemScopedContracts} description={t.fromLiveApi} icon={ShieldCheck} />
           <MetricCard title={t.companyContracts} value={summary.companyScopedContracts} description={t.fromLiveApi} icon={Building2} />
           <MetricCard title={t.criticalContracts} value={criticalCount} description={t.fromLiveApi} icon={CheckCircle2} />
         </section>
-        <Card className="w-full rounded-2xl shadow-sm">
+        <nav
+          aria-label={
+            locale === "ar"
+              ? "تنقل وحدة التكاملات"
+              : "Integrations navigation"
+          }
+          className="flex flex-wrap gap-2"
+        >
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-lg bg-background shadow-none"
+          >
+            <Link href="/system/integrations">
+              <PlugZap className="h-4 w-4" />
+              {t.integrations}
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-lg bg-background shadow-none"
+          >
+            <Link href="/system/integrations/api-keys">
+              <KeyRound className="h-4 w-4" />
+              {t.apiKeys}
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="brand"
+            className="rounded-lg shadow-none"
+          >
+            <Link
+              href="/system/integrations/api-contracts"
+              aria-current="page"
+            >
+              <FileText className="h-4 w-4" />
+              {t.title}
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-lg bg-background shadow-none"
+          >
+            <Link href="/system/release-readiness">
+              <ShieldCheck className="h-4 w-4" />
+              {t.readiness}
+            </Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-lg bg-background shadow-none"
+          >
+            <Link href="/system">
+              <Globe2 className="h-4 w-4" />
+              {t.dashboard}
+            </Link>
+          </Button>
+        </nav>
+        <Card className="w-full rounded-lg border bg-card shadow-none">
           <CardHeader className="gap-3">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <div>
@@ -750,7 +796,7 @@ export default function SystemApiContractsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col gap-3 rounded-2xl border bg-muted/20 p-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-3 md:flex-row md:items-center">
                 <div className="relative min-w-0 flex-1">
                   <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -813,19 +859,11 @@ export default function SystemApiContractsPage() {
                   <RotateCcw className="h-4 w-4" />
                   {t.reset}
                 </Button>
-                <Link href="/system/release-readiness" className="inline-flex h-10 items-center gap-2 rounded-xl border bg-background px-4 text-sm font-medium hover:bg-muted">
-                  <Network className="h-4 w-4" />
-                  {t.readiness}
-                </Link>
-                <Link href="/system" className="inline-flex h-10 items-center gap-2 rounded-xl border bg-background px-4 text-sm font-medium hover:bg-muted">
-                  <Globe2 className="h-4 w-4" />
-                  {t.dashboard}
-                </Link>
               </div>
             </div>
-            <div className="overflow-hidden rounded-2xl border bg-background">
+            <div className="overflow-hidden rounded-lg border bg-background">
               <div className="w-full overflow-x-auto">
-                <Table className="w-full min-w-[1280px] table-fixed">
+                <Table variant="register" className="w-full min-w-[1280px] table-fixed">
                   <TableHeader>
                     <TableRow className="h-11 bg-muted/40 hover:bg-muted/40">
                       <TableHead className={cn("w-[170px] px-4 text-xs font-semibold text-muted-foreground", alignClass)}>

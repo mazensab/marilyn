@@ -1,7 +1,7 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/accounting/_components/company-account-detail-page.tsx
-   🧾 Mhamcloud — Company Accounting Account Detail
+   🧾 Marilyn Clinics — Company Accounting Account Detail
    ------------------------------------------------------------
    ✅ Approved Premium company detail pattern
    ✅ Real API only
@@ -67,6 +67,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  writeAutoManagedPrintDocument as writeAutoMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 type Locale = "ar" | "en";
 type DetailTab = "ledger" | "journal" | "payments";
 type ApiRecord = Record<string, unknown>;
@@ -1691,7 +1695,7 @@ export function CompanyAccountDetailPage() {
     titleText: string,
     bodyHtml: string,
   ) {
-    const printWindow = window.open(
+    const printWindow = openMarilynPrintWindow(
       "",
       "_blank",
       "width=1400,height=900",
@@ -1705,7 +1709,7 @@ export function CompanyAccountDetailPage() {
         ? "right"
         : "left";
     printWindow.opener = null;
-    printWindow.document.write(`
+    writeAutoMarilynPrintDocument(printWindow, `
       <!doctype html>
       <html dir="${dir}" lang="${locale}">
         <head>
@@ -1735,7 +1739,7 @@ export function CompanyAccountDetailPage() {
           <script>
             window.onload = function () {
               window.focus();
-              window.print();
+              window.__MARILYN_PRINT_READY__ = true;
             };
             window.onafterprint = function () {
               window.close();
@@ -1759,7 +1763,7 @@ export function CompanyAccountDetailPage() {
     downloadApprovedAccountExcel(
       titleText,
       approvedRowsTableHtml(rows),
-      `primeyacc-account-${account?.code || id}-${suffix}-${new Date()
+      `marilyn-account-${account?.code || id}-${suffix}-${new Date()
         .toISOString()
         .slice(0, 10)}.xls`,
     );
@@ -1869,7 +1873,7 @@ export function CompanyAccountDetailPage() {
     downloadApprovedAccountExcel(
       account.name,
       approvedFullReportHtml(),
-      `primeyacc-account-${account.code}-${new Date()
+      `marilyn-account-${account.code}-${new Date()
         .toISOString()
         .slice(0, 10)}.xls`,
     );

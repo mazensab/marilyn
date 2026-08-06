@@ -1,9 +1,9 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/company/treasury/_components/treasury-voucher-detail-page.tsx
-   🧠 PrimeyAcc — Company Treasury Voucher Detail
+   🧠 Marilyn Clinics — Company Treasury Voucher Detail
    ------------------------------------------------------------
-   ✅ PrimeyAcc Approved Design
+   ✅ Marilyn Clinics Approved Design
    ✅ Shared receipt/payment voucher detail page
    ✅ Real company-scoped APIs only
    ✅ Confirm/cancel with shared AlertDialog
@@ -67,6 +67,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  openManagedPrintWindow as openMarilynPrintWindow,
+  writeAutoManagedPrintDocument as writeAutoMarilynPrintDocument,
+} from "@/lib/managed-print-window";
 
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
@@ -1341,7 +1345,7 @@ export function TreasuryVoucherDetailPage({
   function printReport(targetWindow?: Window) {
     if (!voucher) return;
     const popup =
-      targetWindow || window.open("", "_blank", "width=980,height=900");
+      targetWindow || openMarilynPrintWindow("", "_blank", "width=980,height=900");
     if (!popup) {
       toast.error(t.printBlocked);
       return;
@@ -1408,7 +1412,7 @@ export function TreasuryVoucherDetailPage({
         : "";
 
     popup.document.open();
-    popup.document.write(`<!doctype html>
+    writeAutoMarilynPrintDocument(popup, `<!doctype html>
       <html lang="${locale}" dir="${dir}">
         <head>
           <meta charset="utf-8" />
@@ -1622,7 +1626,7 @@ export function TreasuryVoucherDetailPage({
                   <div class="company-name">${escapeHtml(
                     displayCompanyName,
                   )}</div>
-                  <div class="system-name">PrimeyAcc</div>
+                  <div class="system-name">Marilyn Clinics</div>
                 </div>
                 <div class="title-block">
                   <div class="copy-label">${escapeHtml(t.originalCopy)}</div>
@@ -1726,7 +1730,7 @@ export function TreasuryVoucherDetailPage({
             window.onload = () => {
               window.onafterprint = () => window.close();
               window.focus();
-              window.print();
+              window.__MARILYN_PRINT_READY__ = true;
             };
           <\/script>
         </body>

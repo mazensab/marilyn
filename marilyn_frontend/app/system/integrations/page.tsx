@@ -1,11 +1,11 @@
 "use client";
 /* ============================================================
    📂 marilyn_frontend/app/system/integrations/page.tsx
-   🔗 Mhamcloud — System Integrations Center
+   🔗 Marilyn Clinics — System Integrations Center
    ------------------------------------------------------------
-   ✅ Approved /system/companies visual pattern
+   ✅ Approved system workspace visual pattern
    ✅ Real API only: GET /api/system/integration-api-keys/
-   ✅ KPI cards + quick actions + recent API keys table
+   ✅ Shared KPI cards + approved navigation + recent API keys register
    ✅ Search, status filter, environment filter, sorting, reset
    ✅ Excel .xls export
    ✅ Web print + PDF through browser print dialog
@@ -20,7 +20,6 @@ import * as React from "react";
 import Link from "next/link";
 import {
   ArrowUpDown,
-  FileBarChart2,
   FileSpreadsheet,
   FileText,
   KeyRound,
@@ -30,12 +29,12 @@ import {
   Printer,
   RefreshCw,
   RotateCcw,
-  Search,
   ShieldCheck,
   Sparkles,
   TriangleAlert,
 } from "lucide-react";
 import { toast } from "sonner";
+import { openPrintReport } from "@/lib/print-report";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,7 +44,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -62,6 +60,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DataRegisterEmptyState,
+  DataRegisterSearch,
+  DataRegisterToolbar,
+  registerBrandButtonClass,
+  registerOutlineButtonClass,
+} from "@/components/ui/data-register";
+import { SystemKpiCard } from "@/components/ui/system-kpi-card";
 import { API_PATHS } from "@/lib/api/endpoints";
 type Locale = "ar" | "en";
 type ApiRecord = Record<string, unknown>;
@@ -92,7 +98,7 @@ const translations = {
   ar: {
     title: "مركز التكاملات",
     subtitle:
-      "مركز إدارة تكاملات Mhamcloud لمتابعة مفاتيح API وعقود الربط وجاهزية التكاملات من مكان واحد.",
+      "مركز إدارة تكاملات Marilyn Clinics لمتابعة مفاتيح API وعقود الربط وجاهزية التكاملات من مكان واحد.",
     badge: "التكاملات",
     refresh: "تحديث",
     exportExcel: "تصدير Excel",
@@ -103,7 +109,7 @@ const translations = {
     readiness: "جاهزية الإصدار",
     dashboard: "لوحة النظام",
     reset: "إعادة ضبط",
-    searchPlaceholder: "ابحث باسم المفتاح أو الشركة أو البادئة أو الصلاحيات...",
+    searchPlaceholder: "ابحث باسم المفتاح أو المنشأة أو البادئة أو الصلاحيات...",
     all: "الكل",
     sort: "الترتيب",
     newest: "الأحدث",
@@ -128,10 +134,10 @@ const translations = {
     dashboardDesc: "العودة إلى لوحة تحكم النظام الرئيسية.",
     tableTitle: "أحدث مفاتيح API",
     tableDesc:
-      "نظرة سريعة على أحدث مفاتيح التكامل المسجلة في Mhamcloud مع البيئة والحالة والصلاحيات.",
+      "نظرة سريعة على أحدث مفاتيح التكامل المسجلة في Marilyn Clinics مع البيئة والحالة والصلاحيات.",
     keyName: "المفتاح",
     prefix: "البادئة",
-    company: "الشركة",
+    company: "المنشأة",
     environment: "البيئة",
     scopes: "الصلاحيات",
     status: "الحالة",
@@ -156,7 +162,7 @@ const translations = {
     exportEmpty: "لا توجد بيانات للتصدير.",
     printEmpty: "لا توجد بيانات للطباعة.",
     pdfHint: "اختر حفظ كـ PDF من نافذة الطباعة.",
-    reportTitle: "تقرير مركز تكاملات Mhamcloud",
+    reportTitle: "تقرير مركز تكاملات Marilyn Clinics",
     generatedAt: "تاريخ الإنشاء",
     showing: "عرض",
     of: "من",
@@ -166,7 +172,7 @@ const translations = {
   en: {
     title: "Integrations Center",
     subtitle:
-      "Mhamcloud integrations center for API keys, API contracts, and integration readiness in one place.",
+      "Marilyn Clinics integrations center for API keys, API contracts, and integration readiness in one place.",
     badge: "Integrations",
     refresh: "Refresh",
     exportExcel: "Export Excel",
@@ -177,7 +183,7 @@ const translations = {
     readiness: "Release Readiness",
     dashboard: "System dashboard",
     reset: "Reset",
-    searchPlaceholder: "Search by key name, company, prefix, or scopes...",
+    searchPlaceholder: "Search by key name, facility, prefix, or scopes...",
     all: "All",
     sort: "Sort",
     newest: "Newest",
@@ -202,10 +208,10 @@ const translations = {
     dashboardDesc: "Return to the main system dashboard.",
     tableTitle: "Latest API keys",
     tableDesc:
-      "A quick view of the newest integration keys registered in Mhamcloud with environment, status, and scopes.",
+      "A quick view of the newest integration keys registered in Marilyn Clinics with environment, status, and scopes.",
     keyName: "Key",
     prefix: "Prefix",
-    company: "Company",
+    company: "Facility",
     environment: "Environment",
     scopes: "Scopes",
     status: "Status",
@@ -230,7 +236,7 @@ const translations = {
     exportEmpty: "There is no data to export.",
     printEmpty: "There is no data to print.",
     pdfHint: "Choose Save as PDF from the print dialog.",
-    reportTitle: "Mhamcloud Integrations Center Report",
+    reportTitle: "Marilyn Clinics Integrations Center Report",
     generatedAt: "Generated at",
     showing: "Showing",
     of: "of",
@@ -474,118 +480,31 @@ function PillBadge({
     </Badge>
   );
 }
-function KpiCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-}: {
-  title: string;
-  value: number;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-}) {
-  return (
-    <Card className="overflow-hidden rounded-2xl border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0 pb-2">
-        <div className="min-w-0">
-          <CardDescription className="truncate text-sm">{title}</CardDescription>
-          <CardTitle className="mt-2 text-2xl font-bold tracking-tight tabular-nums">
-            {formatInteger(value)}
-          </CardTitle>
-        </div>
-        <span className="rounded-2xl bg-primary/10 p-2.5 text-primary">
-          <Icon className="h-5 w-5" />
-        </span>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <p className="line-clamp-2 text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
-function QuickActionCard({ action }: { action: QuickAction }) {
-  const Icon = action.icon;
-  return (
-    <Card className="group rounded-2xl border-border/70 bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <Link href={action.href} className="block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-          <div className="min-w-0">
-            <CardTitle className="text-base">{action.title}</CardTitle>
-            <CardDescription className="mt-2 line-clamp-2">{action.description}</CardDescription>
-          </div>
-          <span className="rounded-2xl bg-primary/10 p-2.5 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-            <Icon className="h-5 w-5" />
-          </span>
-        </CardHeader>
-      </Link>
-    </Card>
-  );
-}
 function IntegrationsOverviewSkeleton() {
   return (
-    <main className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
-      <div className="w-full space-y-6">
-        <div className="rounded-3xl border bg-card p-6 shadow-sm">
-          <Skeleton className="h-5 w-40" />
-          <Skeleton className="mt-3 h-8 w-72" />
-          <Skeleton className="mt-3 h-4 w-full max-w-3xl" />
+    <main className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
+      <div className="w-full space-y-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-9 w-72 max-w-full" />
+            <Skeleton className="h-4 w-[560px] max-w-full" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-9 w-24" />
+            ))}
+          </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
-            <Card key={index} className="rounded-2xl">
-              <CardHeader>
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-8 w-20" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-full" />
-              </CardContent>
-            </Card>
+            <Skeleton key={index} className="min-h-[126px] rounded-lg" />
           ))}
         </div>
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <Skeleton className="h-6 w-52" />
-            <Skeleton className="h-4 w-96 max-w-full" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-80 w-full" />
-          </CardContent>
-        </Card>
+        <Skeleton className="h-9 w-full max-w-3xl rounded-lg" />
+        <Skeleton className="h-[420px] w-full rounded-lg" />
       </div>
     </main>
-  );
-}
-function EmptyState({
-  title,
-  description,
-  showReset,
-  resetLabel,
-  onReset,
-}: {
-  title: string;
-  description: string;
-  showReset?: boolean;
-  resetLabel: string;
-  onReset: () => void;
-}) {
-  return (
-    <div className="flex min-h-64 flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-      <div className="rounded-full bg-muted p-4 text-muted-foreground">
-        <Search className="h-6 w-6" />
-      </div>
-      <div>
-        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-      </div>
-      {showReset ? (
-        <Button variant="outline" size="sm" onClick={onReset} className="rounded-lg">
-          <RotateCcw className="h-4 w-4" />
-          {resetLabel}
-        </Button>
-      ) : null}
-    </div>
   );
 }
 export default function SystemIntegrationsPage() {
@@ -773,104 +692,98 @@ export default function SystemIntegrationsPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Mhamcloud-system-integrations-overview-${new Date().toISOString().slice(0, 10)}.xls`;
+    link.download = `marilyn-system-integrations-overview-${new Date().toISOString().slice(0, 10)}.xls`;
     document.body.appendChild(link);
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
   }
-  function openPrintWindow(mode: "print" | "pdf") {
+  async function openPrintWindow() {
     const rows = buildExportRows();
     if (!rows.length) {
       toast.error(t.printEmpty);
       return;
     }
-    if (mode === "pdf") {
-      toast.info(t.pdfHint);
+    const opened = await openPrintReport({
+      locale,
+      title: t.reportTitle,
+      tableHtml: buildTableHtml(),
+      recordsCount: rows.length,
+    });
+    if (!opened) {
+      toast.error(
+        locale === "ar"
+          ? "تعذر فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم أعد المحاولة."
+          : "The print window could not be opened. Allow pop-ups and try again.",
+      );
     }
-    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1200,height=800");
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <!doctype html>
-      <html dir="${dir}" lang="${locale}">
-        <head>
-          <meta charset="utf-8" />
-          <title>${escapeHtml(t.reportTitle)}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 24px; color: #0f172a; }
-            h1 { margin: 0 0 8px; font-size: 24px; }
-            p { color: #64748b; }
-            table { width: 100%; border-collapse: collapse; margin-top: 18px; }
-            th, td {
-              border: 1px solid #cbd5e1;
-              padding: 8px;
-              font-size: 12px;
-              text-align: ${dir === "rtl" ? "right" : "left"};
-              vertical-align: top;
-            }
-            th { background: #f1f5f9; font-weight: 700; }
-          </style>
-        </head>
-        <body>
-          <h1>${escapeHtml(t.reportTitle)}</h1>
-          <p>${escapeHtml(t.generatedAt)}: ${escapeHtml(new Date().toLocaleString())}</p>
-          ${buildTableHtml()}
-          <script>window.onload = function () { window.print(); };</script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
   }
   if (loading) return <IntegrationsOverviewSkeleton />;
   return (
-    <main dir={dir} className="min-h-screen bg-muted/30 px-4 py-6 text-foreground sm:px-6 lg:px-8">
-      <div className="w-full space-y-6">
-        <section className="overflow-hidden rounded-3xl border bg-card shadow-sm">
-          <div className="relative p-6 sm:p-8">
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/80 via-primary/30 to-transparent" />
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-              <div className="max-w-4xl">
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-muted-foreground">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
-                  {t.badge}
-                </div>
-                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{t.title}</h1>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground sm:text-base">{t.subtitle}</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  className="rounded-xl bg-background"
-                  onClick={() => void loadIntegrations({ silent: true })}
-                  disabled={refreshing}
-                >
-                  {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                  {t.refresh}
-                </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={exportExcel}>
-                  <FileSpreadsheet className="h-4 w-4" />
-                  {t.exportExcel}
-                </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => openPrintWindow("print")}>
-                  <Printer className="h-4 w-4" />
-                  {t.print}
-                </Button>
-                <Button variant="outline" className="rounded-xl bg-background" onClick={() => openPrintWindow("pdf")}>
-                  <FileText className="h-4 w-4" />
-                  {t.pdf}
-                </Button>
-                <Button asChild className="rounded-xl">
-                  <Link href="/system/integrations/api-keys">
-                    <KeyRound className="h-4 w-4" />
-                    {t.apiKeys}
-                  </Link>
-                </Button>
-              </div>
+    <main dir={dir} className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
+      <div className="w-full space-y-5">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-2 text-start">
+            <div className="inline-flex items-center gap-2 text-xs font-medium text-[#a57b3d]">
+              <Sparkles className="h-4 w-4" />
+              {t.badge}
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">{t.title}</h1>
+            <p className="max-w-4xl text-sm leading-6 text-muted-foreground">
+              {t.subtitle}
+            </p>
+            <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <PlugZap className="h-4 w-4 text-emerald-600" />
+              {t.fromLiveApi}
             </div>
           </div>
-        </section>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className={registerOutlineButtonClass}
+              onClick={() => void loadIntegrations({ silent: true })}
+              disabled={refreshing}
+            >
+              {refreshing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {t.refresh}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className={registerOutlineButtonClass}
+              onClick={exportExcel}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              {t.exportExcel}
+            </Button>
+            <Button
+              type="button"
+              variant="brand"
+              className={registerBrandButtonClass}
+              onClick={() => void openPrintWindow()}
+            >
+              <Printer className="h-4 w-4" />
+              {t.print}
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className={registerOutlineButtonClass}
+            >
+              <Link href="/system/integrations/api-keys">
+                <KeyRound className="h-4 w-4" />
+                {t.apiKeys}
+              </Link>
+            </Button>
+          </div>
+        </header>
         {apiWarning ? (
-          <Card className="rounded-2xl border-amber-200 bg-amber-50/70 shadow-sm">
+          <Card className="rounded-lg border-amber-200 bg-amber-50/70 shadow-none">
             <CardContent className="flex flex-col gap-3 p-4 text-amber-800 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">
                 <span className="rounded-full bg-amber-100 p-2">
@@ -884,7 +797,7 @@ export default function SystemIntegrationsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="w-fit rounded-xl bg-background"
+                className={registerOutlineButtonClass}
                 onClick={() => void loadIntegrations({ silent: true })}
                 disabled={refreshing}
               >
@@ -893,97 +806,175 @@ export default function SystemIntegrationsPage() {
               </Button>
             </CardContent>
           </Card>
-        ) : null}        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <KpiCard title={t.totalKeys} value={stats.total} description={t.fromLiveApi} icon={KeyRound} />
-          <KpiCard title={t.activeKeys} value={stats.active} description={t.fromLiveApi} icon={ShieldCheck} />
-          <KpiCard title={t.liveKeys} value={stats.live} description={t.fromLiveApi} icon={PlugZap} />
-          <KpiCard title={t.testKeys} value={stats.test} description={t.fromLiveApi} icon={FileText} />
+        ) : null}
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <SystemKpiCard
+            title={t.totalKeys}
+            value={stats.total}
+            description={t.fromLiveApi}
+            icon={KeyRound}
+            href="/system/integrations/api-keys"
+          />
+          <SystemKpiCard
+            title={t.activeKeys}
+            value={stats.active}
+            description={t.fromLiveApi}
+            icon={ShieldCheck}
+            href="/system/integrations/api-keys"
+          />
+          <SystemKpiCard
+            title={t.liveKeys}
+            value={stats.live}
+            description={t.fromLiveApi}
+            icon={PlugZap}
+            href="/system/integrations/api-keys"
+          />
+          <SystemKpiCard
+            title={t.testKeys}
+            value={stats.test}
+            description={t.fromLiveApi}
+            icon={FileText}
+            href="/system/integrations/api-keys"
+          />
         </div>
-        <Card className="rounded-2xl shadow-sm">
-          <CardHeader>
-            <CardTitle>{t.actionsTitle}</CardTitle>
-            <CardDescription>{t.actionsDesc}</CardDescription>
-          </CardHeader>
-          <CardContent>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {quickActions.map((action) => (
-                <QuickActionCard key={action.href} action={action} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="w-full rounded-2xl shadow-sm">
+        <nav
+          aria-label={t.actionsTitle}
+          className="flex flex-wrap gap-2"
+        >
+          <Button
+            asChild
+            variant="brand"
+            className={registerBrandButtonClass}
+          >
+            <Link href="/system/integrations" aria-current="page">
+              <PlugZap className="h-4 w-4" />
+              {t.title}
+            </Link>
+          </Button>
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Button
+                key={action.href}
+                asChild
+                variant="outline"
+                className={registerOutlineButtonClass}
+              >
+                <Link href={action.href}>
+                  <Icon className="h-4 w-4" />
+                  {action.title}
+                </Link>
+              </Button>
+            );
+          })}
+        </nav>
+        <Card className="w-full overflow-hidden rounded-lg border bg-card shadow-none">
           <CardHeader className="gap-3">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <CardTitle>{t.tableTitle}</CardTitle>
-                <CardDescription className="mt-2">{t.tableDesc}</CardDescription>
+                <CardDescription className="mt-1">{t.tableDesc}</CardDescription>
               </div>
-              <Badge variant="outline" className="w-fit rounded-full px-3 py-1">
-                <KeyRound className="h-3.5 w-3.5" />
-                {t.showing} {formatInteger(previewRows.length)} {t.of} {formatInteger(apiTotal || keys.length)} {t.rows}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col gap-3 rounded-2xl border bg-muted/20 p-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex min-w-0 flex-1 flex-col gap-3 md:flex-row md:items-center">
-                <div className="relative min-w-0 flex-1">
-                  <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder={t.searchPlaceholder}
-                    className="h-10 rounded-xl ps-9"
-                  />
-                </div>
-                <Select value={status} onValueChange={(value) => setStatus(value as StatusFilter)}>
-                  <SelectTrigger className="h-10 rounded-xl bg-background md:w-[170px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusFilters.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item === "all" ? t.all : getStatusLabel(item, locale)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={environment} onValueChange={(value) => setEnvironment(value as EnvironmentFilter)}>
-                  <SelectTrigger className="h-10 rounded-xl bg-background md:w-[150px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {environmentFilters.map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item === "all" ? t.all : getEnvironmentLabel(item, locale)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Select value={sort} onValueChange={(value) => setSort(value as SortKey)}>
-                  <SelectTrigger className="h-10 rounded-xl bg-background sm:w-[160px]">
-                    <ArrowUpDown className="h-4 w-4" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">{t.newest}</SelectItem>
-                    <SelectItem value="oldest">{t.oldest}</SelectItem>
-                    <SelectItem value="name">{t.nameSort}</SelectItem>
-                    <SelectItem value="environment">{t.environmentSort}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" className="h-10 rounded-xl bg-background" onClick={resetFilters}>
-                  <RotateCcw className="h-4 w-4" />
-                  {t.reset}
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={registerOutlineButtonClass}
+                  onClick={exportExcel}
+                >
+                  <FileSpreadsheet className="h-4 w-4" />
+                  {t.exportExcel}
+                </Button>
+                <Button
+                  type="button"
+                  variant="brand"
+                  className={registerBrandButtonClass}
+                  onClick={() => void openPrintWindow()}
+                >
+                  <Printer className="h-4 w-4" />
+                  {t.print}
                 </Button>
               </div>
             </div>
-            <div className="overflow-hidden rounded-2xl border bg-background">
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <DataRegisterToolbar className="flex flex-col gap-2 lg:flex-row lg:items-center">
+              <DataRegisterSearch
+                value={search}
+                onChange={setSearch}
+                placeholder={t.searchPlaceholder}
+                className="min-w-0 flex-1"
+              />
+              <Select
+                value={status}
+                onValueChange={(value) =>
+                  setStatus(value as StatusFilter)
+                }
+              >
+                <SelectTrigger className="h-9 w-full bg-background shadow-none sm:w-[165px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusFilters.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item === "all"
+                        ? t.all
+                        : getStatusLabel(item, locale)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={environment}
+                onValueChange={(value) =>
+                  setEnvironment(value as EnvironmentFilter)
+                }
+              >
+                <SelectTrigger className="h-9 w-full bg-background shadow-none sm:w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {environmentFilters.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item === "all"
+                        ? t.all
+                        : getEnvironmentLabel(item, locale)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={sort}
+                onValueChange={(value) =>
+                  setSort(value as SortKey)
+                }
+              >
+                <SelectTrigger className="h-9 w-full bg-background shadow-none sm:w-[160px]">
+                  <ArrowUpDown className="me-2 h-4 w-4 text-[#a57b3d]" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">{t.newest}</SelectItem>
+                  <SelectItem value="oldest">{t.oldest}</SelectItem>
+                  <SelectItem value="name">{t.nameSort}</SelectItem>
+                  <SelectItem value="environment">
+                    {t.environmentSort}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                className={registerOutlineButtonClass}
+                onClick={resetFilters}
+              >
+                <RotateCcw className="h-4 w-4" />
+                {t.reset}
+              </Button>
+            </DataRegisterToolbar>
+            <div className="overflow-hidden rounded-lg border bg-background">
               <div className="w-full overflow-x-auto">
-                <Table className="w-full min-w-[980px] table-fixed">
+                <Table variant="register" className="w-full min-w-[980px] table-fixed">
                   <TableHeader>
                     <TableRow className="h-11 bg-muted/40 hover:bg-muted/40">
                       <TableHead className={cn("h-11 w-[220px] px-4 text-xs font-semibold text-muted-foreground", alignClass)}>
@@ -1061,8 +1052,19 @@ export default function SystemIntegrationsPage() {
                             </span>
                           </TableCell>
                           <TableCell className="sticky left-0 z-10 h-[64px] bg-background px-3 text-center align-middle">
-                            <Button asChild variant="outline" size="sm" className="h-8 rounded-lg bg-background px-3">
-                              <Link href="/system/integrations/api-keys">{t.open}</Link>
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="icon"
+                              className="size-9 rounded-full bg-background shadow-none [&_svg]:text-[#a57b3d]"
+                            >
+                              <Link
+                                href="/system/integrations/api-keys"
+                                aria-label={t.open}
+                                title={t.open}
+                              >
+                                <KeyRound className="h-4 w-4" />
+                              </Link>
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -1070,12 +1072,21 @@ export default function SystemIntegrationsPage() {
                     ) : (
                       <TableRow>
                         <TableCell colSpan={9}>
-                          <EmptyState
-                            title={hasFilters ? t.noResultsTitle : t.noDataTitle}
-                            description={hasFilters ? t.noResultsDesc : t.noDataDesc}
+                          <DataRegisterEmptyState
+                            title={
+                              hasFilters
+                                ? t.noResultsTitle
+                                : t.noDataTitle
+                            }
+                            description={
+                              hasFilters
+                                ? t.noResultsDesc
+                                : t.noDataDesc
+                            }
                             showReset={hasFilters}
                             resetLabel={t.reset}
                             onReset={resetFilters}
+                            icon={KeyRound}
                           />
                         </TableCell>
                       </TableRow>
@@ -1096,7 +1107,7 @@ export default function SystemIntegrationsPage() {
                 </span>{" "}
                 {t.rows}
               </p>
-              <Button asChild variant="outline" className="w-fit rounded-xl bg-background">
+              <Button asChild variant="outline" className={registerOutlineButtonClass}>
                 <Link href="/system/integrations/api-keys">
                   <KeyRound className="h-4 w-4" />
                   {t.apiKeys}
