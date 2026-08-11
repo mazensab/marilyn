@@ -1,270 +1,377 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import {
+  CalendarDays,
+  Instagram,
+  Mail,
+  MessageCircle,
+} from "lucide-react";
 
-/* =========================================================
-   🌐 Language Types
-========================================================= */
-type AppLang = "ar" | "en";
+import { Button } from "@/components/ui/button";
+import {
+  PUBLIC_LOCALE_CHANGE_EVENT,
+  readPublicLocale,
+  type PublicLocale,
+} from "@/lib/public-locale";
+import {
+  PUBLIC_SITE,
+  buildPublicWhatsAppUrl,
+} from "@/lib/public-site-config";
 
-type FooterContent = {
-  description: string;
-  disclaimer: string;
-  groups: { explore: string; programs: string; support: string };
-  links: {
-    benefits: string; features: string; pricing: string; register: string;
-    patientManagement: string; appointments: string; medicalRecords: string;
-    billingPayments: string; contactUs: string; faq: string;
-    practitioners: string; branchesReports: string;
-  };
-  copyright: string;
-  logoAlt: string;
-};
-
-/* =========================================================
-   🍪 Cookie Helpers
-========================================================= */
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-
-  const match = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith(`${name}=`));
-
-  return match ? decodeURIComponent(match.split("=")[1]) : null;
-}
-
-function getCurrentLang(): AppLang {
-  const storedLang = typeof window !== "undefined"
-    ? window.localStorage.getItem("marilyn-locale") ||
-      window.localStorage.getItem("Mhamcloud-locale") ||
-      window.localStorage.getItem("primey-locale") || ""
-    : "";
-  const cookieLang = getCookie("lang") || getCookie("locale") || getCookie("NEXT_LOCALE") || "";
-  return (storedLang || cookieLang).toLowerCase().startsWith("ar") ? "ar" : "en";
-}
-
-/* =========================================================
-   📝 Localized Content
-========================================================= */
-const content: Record<AppLang, FooterContent> = {
-  ar: {
-    description: "Marilyn Clinics منصة سحابية متكاملة لإدارة المرضى والمواعيد والسجلات الطبية والأطباء والفوترة والمدفوعات والفروع والتقارير من مكان واحد.",
-    disclaimer: "تساعد المنصة المنشآت الطبية على تنظيم عملياتها، وتبقى إعدادات الصلاحيات والخصوصية وجودة البيانات تحت إدارة الجهة المشغلة.",
-    groups: { explore: "استكشف", programs: "حلول المنصة", support: "الدعم" },
-    links: {
-      benefits: "لماذا Marilyn", features: "المزايا", pricing: "الباقات", register: "ابدأ الآن",
-      patientManagement: "إدارة المرضى", appointments: "المواعيد والجداول",
-      medicalRecords: "السجل الطبي الموحد", billingPayments: "الفوترة والمدفوعات",
-      contactUs: "تواصل معنا", faq: "الأسئلة الشائعة",
-      practitioners: "الأطباء والممارسون", branchesReports: "الفروع والتقارير",
-    },
-    copyright: "جميع الحقوق محفوظة", logoAlt: "شعار Marilyn Clinics",
+const navigation = [
+  {
+    href: "/#services",
+    ar: "الخدمات",
+    en: "Services",
   },
-  en: {
-    description: "Marilyn Clinics is an integrated cloud platform for managing patients, appointments, medical records, practitioners, billing, payments, branches, and clinic reporting from one place.",
-    disclaimer: "The platform helps medical organizations organize their operations. Access, privacy, and data-quality settings remain under the operating organization's management.",
-    groups: { explore: "Explore", programs: "Platform Solutions", support: "Support" },
-    links: {
-      benefits: "Why Marilyn", features: "Features", pricing: "Plans", register: "Get Started",
-      patientManagement: "Patient Management", appointments: "Appointments & Scheduling",
-      medicalRecords: "Unified Medical Records", billingPayments: "Billing & Payments",
-      contactUs: "Contact Us", faq: "FAQ",
-      practitioners: "Practitioners & Clinics", branchesReports: "Branches & Reports",
-    },
-    copyright: "All rights reserved", logoAlt: "Marilyn Clinics logo",
+  {
+    href: "/#practitioners",
+    ar: "الأطباء",
+    en: "Doctors",
   },
-};
+  {
+    href: "/#offers",
+    ar: "العروض",
+    en: "Offers",
+  },
+  {
+    href: "/#branches",
+    ar: "الفروع",
+    en: "Branches",
+  },
+  {
+    href: "/#faq",
+    ar: "الأسئلة الشائعة",
+    en: "FAQ",
+  },
+  {
+    href: "/contact",
+    ar: "تواصل معنا",
+    en: "Contact",
+  },
+];
 
-/* =========================================================
-   🧩 Section
-========================================================= */
-export const FooterSection = () => {
-  const [lang, setLang] = useState<AppLang>("en");
+export function FooterSection() {
+  const [locale, setLocale] =
+    React.useState<PublicLocale>("ar");
 
-  useEffect(() => {
-    const updateLang = () => {
-      setLang(getCurrentLang());
+  React.useEffect(() => {
+    const syncLocale = () => {
+      setLocale(readPublicLocale());
     };
 
-    updateLang();
+    syncLocale();
 
-    const observer = new MutationObserver(() => {
-      updateLang();
-    });
+    window.addEventListener(
+      PUBLIC_LOCALE_CHANGE_EVENT,
+      syncLocale,
+    );
 
-    if (typeof document !== "undefined") {
-      observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ["lang", "dir"],
-      });
-    }
+    window.addEventListener(
+      "storage",
+      syncLocale,
+    );
 
-    return () => observer.disconnect();
+    return () => {
+      window.removeEventListener(
+        PUBLIC_LOCALE_CHANGE_EVENT,
+        syncLocale,
+      );
+
+      window.removeEventListener(
+        "storage",
+        syncLocale,
+      );
+    };
   }, []);
 
-  const isArabic = lang === "ar";
-  const t = content[lang];
+  const ar = locale === "ar";
+
+  const copy = ar
+    ? {
+        description:
+          "Marilyn Clinics للعناية بالجلدية والتجميل والليزر، بتجربة تبدأ من اكتشاف الخدمة وحتى تأكيد الموعد.",
+        explore:
+          "استكشف",
+        contact:
+          "تواصل معنا",
+        book:
+          "احجزي موعدك",
+        whatsapp:
+          "WhatsApp",
+        rights:
+          "جميع الحقوق محفوظة",
+      }
+    : {
+        description:
+          "Marilyn Clinics for dermatology, aesthetics, and laser care, from discovering your service to confirming your appointment.",
+        explore:
+          "Explore",
+        contact:
+          "Contact",
+        book:
+          "Book appointment",
+        whatsapp:
+          "WhatsApp",
+        rights:
+          "All rights reserved",
+      };
+
+  const whatsappHref =
+    buildPublicWhatsAppUrl(
+      ar
+        ? "مرحبًا Marilyn Clinics، أود الاستفسار عن الخدمات والحجز."
+        : "Hello Marilyn Clinics, I would like to ask about services and booking.",
+    );
 
   return (
     <footer
       id="footer"
-      className="container space-y-4 pb-4 lg:pb-8"
-      dir={isArabic ? "rtl" : "ltr"}
+      dir={ar ? "rtl" : "ltr"}
+      className="
+        container
+        pb-5
+        pt-3
+
+        sm:pb-6
+        sm:pt-4
+
+        lg:pb-7
+      "
     >
-      <div className="bg-muted rounded-2xl border p-10">
-        <div className="grid grid-cols-2 gap-x-12 gap-y-8 md:grid-cols-4 xl:grid-cols-5">
-          <div className="col-span-full space-y-4 xl:col-span-2">
+      <div
+        className="
+          overflow-hidden
+          rounded-[26px]
+          border
+          border-black/[0.055]
+          bg-white
+          px-5
+          py-7
+          shadow-[0_10px_34px_rgba(15,23,42,0.035)]
+
+          sm:px-7
+          sm:py-8
+
+          lg:px-9
+          lg:py-8
+        "
+      >
+        <div
+          className="
+            grid
+            gap-8
+
+            sm:grid-cols-2
+
+            lg:grid-cols-[1.25fr_0.7fr_0.85fr]
+            lg:gap-10
+          "
+        >
+          <div
+            className="
+              sm:col-span-2
+
+              lg:col-span-1
+            "
+          >
             <Link
               href="/"
-              className={cn(
-                "inline-flex w-full",
-                isArabic ? "justify-start xl:justify-start" : "justify-start"
-              )}
-              aria-label={t.logoAlt}
+              aria-label={PUBLIC_SITE.name}
+              className="inline-flex"
             >
               <Image
                 src="/hero logo.png"
-                alt={t.logoAlt}
+                alt={PUBLIC_SITE.name}
                 width={1200}
                 height={420}
-                priority
                 unoptimized
                 className="
                   h-auto
-                  w-full
-                  max-w-[180px]
+                  w-[145px]
                   object-contain
-                  sm:max-w-[220px]
-                  md:max-w-[240px]
-                  lg:max-w-[260px]
+
+                  sm:w-[155px]
                 "
               />
             </Link>
 
             <p
-              className={cn(
-                "text-muted-foreground leading-7",
-                isArabic && "text-right"
-              )}
+              className="
+                mt-4
+                max-w-xl
+                text-sm
+                leading-7
+                text-[#637083]
+
+                sm:text-[15px]
+              "
             >
-              {t.description}
+              {copy.description}
             </p>
 
-            <p
-              className={cn(
-                "text-muted-foreground/80 rounded-xl border bg-background/60 p-3 text-xs leading-6",
-                isArabic && "text-right"
-              )}
+            <Button
+              asChild
+              className="
+                mt-5
+                h-10
+                rounded-full
+                bg-[#c9871d]
+                px-5
+                text-white
+                hover:bg-[#b87917]
+              "
             >
-              {t.disclaimer}
-            </p>
+              <Link href="/book">
+                <CalendarDays className="size-4" />
+                {copy.book}
+              </Link>
+            </Button>
           </div>
 
-          <div className={cn("flex flex-col gap-2", isArabic && "text-right")}>
-            <h3 className="mb-2 text-lg font-bold">{t.groups.explore}</h3>
+          <div>
+            <h3
+              className="
+                mb-4
+                text-sm
+                font-bold
+                text-[#10213b]
 
-            <div>
-              <Link href="/#benefits" className="opacity-60 hover:opacity-100">
-                {t.links.benefits}
-              </Link>
-            </div>
+                sm:text-base
+              "
+            >
+              {copy.explore}
+            </h3>
 
-            <div>
-              <Link href="/#features" className="opacity-60 hover:opacity-100">
-                {t.links.features}
-              </Link>
-            </div>
-
-            <div>
-              <Link href="/pricing" className="opacity-60 hover:opacity-100">
-                {t.links.pricing}
-              </Link>
-            </div>
-
-            <div>
-              <Link href="/register" className="opacity-60 hover:opacity-100">
-                {t.links.register}
-              </Link>
-            </div>
-          </div>
-
-          <div className={cn("flex flex-col gap-2", isArabic && "text-right")}>
-            <h3 className="mb-2 text-lg font-bold">{t.groups.programs}</h3>
-
-            <div>
-              <Link href="/#features" className="opacity-60 hover:opacity-100">
-                {t.links.patientManagement}
-              </Link>
-            </div>
-
-            <div>
-              <Link href="/#features" className="opacity-60 hover:opacity-100">
-                {t.links.appointments}
-              </Link>
-            </div>
-
-            <div>
-              <Link href="/#features" className="opacity-60 hover:opacity-100">
-                {t.links.medicalRecords}
-              </Link>
-            </div>
-
-            <div>
-              <Link href="/#features" className="opacity-60 hover:opacity-100">
-                {t.links.billingPayments}
-              </Link>
+            <div className="grid grid-cols-2 gap-x-5 gap-y-3 sm:flex sm:flex-col">
+              {navigation.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="
+                    text-sm
+                    text-[#667184]
+                    transition-colors
+                    hover:text-[#b87515]
+                  "
+                >
+                  {ar
+                    ? item.ar
+                    : item.en}
+                </Link>
+              ))}
             </div>
           </div>
 
-          <div className={cn("flex flex-col gap-2", isArabic && "text-right")}>
-            <h3 className="mb-2 text-lg font-bold">{t.groups.support}</h3>
+          <div>
+            <h3
+              className="
+                mb-4
+                text-sm
+                font-bold
+                text-[#10213b]
 
-            <div>
-              <Link href="/contact" className="opacity-60 hover:opacity-100">
-                {t.links.contactUs}
-              </Link>
-            </div>
+                sm:text-base
+              "
+            >
+              {copy.contact}
+            </h3>
 
-            <div>
-              <Link href="/#faq" className="opacity-60 hover:opacity-100">
-                {t.links.faq}
-              </Link>
-            </div>
+            <div className="flex flex-col gap-3">
+              <a
+                href={`mailto:${PUBLIC_SITE.email}`}
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  text-sm
+                  text-[#667184]
+                  transition-colors
+                  hover:text-[#b87515]
+                "
+              >
+                <Mail className="size-4 shrink-0" />
 
-            <div>
-              <Link href="/#features" className="opacity-60 hover:opacity-100">
-                {t.links.practitioners}
-              </Link>
-            </div>
+                <span dir="ltr">
+                  {PUBLIC_SITE.email}
+                </span>
+              </a>
 
-            <div>
-              <Link href="/#features" className="opacity-60 hover:opacity-100">
-                {t.links.branchesReports}
-              </Link>
+              <a
+                href={PUBLIC_SITE.instagram.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  text-sm
+                  text-[#667184]
+                  transition-colors
+                  hover:text-[#b87515]
+                "
+              >
+                <Instagram className="size-4 shrink-0" />
+
+                <span dir="ltr">
+                  {PUBLIC_SITE.instagram.handle}
+                </span>
+              </a>
+
+              {whatsappHref ? (
+                <a
+                  href={whatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                    text-sm
+                    text-[#667184]
+                    transition-colors
+                    hover:text-[#b87515]
+                  "
+                >
+                  <MessageCircle className="size-4 shrink-0" />
+                  {copy.whatsapp}
+                </a>
+              ) : null}
             </div>
           </div>
-
         </div>
       </div>
 
       <div
-        className={cn(
-          "flex flex-col justify-between gap-4 sm:flex-row!",
-          isArabic && "sm:flex-row-reverse!"
-        )}
+        className="
+          flex
+          flex-col
+          gap-2
+          px-2
+          pt-4
+          text-center
+          text-xs
+          text-[#7b8593]
+
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
+          sm:text-start
+        "
       >
-        <div className={cn("flex flex-col justify-between gap-4 sm:flex-row!", isArabic && "sm:flex-row-reverse!")}>
-        <div className={cn("text-muted-foreground flex items-center justify-center gap-1 text-sm sm:justify-start", isArabic && "sm:justify-end")}>
-          <span>&copy; {new Date().getFullYear()}</span><span>|</span>
-          <span className="font-medium">Marilyn Clinics</span><span>|</span>
-          <span>{t.copyright}</span>
-        </div>
-      </div>
+        <span>
+          © {new Date().getFullYear()}{" "}
+          {PUBLIC_SITE.name}.{" "}
+          {copy.rights}.
+        </span>
+
+        <span dir="ltr">
+          {PUBLIC_SITE.domain}
+        </span>
       </div>
     </footer>
   );
-};
+}

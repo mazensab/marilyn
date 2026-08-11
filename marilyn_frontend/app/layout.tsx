@@ -2,7 +2,10 @@ import React from "react";
 import { cookies } from "next/headers";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
-import { Inter, Bricolage_Grotesque } from "next/font/google";
+import {
+  Inter,
+  Bricolage_Grotesque,
+} from "next/font/google";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/layout/theme-provider";
@@ -13,48 +16,48 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-const bricolageGrotesque = Bricolage_Grotesque({
-  subsets: ["latin"],
-  variable: "--bricolage-grotesque",
-});
+const bricolageGrotesque =
+  Bricolage_Grotesque({
+    subsets: ["latin"],
+    variable: "--bricolage-grotesque",
+  });
 
 type AppLocale = "ar" | "en";
 
-function normalizeLocale(value?: string | null): AppLocale {
-  const normalized = (value || "").trim().toLowerCase();
+function normalizeLocale(
+  value?: string | null,
+): AppLocale {
+  const normalized =
+    (value || "").trim().toLowerCase();
 
-  if (
-    normalized === "ar" ||
-    normalized.startsWith("ar-") ||
-    normalized.startsWith("ar_")
-  ) {
-    return "ar";
-  }
-
-  return "en";
+  return normalized.startsWith("ar")
+    ? "ar"
+    : "en";
 }
 
 function getMetadataBase(): URL {
   const rawUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    "http://127.0.0.1:3000";
+    "https://marilynclinics.com";
 
   try {
     return new URL(rawUrl);
   } catch {
-    return new URL("http://127.0.0.1:3000");
+    return new URL(
+      "https://marilynclinics.com",
+    );
   }
 }
 
-// ======================================================
-// 🌐 Metadata — Favicon + Title
-// ======================================================
-
 export const metadata: Metadata = {
   metadataBase: getMetadataBase(),
-  title: "Marilyn Clinics",
-  description: "Integrated clinic and medical center management platform",
+  title: {
+    default: "Marilyn Clinics",
+    template: "%s | Marilyn Clinics",
+  },
+  description:
+    "Marilyn Clinics for dermatology, aesthetics, laser services, and online appointment booking.",
+  applicationName: "Marilyn Clinics",
   icons: {
     icon: "/favicon.ico",
   },
@@ -70,10 +73,11 @@ export default async function RootLayout({
   const locale = normalizeLocale(
     cookieStore.get("lang")?.value ||
       cookieStore.get("locale")?.value ||
-      cookieStore.get("NEXT_LOCALE")?.value
+      cookieStore.get("NEXT_LOCALE")?.value,
   );
 
-  const dir = locale === "ar" ? "rtl" : "ltr";
+  const dir =
+    locale === "ar" ? "rtl" : "ltr";
 
   return (
     <html
@@ -88,7 +92,7 @@ export default async function RootLayout({
           "from-muted to-primary/5 min-h-screen bg-gradient-to-tl antialiased",
           inter.variable,
           inter.className,
-          bricolageGrotesque.variable
+          bricolageGrotesque.variable,
         )}
         suppressHydrationWarning
       >
@@ -99,7 +103,11 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          <Toaster position="top-right" closeButton />
+
+          <Toaster
+            position="top-right"
+            closeButton
+          />
         </ThemeProvider>
       </body>
     </html>

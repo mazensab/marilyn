@@ -1,366 +1,324 @@
 "use client";
-/* ============================================================
-   📂 marilyn_frontend/components/chat-widget.tsx
-   💬 Marilyn Clinics — Landing Floating WhatsApp Chat Widget V2.0
-   ------------------------------------------------------------
-   ✅ Marilyn Clinics landing support content
-   ✅ Floating landing support widget
-   ✅ Connects to system WhatsApp number via wa.me
-   ✅ Uses sonner toast
-   ✅ Arabic/English via primey-locale
-   ✅ No backend mutation
-   ✅ No fake external sending
-   ✅ Keeps premium floating UI
-============================================================ */
+
 import * as React from "react";
 import {
-  ArrowUpRight,
-  Bot,
+  CalendarDays,
   MessageCircle,
-  PhoneCall,
   Send,
   Sparkles,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  PUBLIC_LOCALE_CHANGE_EVENT,
+  readPublicLocale,
+  type PublicLocale,
+} from "@/lib/public-locale";
+import {
+  buildPublicWhatsAppUrl,
+} from "@/lib/public-site-config";
 import { cn } from "@/lib/utils";
-type AppLocale = "ar" | "en";
+
 type QuickReply = {
   label: string;
   message: string;
 };
-type WidgetCopy = {
-  assistantName: string;
-  badge: string;
-  title: string;
-  subtitle: string;
-  greeting: string;
-  helper: string;
-  inputPlaceholder: string;
-  whatsapp: string;
-  contact: string;
-  close: string;
-  open: string;
-  emptyToast: string;
-  openToast: string;
-  quickTitle: string;
-  defaultMessage: string;
-  quickReplies: QuickReply[];
-};
-const SYSTEM_WHATSAPP_NUMBER = (
-  process.env.NEXT_PUBLIC_SYSTEM_WHATSAPP_NUMBER ||
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
-  ""
-).replace(/\D/g, "");
-const copy: Record<AppLocale, WidgetCopy> = {
-  ar: {
-    assistantName: "مساعد Marilyn Clinics",
-    badge: "Marilyn Clinics Support",
-    title: "دعم Marilyn Clinics",
-    subtitle: "تواصل معنا عبر واتساب النظام",
-    greeting:
-      "مرحبًا 👋 يسعدنا مساعدتك في الاشتراك، الباقات، تسجيل الدخول، أو أي استفسار عن منصة Marilyn Clinics لإدارة العيادات.",
-    helper:
-      "اكتب رسالتك أو اختر أحد الاختصارات، وسيتم فتح واتساب برسالة جاهزة لفريق الدعم.",
-    inputPlaceholder: "اكتب استفسارك هنا...",
-    whatsapp: "واتساب",
-    contact: "تواصل معنا",
-    close: "إغلاق",
-    open: "فتح المحادثة",
-    emptyToast: "سيتم فتح واتساب برسالة افتراضية لفريق Marilyn Clinics.",
-    openToast: "جاري فتح واتساب للتواصل مع فريق الدعم.",
-    quickTitle: "اختصارات سريعة",
-    defaultMessage:
-      "مرحبًا فريق Marilyn Clinics، أحتاج مساعدة بخصوص Marilyn Clinics.",
-    quickReplies: [
-      {
-        label: "أريد الاشتراك",
-        message:
-          "مرحبًا فريق Marilyn Clinics، أريد الاشتراك في Marilyn Clinics ومعرفة الباقات المناسبة.",
-      },
-      {
-        label: "أحتاج دعم الدخول",
-        message:
-          "مرحبًا فريق Marilyn Clinics، أحتاج مساعدة في تسجيل الدخول إلى Marilyn Clinics.",
-      },
-      {
-        label: "أريد عرض الباقات",
-        message:
-          "مرحبًا فريق Marilyn Clinics، أريد معرفة باقات Marilyn Clinics والأسعار.",
-      },
-      {
-        label: "لدي استفسار تقني",
-        message:
-          "مرحبًا فريق Marilyn Clinics، لدي استفسار تقني بخصوص Marilyn Clinics.",
-      },
-    ],
-  },
-  en: {
-    assistantName: "Marilyn Clinics Assistant",
-    badge: "Marilyn Clinics Support",
-    title: "Marilyn Clinics Support",
-    subtitle: "Chat with the system WhatsApp support line",
-    greeting:
-      "Hello 👋 We can help with subscriptions, plans, login, or questions about the Marilyn Clinics clinic management platform.",
-    helper:
-      "Write your message or choose a shortcut. WhatsApp will open with a ready message for our support team.",
-    inputPlaceholder: "Write your question here...",
-    whatsapp: "WhatsApp",
-    contact: "Contact us",
-    close: "Close",
-    open: "Open chat",
-    emptyToast: "WhatsApp will open with a default Marilyn Clinics support message.",
-    openToast: "Opening WhatsApp to contact support.",
-    quickTitle: "Quick shortcuts",
-    defaultMessage:
-      "Hello Marilyn Clinics team, I need help with Marilyn Clinics.",
-    quickReplies: [
-      {
-        label: "I want to subscribe",
-        message:
-          "Hello Marilyn Clinics team, I want to subscribe to Marilyn Clinics and learn about the right plans.",
-      },
-      {
-        label: "Login support",
-        message:
-          "Hello Marilyn Clinics team, I need help logging in to Marilyn Clinics.",
-      },
-      {
-        label: "Show plans",
-        message:
-          "Hello Marilyn Clinics team, I want to learn about Marilyn Clinics plans and pricing.",
-      },
-      {
-        label: "Technical question",
-        message:
-          "Hello Marilyn Clinics team, I have a technical question about Marilyn Clinics.",
-      },
-    ],
-  },
-};
-function normalizeLocale(value?: string | null): AppLocale {
-  const normalized = (value || "").trim().toLowerCase();
-  if (
-    normalized === "ar" ||
-    normalized.startsWith("ar-") ||
-    normalized.startsWith("ar_")
-  ) {
-    return "ar";
-  }
-  return "en";
-}
-function readLocale(): AppLocale {
-  if (typeof window === "undefined") return "ar";
-  const savedLocale =
-    window.localStorage.getItem("marilyn-locale") ||
-    window.localStorage.getItem("Mhamcloud-locale") ||
-    window.localStorage.getItem("primey-locale");
-  const cookieLocale =
-    typeof document !== "undefined"
-      ? document.cookie
-          .split("; ")
-          .find((item) => item.startsWith("lang="))
-          ?.split("=")[1]
-      : null;
-  return normalizeLocale(savedLocale || cookieLocale || "ar");
-}
-function buildWhatsAppUrl(phoneNumber: string, message: string) {
-  const safeNumber = phoneNumber.replace(/\D/g, "");
-  if (!safeNumber) return "";
-  return `https://wa.me/${safeNumber}?text=${encodeURIComponent(message)}`;
-}
+
 export function ChatWidget() {
-  const [open, setOpen] = React.useState(false);
-  const [locale, setLocale] = React.useState<AppLocale>("ar");
-  const [message, setMessage] = React.useState("");
+  const [open, setOpen] =
+    React.useState(false);
+
+  const [locale, setLocale] =
+    React.useState<PublicLocale>("ar");
+
+  const [message, setMessage] =
+    React.useState("");
+
   React.useEffect(() => {
-    const syncLocale = () => setLocale(readLocale());
+    const syncLocale = () =>
+      setLocale(readPublicLocale());
+
     syncLocale();
-    window.addEventListener("primey-locale-changed", syncLocale);
-    window.addEventListener("storage", syncLocale);
+
+    window.addEventListener(
+      PUBLIC_LOCALE_CHANGE_EVENT,
+      syncLocale,
+    );
+
+    window.addEventListener(
+      "storage",
+      syncLocale,
+    );
+
     return () => {
-      window.removeEventListener("primey-locale-changed", syncLocale);
-      window.removeEventListener("storage", syncLocale);
+      window.removeEventListener(
+        PUBLIC_LOCALE_CHANGE_EVENT,
+        syncLocale,
+      );
+
+      window.removeEventListener(
+        "storage",
+        syncLocale,
+      );
     };
   }, []);
-  if (!SYSTEM_WHATSAPP_NUMBER) return null;
+
   const isArabic = locale === "ar";
-  const t = copy[locale];
-  const finalMessage = message.trim() || t.defaultMessage;
-  const whatsappHref = buildWhatsAppUrl(SYSTEM_WHATSAPP_NUMBER, finalMessage);
-  const handleOpenWhatsApp = () => {
-    if (!message.trim()) {
-      toast.info(t.emptyToast);
+
+  const quickReplies: QuickReply[] =
+    isArabic
+      ? [
+          {
+            label: "أريد حجز موعد",
+            message:
+              "مرحبًا Marilyn Clinics، أريد حجز موعد.",
+          },
+          {
+            label: "استفسار عن خدمة",
+            message:
+              "مرحبًا Marilyn Clinics، لدي استفسار عن إحدى الخدمات.",
+          },
+          {
+            label: "أوقات ومواعيد",
+            message:
+              "مرحبًا Marilyn Clinics، أريد معرفة المواعيد المتاحة.",
+          },
+          {
+            label: "موقع العيادة",
+            message:
+              "مرحبًا Marilyn Clinics، أريد معرفة موقع العيادة.",
+          },
+        ]
+      : [
+          {
+            label: "Book appointment",
+            message:
+              "Hello Marilyn Clinics, I would like to book an appointment.",
+          },
+          {
+            label: "Ask about a service",
+            message:
+              "Hello Marilyn Clinics, I have a question about a service.",
+          },
+          {
+            label: "Available times",
+            message:
+              "Hello Marilyn Clinics, I would like to know the available appointment times.",
+          },
+          {
+            label: "Clinic location",
+            message:
+              "Hello Marilyn Clinics, I would like to know the clinic location.",
+          },
+        ];
+
+  const copy = isArabic
+    ? {
+        title: "تواصل مع Marilyn",
+        subtitle:
+          "نساعدك في الخدمات والحجز والمواعيد",
+        greeting:
+          "مرحبًا 👋 كيف نقدر نخدمك اليوم؟ اختر استفسارك أو اكتب رسالتك وسنجهزها لك على واتساب.",
+        placeholder: "اكتب رسالتك...",
+        send: "فتح واتساب",
+        open: "تواصل معنا",
+        close: "إغلاق",
+        prepared: "تم تجهيز الرسالة.",
+        noWhatsapp:
+          "رقم واتساب لم يتم ضبطه في إعدادات الموقع بعد.",
+      }
+    : {
+        title: "Chat with Marilyn",
+        subtitle:
+          "We can help with services and appointments",
+        greeting:
+          "Hello 👋 How can we help today? Choose a shortcut or write your message and we will prepare it for WhatsApp.",
+        placeholder: "Write your message...",
+        send: "Open WhatsApp",
+        open: "Contact us",
+        close: "Close",
+        prepared: "Message prepared.",
+        noWhatsapp:
+          "The WhatsApp number has not been configured yet.",
+      };
+
+  const finalMessage =
+    message.trim() ||
+    (isArabic
+      ? "مرحبًا Marilyn Clinics، أود الاستفسار."
+      : "Hello Marilyn Clinics, I would like to ask a question.");
+
+  const whatsappHref =
+    buildPublicWhatsAppUrl(finalMessage);
+
+  const openWhatsApp = () => {
+    if (!whatsappHref) {
+      toast.error(copy.noWhatsapp);
       return;
     }
-    toast.success(t.openToast);
+
+    window.open(
+      whatsappHref,
+      "_blank",
+      "noopener,noreferrer",
+    );
   };
-  const handleQuickReply = (value: string) => {
-    setMessage(value);
-    toast.success(isArabic ? "تم تجهيز الرسالة." : "Message prepared.");
-  };
+
   if (!open) {
     return (
       <div
-        className={cn(
-          "fixed bottom-5 left-5 z-50",
-          "sm:bottom-6 sm:left-6"
-        )}
         dir={isArabic ? "rtl" : "ltr"}
+        className="
+          fixed bottom-5 left-5 z-50
+          sm:bottom-6 sm:left-6
+        "
       >
         <Button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label={t.open}
-          className={cn(
-            "h-14 rounded-full px-5 shadow-2xl",
-            "border border-white/30",
-            "bg-slate-950 text-white hover:bg-slate-900",
-            "gap-3"
-          )}
+          className="
+            size-12 rounded-full
+            p-0
+            shadow-[0_12px_32px_rgba(15,23,42,0.22)]
+            sm:size-13
+          "
+          aria-label={copy.open}
+          title={copy.open}
         >
-          <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-white/10">
-            <MessageCircle className="h-5 w-5" />
-            <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-slate-950 bg-emerald-400" />
-          </span>
-          <span className="hidden text-sm font-semibold sm:inline">
-            {t.title}
-          </span>
+          <MessageCircle className="size-5" />
         </Button>
       </div>
     );
   }
+
   return (
     <div
-      className={cn(
-        "fixed bottom-5 left-5 z-50 w-[calc(100vw-2.5rem)]",
-        "sm:bottom-6 sm:left-6 sm:w-[380px]"
-      )}
       dir={isArabic ? "rtl" : "ltr"}
+      className="
+        fixed bottom-5 left-5 z-50
+        w-[calc(100vw-2.5rem)]
+        sm:bottom-6 sm:left-6 sm:w-[380px]
+      "
     >
-      <Card className="overflow-hidden rounded-[26px] border bg-background/95 shadow-2xl backdrop-blur-xl">
-        <CardHeader className="border-b bg-muted/25 px-5 py-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-11 w-11 border bg-slate-950 text-white">
-                <AvatarFallback className="bg-slate-950 text-white">
-                  <Bot className="h-5 w-5" />
-                </AvatarFallback>
-              </Avatar>
-              <div className={cn("space-y-1", isArabic ? "text-right" : "text-left")}>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-sm font-bold text-foreground">
-                    {t.assistantName}
-                  </h3>
-                  <Badge variant="outline" className="rounded-full">
-                    {t.badge}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">{t.subtitle}</p>
+      <Card className="
+        overflow-hidden
+        rounded-[26px]
+        bg-background/96
+        shadow-2xl
+        backdrop-blur-xl
+      ">
+        <CardHeader className="border-b p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div
+              className={cn(
+                isArabic
+                  ? "text-right"
+                  : "text-left",
+              )}
+            >
+              <div className="flex items-center gap-2 text-sm font-bold">
+                <Sparkles className="size-4 text-amber-700" />
+                {copy.title}
               </div>
+
+              <p className="text-muted-foreground mt-1 text-xs">
+                {copy.subtitle}
+              </p>
             </div>
+
             <Button
               type="button"
               variant="ghost"
               size="icon"
               onClick={() => setOpen(false)}
-              aria-label={t.close}
-              className="h-8 w-8 rounded-full"
+              className="size-8 rounded-full"
+              aria-label={copy.close}
             >
-              <X className="h-4 w-4" />
+              <X className="size-4" />
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 px-5 py-5">
-          <div className="rounded-2xl border bg-muted/20 p-4">
-            <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <Sparkles className="h-4 w-4" />
-              <span>{t.title}</span>
-            </div>
-            <p className="text-sm leading-7 text-foreground">{t.greeting}</p>
-            <p className="mt-3 text-xs leading-6 text-muted-foreground">
-              {t.helper}
-            </p>
+
+        <CardContent className="space-y-4 p-5">
+          <div className="rounded-2xl bg-muted/50 p-4 text-sm leading-7">
+            {copy.greeting}
           </div>
-          <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground">
-              {t.quickTitle}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {t.quickReplies.map((item) => (
-                <Button
-                  key={item.label}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickReply(item.message)}
-                  className="h-8 rounded-full px-3 text-xs"
-                >
-                  {item.label}
-                </Button>
-              ))}
-            </div>
+
+          <div className="flex flex-wrap gap-2">
+            {quickReplies.map((item) => (
+              <Button
+                key={item.label}
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-full px-3 text-xs"
+                onClick={() => {
+                  setMessage(item.message);
+                  toast.success(copy.prepared);
+                }}
+              >
+                {item.label}
+              </Button>
+            ))}
           </div>
+
           <div className="flex items-center gap-2">
             <Input
               value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder={t.inputPlaceholder}
+              onChange={(event) =>
+                setMessage(event.target.value)
+              }
+              placeholder={copy.placeholder}
               className={cn(
                 "h-11 rounded-2xl",
-                isArabic ? "text-right" : "text-left"
+                isArabic
+                  ? "text-right"
+                  : "text-left",
               )}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  openWhatsApp();
+                }
+              }}
             />
+
             <Button
               type="button"
               size="icon"
-              className="h-11 w-11 shrink-0 rounded-2xl"
-              asChild
-              onClick={handleOpenWhatsApp}
+              onClick={openWhatsApp}
+              className="size-11 shrink-0 rounded-2xl"
+              aria-label={copy.send}
             >
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t.whatsapp}
-              >
-                <Send className="h-4 w-4" />
-              </a>
+              <Send className="size-4" />
             </Button>
           </div>
-        </CardContent>
-        <CardFooter className="grid grid-cols-2 gap-2 border-t bg-muted/15 px-5 py-4">
-          <Button
-            type="button"
-            className="rounded-2xl"
-            asChild
-            onClick={handleOpenWhatsApp}
-          >
-            <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
-              <PhoneCall className="h-4 w-4" />
-              {t.whatsapp}
-              <ArrowUpRight className="h-4 w-4" />
-            </a>
-          </Button>
+
           <Button
             type="button"
             variant="outline"
-            className="rounded-2xl"
-            asChild
+            className="h-11 w-full rounded-2xl"
+            onClick={() => {
+              window.location.href = "/book";
+            }}
           >
-            <a href="/contact">
-              <MessageCircle className="h-4 w-4" />
-              {t.contact}
-            </a>
+            <CalendarDays className="size-4" />
+            {isArabic
+              ? "الحجز الإلكتروني"
+              : "Online booking"}
           </Button>
-        </CardFooter>
+        </CardContent>
       </Card>
     </div>
   );
 }
+
 export default ChatWidget;
