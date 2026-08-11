@@ -54,7 +54,7 @@ export async function HeroSection() {
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-24 bottom-[-150px] size-[400px] rounded-full bg-[#a98b63]/16 blur-3xl" />
 
-        <div className="absolute right-[30%] top-[-120px] size-[340px] rounded-full bg-[#d0a45a]/14 blur-3xl" />
+        <div className="absolute right-[30%] top-[-120px] size-[340px] rounded-full bg-[#d9b979]/14 blur-3xl" />
 
         <div className="absolute left-[4%] top-[24%] h-[330px] w-[150px] -rotate-12 rounded-[50%] bg-[#8d7354]/[0.045] blur-2xl" />
 
@@ -108,7 +108,7 @@ export async function HeroSection() {
             <div className="relative mx-auto flex w-full max-w-[420px] justify-center pb-6 pt-1 lg:pt-4 xl:pt-3">
               <div
                 aria-hidden="true"
-                className="absolute left-1/2 top-[44%] size-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#c89d5d]/15 bg-white/[0.08]"
+                className="absolute left-1/2 top-[44%] size-[340px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#b89561]/18 bg-white/[0.08]"
               />
 
               <div
@@ -147,8 +147,8 @@ export async function HeroSection() {
                 items-center
                 gap-2
                 text-sm
-                font-bold
-                text-[#c4811e]
+                font-semibold
+                text-[#a57b3d]
 
                 sm:text-base
 
@@ -164,9 +164,9 @@ export async function HeroSection() {
                 mx-auto
                 max-w-[600px]
                 text-[33px]
-                font-bold
+                font-semibold
                 leading-[1.14]
-                tracking-tight
+                tracking-[-0.035em]
                 text-[#10213b]
 
                 min-[390px]:text-[36px]
@@ -231,11 +231,16 @@ export async function HeroSection() {
                 className="
                   h-11
                   rounded-full
-                  bg-[#c9871d]
+                  border
+                  border-[#b58c4d]/40
+                  bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)]
                   px-6
-                  text-white
-                  shadow-[0_12px_28px_rgba(201,135,29,0.20)]
-                  hover:bg-[#b87917]
+                  font-semibold
+                  text-[#2e251a]
+                  shadow-[0_12px_28px_rgba(168,121,56,0.22),inset_0_1px_0_rgba(255,255,255,0.38)]
+                  transition
+                  hover:brightness-[1.03]
+                  hover:shadow-[0_15px_34px_rgba(168,121,56,0.28)]
 
                   sm:h-12
                   sm:px-7
@@ -253,10 +258,16 @@ export async function HeroSection() {
                 className="
                   h-11
                   rounded-full
-                  border-black/[0.06]
-                  bg-white
+                  border-[#cbbda9]/60
+                  bg-white/70
                   px-6
+                  font-semibold
+                  text-[#4b443c]
                   shadow-sm
+                  transition
+                  hover:border-[#b89b69]
+                  hover:bg-white/90
+                  hover:text-[#7e5925]
 
                   sm:h-12
                   sm:px-7

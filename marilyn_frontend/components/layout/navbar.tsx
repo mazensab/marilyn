@@ -96,8 +96,8 @@ export function Navbar({
               asChild
               className={
                 index === 0
-                  ? "h-9 rounded-full bg-white/42 px-3.5 text-sm font-semibold text-[#b77716] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.28)] hover:bg-white/58"
-                  : "h-9 rounded-full px-3.5 text-sm font-medium text-[#26354a] hover:bg-white/34 hover:text-[#aa721f]"
+                  ? "h-9 rounded-full bg-white/42 px-3.5 text-sm font-semibold text-[#a57b3d] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.28)] hover:bg-white/58"
+                  : "h-9 rounded-full px-3.5 text-sm font-medium text-[#26354a] hover:bg-white/34 hover:text-[#9b7033]"
               }
             >
               <Link href={item.href}>
@@ -112,7 +112,7 @@ export function Navbar({
             type="button"
             variant="ghost"
             onClick={toggleLocale}
-            className="h-9 rounded-full border border-white/60 bg-white/52 px-3.5 shadow-sm"
+            className="h-9 rounded-full border border-[#cbbda9]/65 bg-white/55 px-3.5 text-[#6d6154] shadow-sm transition hover:border-[#b89b69] hover:bg-white/80 hover:text-[#3f382f] focus-visible:ring-2 focus-visible:ring-[#b99150]/35"
           >
             <Languages className="size-4" />
             {isArabic ? "العربية" : "English"}
@@ -121,7 +121,7 @@ export function Navbar({
 
           <Button
             asChild
-            className="h-10 rounded-full bg-[#c9871d] px-5 text-white shadow-[0_10px_22px_rgba(201,135,29,0.20)] hover:bg-[#b87917]"
+            className="h-10 rounded-full border border-[#b58c4d]/40 bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] px-5 font-semibold text-[#2e251a] shadow-[0_12px_28px_rgba(168,121,56,0.22),inset_0_1px_0_rgba(255,255,255,0.38)] transition hover:brightness-[1.03] hover:shadow-[0_15px_34px_rgba(168,121,56,0.28)]"
           >
             <Link href="/book">
               <CalendarDays className="size-4" />
@@ -138,7 +138,7 @@ export function Navbar({
             variant="ghost"
             size="icon"
             onClick={toggleLocale}
-            className="size-10 rounded-full"
+            className="size-10 rounded-full border border-[#cbbda9]/55 bg-white/45 text-[#6d6154] shadow-sm transition hover:border-[#b89b69] hover:bg-white/75 hover:text-[#3f382f]"
           >
             <Languages className="size-5" />
           </Button>
@@ -152,7 +152,7 @@ export function Navbar({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-10 rounded-xl"
+                className="size-10 rounded-xl border border-[#cbbda9]/55 bg-white/45 text-[#6d6154] shadow-sm transition hover:border-[#b89b69] hover:bg-white/75 hover:text-[#3f382f]"
               >
                 <Menu className="size-6" />
               </Button>
@@ -198,7 +198,7 @@ export function Navbar({
                 <Button
                   asChild
                   onClick={() => setOpen(false)}
-                  className="h-11 rounded-xl bg-[#c9871d] text-white hover:bg-[#b87917]"
+                  className="h-11 rounded-xl border border-[#b58c4d]/40 bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] font-semibold text-[#2e251a] shadow-[0_12px_28px_rgba(168,121,56,0.20),inset_0_1px_0_rgba(255,255,255,0.38)] transition hover:brightness-[1.03]"
                 >
                   <Link href="/book">
                     <CalendarDays className="size-4" />

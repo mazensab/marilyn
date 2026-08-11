@@ -189,7 +189,7 @@ export function HeroSocialReel() {
               className="absolute inset-0 size-full object-cover"
             />
           ) : (
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_12%,rgba(202,151,65,0.28),transparent_34%),linear-gradient(155deg,#392f24_0%,#171b24_47%,#0b111d_100%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_12%,rgba(185,145,80,0.28),transparent_34%),linear-gradient(155deg,#392f24_0%,#171b24_47%,#0b111d_100%)]" />
           )}
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/78 via-black/5 to-black/20" />
@@ -216,7 +216,7 @@ export function HeroSocialReel() {
                 : "Following"}
             </span>
 
-            <span className="border-b-2 border-[#d3952b] pb-1 text-white">
+            <span className="border-b-2 border-[#b48745] pb-1 text-white">
               {isArabic
                 ? "لك"
                 : "For You"}

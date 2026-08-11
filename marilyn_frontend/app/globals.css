@@ -73,6 +73,15 @@
 :root {
   --radius: 0.625rem;
 
+  /* Marilyn Clinics — Public Champagne / Gold */
+  --marilyn-gold-300: #d9b979;
+  --marilyn-gold-400: #c89e58;
+  --marilyn-gold-500: #b7853f;
+  --marilyn-gold-600: #a57b3d;
+  --marilyn-gold-700: #7e5925;
+  --marilyn-gold-border: #cbbda9;
+  --marilyn-gold-ink: #2e251a;
+
   /* ======================================================
      Mhamcloud Black / Neutral Brand Colors
      Primary:   #111827
