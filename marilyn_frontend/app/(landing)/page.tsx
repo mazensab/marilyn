@@ -6,6 +6,7 @@ import { MobileBottomNav } from "@/components/landing/mobile-bottom-nav";
 import { ReferenceFinalCta } from "@/components/landing/reference-final-cta";
 import { ReferenceTrustStrip } from "@/components/landing/reference-trust-strip";
 import { ReferenceStatsBranches } from "@/components/landing/reference-stats-branches";
+import { ReferencePractitioners } from "@/components/landing/reference-practitioners";
 import { FooterSection } from "@/components/layout/sections/footer";
 import { HeroSection } from "@/components/layout/sections/hero";
 import { ServicesSection } from "@/components/layout/sections/services";
@@ -31,8 +32,8 @@ export async function generateMetadata(): Promise<Metadata> {
     : "Marilyn Clinics | Dermatology, Aesthetics & Laser";
 
   const description = isArabic
-    ? "اكتشفي خدمات Marilyn Clinics في الجلدية والتجميل والليزر، وتعرّفي على الخدمات والأطباء والعروض والفروع واحجزي موعدك بسهولة."
-    : "Explore Marilyn Clinics dermatology, aesthetic, and laser services, discover doctors, offers, branches, and book your appointment easily.";
+    ? "اكتشفي خدمات Marilyn Clinics في الجلدية والتجميل والليزر، وتعرّفي على الخدمات والفريق الطبي والفروع واحجزي موعدك بسهولة."
+    : "Explore Marilyn Clinics dermatology, aesthetic, and laser services, discover the medical team and branches, and book your appointment easily.";
 
   return {
     title,
@@ -113,6 +114,8 @@ export default async function Home() {
       <ReferenceTrustStrip />
 
       <ReferenceStatsBranches />
+
+      <ReferencePractitioners />
 
       <ReferenceFinalCta />
 
