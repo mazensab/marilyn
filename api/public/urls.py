@@ -1,6 +1,9 @@
 from __future__ import annotations
 from django.urls import path
-from .practitioners import public_practitioners
+from .practitioners import (
+    public_practitioner_detail,
+    public_practitioners,
+)
 from .services import (
     public_service_detail,
     public_service_list,
@@ -11,6 +14,11 @@ urlpatterns = [
         "practitioners/",
         public_practitioners,
         name="practitioners",
+    ),
+    path(
+        "practitioners/<int:practitioner_id>/",
+        public_practitioner_detail,
+        name="practitioner-detail",
     ),
     path(
         "services/",

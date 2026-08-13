@@ -136,4 +136,71 @@ def public_practitioners(
             "count": len(results),
             "results": results,
         }
+    )@api_view(["GET"])
+@permission_classes([AllowAny])
+def public_practitioner_detail(
+    request: Request,
+    practitioner_id: int,
+) -> Response:
+    del request
+    queryset = (
+        MedicalPractitioner.objects
+        .filter(
+            status=MedicalPractitionerStatus.ACTIVE,
+            is_accepting_appointments=True,
+        )
+        .filter(
+            Q(full_name_ar__gt="")
+            | Q(full_name_en__gt="")
+        )
+        .select_related(
+            "primary_specialty",
+            "default_branch",
+        )
+    )
+    company_ids = list(
+        queryset
+        .values_list(
+            "company_id",
+            flat=True,
+        )
+        .distinct()[:2]
+    )
+    if len(company_ids) != 1:
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Public medical practitioner "
+                    "was not found."
+                ),
+            },
+            status=404,
+        )
+    practitioner = (
+        queryset
+        .filter(
+            company_id=company_ids[0],
+            id=practitioner_id,
+        )
+        .first()
+    )
+    if practitioner is None:
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Public medical practitioner "
+                    "was not found."
+                ),
+            },
+            status=404,
+        )
+    return Response(
+        {
+            "success": True,
+            "item": _serialize_public_practitioner(
+                practitioner
+            ),
+        }
     )
