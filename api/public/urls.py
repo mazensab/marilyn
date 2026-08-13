@@ -12,8 +12,23 @@ from .services import (
     public_service_detail,
     public_service_list,
 )
+from .booking import (
+    public_booking_availability,
+    public_booking_options,
+)
+
 app_name = "public"
 urlpatterns = [
+    path(
+        "booking/options/",
+        public_booking_options,
+        name="booking-options",
+    ),
+    path(
+        "booking/availability/",
+        public_booking_availability,
+        name="booking-availability",
+    ),
     path(
         "branches/",
         public_branch_list,
