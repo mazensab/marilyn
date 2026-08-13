@@ -52,22 +52,32 @@ export async function ServicesSection() {
     <SectionContainer id="services">
       <section
         dir={isArabic ? "rtl" : "ltr"}
-        className="py-4 sm:py-6 lg:py-8"
+        className="-mt-2 py-7 sm:-mt-3 sm:py-9 lg:-mt-4 lg:py-10"
       >
-        <div className="mx-auto mb-8 max-w-2xl text-center sm:mb-10">
-          <p className="text-sm font-bold text-[#c9871d] sm:text-base">
-            {isArabic
-              ? "خدماتنا المميزة"
-              : "Our Featured Services"}
-          </p>
+        <div className="mx-auto mb-7 max-w-2xl text-center sm:mb-8 lg:mb-9">
+          <div className="inline-flex items-center gap-2 text-sm font-semibold text-[#b48745] sm:text-base">
+            <Sparkles className="size-4" />
 
-          <h2 className="mt-2 text-3xl font-bold leading-tight text-[#10213b] sm:text-4xl">
+            <span>
+              {isArabic
+                ? "خدماتنا المميزة"
+                : "Our Featured Services"}
+            </span>
+          </div>
+
+          <h2 className="mt-3 text-3xl font-semibold leading-[1.18] tracking-[-0.035em] text-[#10213b] sm:text-4xl lg:text-[42px]">
             {isArabic
-              ? "خدمات متكاملة للعناية بك"
-              : "Complete care designed for you"}
+              ? "رعاية متكاملة صممت حولك"
+              : "Complete care designed around you"}
           </h2>
 
-          <div className="mx-auto mt-4 h-px w-20 bg-[#c9871d]/60" />
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[#667184] sm:text-[15px]">
+            {isArabic
+              ? "اختاري الخدمة المناسبة لك ضمن تجربة طبية هادئة تبدأ بالتقييم وتستمر بخطة واضحة."
+              : "Discover care that starts with assessment and continues through a clear, considered treatment journey."}
+          </p>
+
+          <div className="mx-auto mt-5 h-px w-24 bg-[linear-gradient(90deg,transparent,#bd9250,transparent)]" />
         </div>
 
         <div
@@ -76,7 +86,7 @@ export async function ServicesSection() {
             flex
             snap-x
             snap-mandatory
-            gap-4
+            gap-5
             overflow-x-auto
             px-4
             pb-3
@@ -116,29 +126,24 @@ export async function ServicesSection() {
                     snap-center
                     flex-col
                     overflow-hidden
-                    rounded-[18px]
+                    rounded-[26px]
                     border
-                    border-black/[0.06]
-                    bg-white
-                    shadow-[0_8px_28px_rgba(15,23,42,0.045)]
+                    border-white/80
+                    bg-[linear-gradient(180deg,rgba(255,255,255,0.82)_0%,rgba(255,250,244,0.68)_100%)]
+                    shadow-[0_16px_42px_rgba(72,52,30,0.065),inset_0_1px_0_rgba(255,255,255,0.78)]
+                    backdrop-blur-2xl
                     transition
                     duration-300
 
                     hover:-translate-y-1
-                    hover:shadow-[0_18px_44px_rgba(15,23,42,0.08)]
+                    hover:border-[#c4a46f]/60
+                    hover:shadow-[0_22px_52px_rgba(72,52,30,0.105)]
 
                     sm:w-auto
                     sm:max-w-none
                   "
                 >
-                  <div
-                    className="
-                      relative
-                      aspect-[4/3]
-                      overflow-hidden
-                      bg-[#eee2d2]
-                    "
-                  >
+                  <div className="relative aspect-[16/11] overflow-hidden bg-[#eee2d2]">
                     {hasImage ? (
                       <>
                         <Image
@@ -159,28 +164,28 @@ export async function ServicesSection() {
                             object-cover
                             transition
                             duration-500
-                            group-hover:scale-[1.03]
+                            group-hover:scale-[1.035]
                           "
                         />
 
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#342719]/25 via-transparent to-white/5" />
                       </>
                     ) : (
-                      <div className="absolute inset-0 overflow-hidden bg-[linear-gradient(145deg,#f5eadb_0%,#e7d5bb_52%,#d8c2a3_100%)]">
-                        <div className="absolute -left-12 -top-12 size-40 rounded-full border border-white/45" />
+                      <div className="absolute inset-0 overflow-hidden bg-[linear-gradient(145deg,#fbf5ec_0%,#eee0cd_52%,#dec6a8_100%)]">
+                        <div className="absolute -left-12 -top-12 size-40 rounded-full border border-white/55" />
 
-                        <div className="absolute -bottom-16 -right-10 size-44 rounded-full border border-[#bd7b18]/10" />
+                        <div className="absolute -bottom-16 -right-10 size-44 rounded-full border border-[#b48745]/15" />
 
-                        <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3 text-[#b87515]">
+                        <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-3 text-[#a57b3d]">
                           <div
                             className="
                               flex
                               size-14
                               items-center
                               justify-center
-                              rounded-full
+                              rounded-[18px]
                               border
-                              border-white/70
+                              border-[#cbbda9]/55
                               bg-white/65
                               shadow-sm
                               backdrop-blur
@@ -189,12 +194,12 @@ export async function ServicesSection() {
                             <Icon className="size-6" />
                           </div>
 
-                          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9d7951]">
+                          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#78664e]">
                             Marilyn Clinics
                           </span>
                         </div>
 
-                        <Sparkles className="absolute bottom-4 left-4 size-4 text-white/55" />
+                        <Sparkles className="absolute bottom-4 left-4 size-4 text-white/65" />
                       </div>
                     )}
 
@@ -207,9 +212,11 @@ export async function ServicesSection() {
                         size-10
                         items-center
                         justify-center
-                        rounded-full
+                        rounded-[14px]
+                        border
+                        border-[#cbbda9]/55
                         bg-white/90
-                        text-[#bd7b18]
+                        text-[#a57b3d]
                         shadow-sm
                         backdrop-blur
                       "
@@ -224,13 +231,14 @@ export async function ServicesSection() {
                         top-3
                         rounded-full
                         border
-                        border-[#d9a94e]/35
+                        border-[#b89561]/35
                         bg-white/90
                         px-3
                         py-1
                         text-[11px]
                         font-semibold
-                        text-[#b87515]
+                        text-[#8b6938]
+                        shadow-sm
                         backdrop-blur
                       "
                     >
@@ -240,14 +248,14 @@ export async function ServicesSection() {
                     </span>
                   </div>
 
-                  <div className="flex flex-1 flex-col p-4 sm:p-5">
-                    <h3 className="text-base font-bold leading-6 text-[#10213b] sm:text-[17px]">
+                  <div className="flex flex-1 flex-col p-4 sm:p-[18px]">
+                    <h3 className="text-base font-semibold leading-6 text-[#10213b] sm:text-[17px]">
                       {isArabic
                         ? service.title.ar
                         : service.title.en}
                     </h3>
 
-                    <p className="mt-2 flex-1 text-sm leading-6 text-[#596578]">
+                    <p className="mt-2 flex-1 text-[13px] leading-6 text-[#667184] sm:text-sm">
                       {isArabic
                         ? service.shortDescription.ar
                         : service.shortDescription.en}
@@ -256,15 +264,15 @@ export async function ServicesSection() {
                     <Link
                       href={`/services/${service.slug}`}
                       className="
-                        mt-4
+                        mt-3.5
                         inline-flex
                         items-center
                         gap-2
                         text-sm
                         font-semibold
-                        text-[#bd7b18]
+                        text-[#a57b3d]
                         transition
-                        hover:text-[#9f6510]
+                        hover:text-[#7e5925]
                       "
                     >
                       {isArabic

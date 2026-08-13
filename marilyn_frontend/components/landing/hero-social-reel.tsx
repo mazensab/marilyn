@@ -137,9 +137,9 @@ export function HeroSocialReel() {
         relative
         mx-auto
         w-full
-        max-w-[252px]
+        max-w-[286px]
 
-        lg:max-w-[258px]
+        sm:max-w-[294px] lg:max-w-[306px] xl:max-w-[314px]
       "
     >
       <div
@@ -162,18 +162,18 @@ export function HeroSocialReel() {
             w-full
             touch-pan-y before:absolute before:left-1/2 before:top-2 before:z-30 before:h-[17px] before:w-[68px] before:-translate-x-1/2 before:rounded-full before:bg-black before:shadow-[0_1px_0_rgba(255,255,255,0.06)] before:content-['']
             overflow-hidden
-            rounded-[38px]
+            rounded-[42px]
             border-[6px] border-[#202124] bg-[#101216] ring-1 ring-black/20
             shadow-[0_26px_58px_rgba(55,40,24,0.22),0_9px_22px_rgba(0,0,0,0.16)]
 
             sm:aspect-[9/19.5]
 
             lg:aspect-[9/19.5]
-            lg:rounded-[39px]
+            lg:rounded-[43px]
 
             xl:aspect-[9/19.5]
 
-            2xl:rounded-[39px]
+            2xl:rounded-[44px]
           "
         >
           {activeReel ? (

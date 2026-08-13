@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   CalendarDays,
   ChevronDown,
-  Languages,
+  Globe2,
   Menu,
 } from "lucide-react";
 
@@ -69,7 +69,7 @@ export function Navbar({
     <header className="sticky top-3 z-50 px-4 sm:px-6 lg:top-4 lg:px-8">
       <div
         dir={isArabic ? "rtl" : "ltr"}
-        className="container mx-auto flex min-h-[60px] max-w-[1460px] items-center justify-between gap-4 rounded-[22px] border border-white/55 bg-white/46 px-4 shadow-[0_12px_34px_rgba(57,43,27,0.085)] backdrop-blur-2xl supports-[backdrop-filter]:bg-white/36 sm:min-h-[62px] sm:px-5 lg:min-h-[64px] lg:px-5"
+        className="mx-auto flex w-full min-h-[76px] max-w-[1480px] items-center justify-between gap-6 rounded-[28px] border border-white/80 bg-[linear-gradient(115deg,rgba(255,255,255,0.42)_0%,rgba(255,249,240,0.30)_100%)] px-5 shadow-[0_22px_60px_rgba(72,52,30,0.10),inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-2xl sm:min-h-[82px] sm:px-7 lg:min-h-[88px] lg:px-8"
       >
         <Link
           href="/"
@@ -83,7 +83,7 @@ export function Navbar({
             height={60}
             priority
             unoptimized
-            className="h-11 w-auto max-w-[112px] object-contain sm:h-12 sm:max-w-[132px] lg:h-[50px] lg:max-w-[154px]"
+            className="h-[52px] w-auto max-w-[128px] object-contain sm:h-[58px] sm:max-w-[150px] lg:h-[64px] lg:max-w-[182px]"
           />
         </Link>
 
@@ -96,8 +96,8 @@ export function Navbar({
               asChild
               className={
                 index === 0
-                  ? "h-9 rounded-full bg-white/42 px-3.5 text-sm font-semibold text-[#a57b3d] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.28)] hover:bg-white/58"
-                  : "h-9 rounded-full px-3.5 text-sm font-medium text-[#26354a] hover:bg-white/34 hover:text-[#9b7033]"
+                  ? "h-11 rounded-none border-b-2 border-[#b7853f] bg-transparent px-4 text-[15px] font-semibold text-[#a57b3d] shadow-none hover:bg-transparent hover:text-[#7e5925]"
+                  : "h-11 rounded-none px-4 text-[15px] font-medium text-[#26354a] hover:bg-transparent hover:text-[#9b7033]"
               }
             >
               <Link href={item.href}>
@@ -114,7 +114,7 @@ export function Navbar({
             onClick={toggleLocale}
             className="h-9 rounded-full border border-[#cbbda9]/65 bg-white/55 px-3.5 text-[#6d6154] shadow-sm transition hover:border-[#b89b69] hover:bg-white/80 hover:text-[#3f382f] focus-visible:ring-2 focus-visible:ring-[#b99150]/35"
           >
-            <Languages className="size-4" />
+            <Globe2 className="size-4" />
             {isArabic ? "العربية" : "English"}
             <ChevronDown className="size-3.5 opacity-60" />
           </Button>
@@ -140,7 +140,7 @@ export function Navbar({
             onClick={toggleLocale}
             className="size-10 rounded-full border border-[#cbbda9]/55 bg-white/45 text-[#6d6154] shadow-sm transition hover:border-[#b89b69] hover:bg-white/75 hover:text-[#3f382f]"
           >
-            <Languages className="size-5" />
+            <Globe2 className="size-5" />
           </Button>
 
           <Sheet

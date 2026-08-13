@@ -9,7 +9,7 @@ import {
   CalendarClock,
   MapPin,
   Stethoscope,
-  Users,
+  UserRoundCheck,
 } from "lucide-react";
 
 import {
@@ -18,30 +18,26 @@ import {
   type PublicLocale,
 } from "@/lib/public-locale";
 
-const stats = [
+const careSignals = [
   {
     icon: MapPin,
-    value: "—",
-    ar: "فروع",
-    en: "Branches",
+    ar: "اختيار الفرع الأنسب",
+    en: "Choose your branch",
   },
   {
     icon: Stethoscope,
-    value: "—",
-    ar: "طبيب متخصص",
-    en: "Specialist Doctors",
-  },
-  {
-    icon: Users,
-    value: "—",
-    ar: "مراجع",
-    en: "Patients",
+    ar: "اختيار الطبيب",
+    en: "Choose your doctor",
   },
   {
     icon: CalendarClock,
-    value: "—",
-    ar: "سنوات من الخبرة",
-    en: "Years of Experience",
+    ar: "اختيار الموعد",
+    en: "Choose your time",
+  },
+  {
+    icon: UserRoundCheck,
+    ar: "تجربة منظمة للمراجع",
+    en: "Organized patient journey",
   },
 ];
 
@@ -86,235 +82,11 @@ export function ReferenceStatsBranches() {
       ? ArrowLeft
       : ArrowRight;
 
-  const statsPanel = (
-    <div
-      className="
-        order-2
-        grid
-        grid-cols-2
-        overflow-hidden
-        rounded-[24px]
-        bg-[#10213b]
-        shadow-[0_18px_50px_rgba(16,33,59,0.16)]
-
-        lg:order-1
-        lg:grid-cols-4
-      "
-    >
-      {stats.map((item) => {
-        const Icon = item.icon;
-
-        return (
-          <div
-            key={item.en}
-            className="
-              relative
-              flex
-              min-h-[126px]
-              flex-col
-              items-center
-              justify-center
-              px-3
-              py-5
-              text-center
-              text-white
-
-              border-b
-              border-white/10
-              odd:border-e
-
-              lg:min-h-[154px]
-              lg:border-b-0
-              lg:border-e
-              lg:last:border-e-0
-            "
-          >
-            <Icon
-              className="
-                mb-2
-                size-6
-                text-[#d89a35]
-              "
-            />
-
-            <div
-              className="
-                text-3xl
-                font-bold
-                tabular-nums
-                text-[#dda145]
-              "
-            >
-              {item.value}
-            </div>
-
-            <p
-              className="
-                mt-1
-                text-xs
-                font-medium
-                text-white/80
-
-                sm:text-sm
-              "
-            >
-              {ar
-                ? item.ar
-                : item.en}
-            </p>
-          </div>
-        );
-      })}
-    </div>
-  );
-
-  const branchesPanel = (
-    <div
-      className="
-        relative
-        order-1
-        overflow-hidden
-        rounded-[24px]
-        border
-        border-black/[0.05]
-        bg-[#fffaf3]
-        px-6
-        py-6
-        shadow-[0_12px_34px_rgba(15,23,42,0.04)]
-
-        sm:px-8
-        lg:order-2
-        lg:min-h-[154px]
-      "
-    >
-      <div
-        className="
-          pointer-events-none
-          absolute
-          -left-20
-          -top-20
-          size-56
-          rounded-full
-          border
-          border-[#c9871d]/10
-        "
-      />
-
-      <div
-        className="
-          pointer-events-none
-          absolute
-          -bottom-20
-          -right-16
-          size-52
-          rounded-full
-          bg-[#d9b06d]/10
-          blur-2xl
-        "
-      />
-
-      <div
-        className="
-          relative
-          flex
-          h-full
-          flex-col
-          justify-between
-          gap-5
-        "
-      >
-        <div>
-          <div
-            className="
-              mb-3
-              flex
-              size-10
-              items-center
-              justify-center
-              rounded-full
-              bg-white
-              text-[#c9871d]
-              shadow-sm
-            "
-          >
-            <Building2 className="size-5" />
-          </div>
-
-          <p
-            className="
-              text-sm
-              font-bold
-              text-[#c9871d]
-            "
-          >
-            {ar
-              ? "فروع Marilyn Clinics"
-              : "Marilyn Clinics Branches"}
-          </p>
-
-          <h3
-            className="
-              mt-1.5
-              text-xl
-              font-bold
-              text-[#10213b]
-
-              sm:text-2xl
-            "
-          >
-            {ar
-              ? "رعاية أقرب إليك"
-              : "Care closer to you"}
-          </h3>
-
-          <p
-            className="
-              mt-2
-              max-w-md
-              text-sm
-              leading-7
-              text-[#5d6878]
-            "
-          >
-            {ar
-              ? "استعرضي مواقع الفروع واختاري الفرع الأنسب لك عند الحجز."
-              : "Explore our locations and choose the branch that suits you best when booking."}
-          </p>
-        </div>
-
-        <Link
-          href="/#branches"
-          className="
-            inline-flex
-            w-fit
-            items-center
-            gap-2
-            text-sm
-            font-bold
-            text-[#b87515]
-            transition-colors
-            hover:text-[#965f10]
-          "
-        >
-          {ar
-            ? "عرض جميع الفروع"
-            : "View all branches"}
-
-          <ArrowIcon className="size-4" />
-        </Link>
-      </div>
-    </div>
-  );
-
   return (
     <section
+      id="branches"
       dir={ar ? "rtl" : "ltr"}
-      className="
-        container
-        py-4
-
-        sm:py-6
-      "
+      className="container py-4 sm:py-5 lg:py-6"
     >
       <div
         dir="ltr"
@@ -326,12 +98,183 @@ export function ReferenceStatsBranches() {
           lg:items-stretch
         "
       >
-        <div dir={ar ? "rtl" : "ltr"}>
-          {statsPanel}
+        <div
+          dir={ar ? "rtl" : "ltr"}
+          className="
+            relative
+            order-2
+            grid
+            grid-cols-2
+            overflow-hidden
+            rounded-[26px]
+            border border-white/80
+            bg-[linear-gradient(145deg,#fbf5ec_0%,#eee0cd_52%,#dec6a8_100%)]
+            shadow-[0_16px_42px_rgba(72,52,30,0.065),inset_0_1px_0_rgba(255,255,255,0.78)]
+            before:pointer-events-none
+            before:absolute
+            before:-left-12
+            before:-top-12
+            before:size-40
+            before:rounded-full
+            before:border
+            before:border-white/55
+            before:content-['']
+            after:pointer-events-none
+            after:absolute
+            after:-bottom-16
+            after:-right-10
+            after:size-44
+            after:rounded-full
+            after:border
+            after:border-[#b48745]/15
+            after:content-['']
+
+            lg:order-1
+            lg:grid-cols-4
+          "
+        >
+          {careSignals.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <div
+                key={item.en}
+                className="
+                  relative
+                  z-[1]
+                  flex
+                  min-h-[104px]
+                  flex-col
+                  items-center
+                  justify-center
+                  border-b
+                  border-[#cbbda9]/35
+                  px-3
+                  py-4
+                  text-center
+                  text-[#10213b]
+
+                  odd:border-e
+
+                  lg:min-h-[126px]
+                  lg:border-b-0
+                  lg:border-e
+                  lg:last:border-e-0
+                "
+              >
+                <span
+                  className="
+                    mb-2.5
+                    flex
+                    size-9
+                    items-center
+                    justify-center
+                    rounded-[12px]
+                    border
+                    border-[#cbbda9]/55
+                    bg-white/65
+                    text-[#a57b3d]
+                    shadow-sm backdrop-blur
+                  "
+                >
+                  <Icon className="size-[18px]" />
+                </span>
+
+                <p className="max-w-[145px] text-xs font-semibold leading-5 text-[#10213b]/85 sm:text-sm">
+                  {ar
+                    ? item.ar
+                    : item.en}
+                </p>
+              </div>
+            );
+          })}
         </div>
 
-        <div dir={ar ? "rtl" : "ltr"}>
-          {branchesPanel}
+        <div
+          dir={ar ? "rtl" : "ltr"}
+          className="
+            relative
+            order-1
+            overflow-hidden
+            rounded-[26px]
+            border
+            border-white/80
+            bg-[linear-gradient(115deg,rgba(255,255,255,0.42)_0%,rgba(255,249,240,0.30)_100%)]
+            px-6
+            py-5
+            shadow-[0_16px_42px_rgba(72,52,30,0.06),inset_0_1px_0_rgba(255,255,255,0.72)]
+            backdrop-blur-2xl
+
+            sm:px-8
+
+            lg:order-2
+            lg:min-h-[126px]
+          "
+        >
+          <div className="pointer-events-none absolute -left-20 -top-20 size-56 rounded-full border border-[#b48745]/10" />
+
+          <div className="pointer-events-none absolute -bottom-20 -right-16 size-52 rounded-full bg-[#d9b979]/12 blur-2xl" />
+
+          <div className="relative flex h-full flex-col justify-between gap-5">
+            <div>
+              <div
+                className="
+                  mb-2.5
+                  flex
+                  size-9
+                  items-center
+                  justify-center
+                  rounded-[12px]
+                  border
+                  border-[#cbbda9]/55
+                  bg-white/60
+                  text-[#a57b3d]
+                  shadow-sm
+                "
+              >
+                <Building2 className="size-[18px]" />
+              </div>
+
+              <p className="text-sm font-semibold text-[#b48745]">
+                {ar
+                  ? "فروع Marilyn Clinics"
+                  : "Marilyn Clinics Branches"}
+              </p>
+
+              <h3 className="mt-1.5 text-xl font-semibold tracking-[-0.025em] text-[#10213b] sm:text-2xl">
+                {ar
+                  ? "رعاية أقرب إليك"
+                  : "Care closer to you"}
+              </h3>
+
+              <p className="mt-2 max-w-md text-sm leading-6 text-[#667184]">
+                {ar
+                  ? "يمكنك اختيار الفرع الأنسب لك ضمن رحلة الحجز مع تجربة موحدة وواضحة في كل خطوة."
+                  : "Choose the branch that suits you during booking, with one consistent and clear experience at every step."}
+              </p>
+            </div>
+
+            <Link
+              href="/contact"
+              className="
+                inline-flex
+                w-fit
+                items-center
+                gap-2
+                text-sm
+                font-semibold
+                text-[#a57b3d]
+                transition-colors
+                hover:text-[#7e5925]
+              "
+            >
+              {ar
+                ? "تواصل لمعرفة أقرب فرع"
+                : "Contact us for the nearest branch"}
+
+              <ArrowIcon className="size-4" />
+            </Link>
+          </div>
         </div>
       </div>
     </section>

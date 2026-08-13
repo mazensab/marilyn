@@ -73,19 +73,20 @@ export function ReferenceTrustStrip() {
   const ar = locale === "ar";
 
   return (
-    <section className="container py-5 sm:py-7">
+    <section className="container py-3 sm:py-4 lg:py-5">
       <div
         dir={ar ? "rtl" : "ltr"}
         className="
           grid
-          overflow-hidden
-          rounded-[20px]
-          border
-          border-black/[0.055]
-          bg-white
-          shadow-[0_8px_26px_rgba(15,23,42,0.035)]
-
           grid-cols-2
+          overflow-hidden
+          rounded-[24px]
+          border
+          border-white/80
+          bg-[linear-gradient(115deg,rgba(255,255,255,0.42)_0%,rgba(255,249,240,0.30)_100%)]
+          shadow-[0_16px_42px_rgba(72,52,30,0.06),inset_0_1px_0_rgba(255,255,255,0.72)]
+          backdrop-blur-2xl
+
           lg:grid-cols-4
         "
       >
@@ -97,26 +98,42 @@ export function ReferenceTrustStrip() {
               key={item.en}
               className="
                 flex
-                min-h-[92px]
+                min-h-[80px]
                 items-center
                 justify-center
-                gap-3
+                gap-2.5
                 border-b
-                border-black/[0.05]
+                border-[#cbbda9]/35
                 px-4
-                py-5
+                py-3
 
                 odd:border-e
 
-                lg:min-h-[108px]
+                lg:min-h-[88px]
                 lg:border-b-0
                 lg:border-e
                 lg:last:border-e-0
               "
             >
-              <Icon className="size-6 shrink-0 text-[#c9871d] lg:size-7" />
+              <span
+                className="
+                  flex
+                  size-9
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-[12px]
+                  border
+                  border-[#cbbda9]/55
+                  bg-white/60
+                  text-[#a57b3d]
+                  shadow-sm
+                "
+              >
+                <Icon className="size-[18px]" />
+              </span>
 
-              <p className="text-center text-sm font-bold text-[#10213b] sm:text-base">
+              <p className="text-center text-sm font-semibold text-[#10213b] sm:text-base">
                 {ar ? item.ar : item.en}
               </p>
             </div>
