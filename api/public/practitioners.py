@@ -136,7 +136,9 @@ def public_practitioners(
             "count": len(results),
             "results": results,
         }
-    )@api_view(["GET"])
+    )
+
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def public_practitioner_detail(
     request: Request,
