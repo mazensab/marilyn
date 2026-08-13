@@ -255,7 +255,7 @@ export function ReferenceStatsBranches() {
             </div>
 
             <Link
-              href="/contact"
+              href="/branches"
               className="
                 inline-flex
                 w-fit
@@ -269,8 +269,8 @@ export function ReferenceStatsBranches() {
               "
             >
               {ar
-                ? "تواصل لمعرفة أقرب فرع"
-                : "Contact us for the nearest branch"}
+                ? "عرض جميع الفروع"
+                : "View all branches"}
 
               <ArrowIcon className="size-4" />
             </Link>

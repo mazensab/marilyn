@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   CalendarDays,
   ChevronDown,
@@ -31,9 +31,9 @@ type NavbarProps = {
 
 const navigation = [
   { href: "/", ar: "الرئيسية", en: "Home" },
-  { href: "/#services", ar: "الخدمات", en: "Services" },
-  { href: "/#practitioners", ar: "الأطباء", en: "Doctors" },
-  { href: "/#branches", ar: "الفروع", en: "Branches" },
+  { href: "/services", ar: "الخدمات", en: "Services" },
+  { href: "/practitioners", ar: "الأطباء", en: "Doctors" },
+  { href: "/branches", ar: "الفروع", en: "Branches" },
   { href: "/#offers", ar: "العروض", en: "Offers" },
   { href: "/#about", ar: "من نحن", en: "About" },
   { href: "/contact", ar: "تواصل معنا", en: "Contact" },
@@ -43,6 +43,7 @@ export function Navbar({
   initialLocale = "ar",
 }: NavbarProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const [locale, setLocale] =
     React.useState<PublicLocale>(initialLocale);
@@ -55,6 +56,20 @@ export function Navbar({
   }, [initialLocale]);
 
   const isArabic = locale === "ar";
+  const isNavigationActive = (
+    href: string,
+  ) => {
+    if (href === "/") {
+      return pathname === "/";
+    }
+    if (href.startsWith("/#")) {
+      return false;
+    }
+    return (
+      pathname === href ||
+      pathname.startsWith(`${href}/`)
+    );
+  };
 
   const toggleLocale = () => {
     const next: PublicLocale =
@@ -88,14 +103,14 @@ export function Navbar({
         </Link>
 
         <nav className="hidden flex-1 items-center justify-center gap-0.5 lg:flex">
-          {navigation.map((item, index) => (
+          {navigation.map((item) => (
             <Button
               key={item.href}
               variant="ghost"
               size="sm"
               asChild
               className={
-                index === 0
+                isNavigationActive(item.href)
                   ? "h-11 rounded-none border-b-2 border-[#b7853f] bg-transparent px-4 text-[15px] font-semibold text-[#a57b3d] shadow-none hover:bg-transparent hover:text-[#7e5925]"
                   : "h-11 rounded-none px-4 text-[15px] font-medium text-[#26354a] hover:bg-transparent hover:text-[#9b7033]"
               }
@@ -183,7 +198,11 @@ export function Navbar({
                     variant="ghost"
                     asChild
                     onClick={() => setOpen(false)}
-                    className="h-11 justify-start rounded-xl"
+                    className={
+                      isNavigationActive(item.href)
+                        ? "h-11 justify-start rounded-xl bg-[#f3e6d4] font-semibold text-[#a57b3d] hover:bg-[#edddc7] hover:text-[#8e6936]"
+                        : "h-11 justify-start rounded-xl text-[#26354a] hover:bg-[#f7efe4] hover:text-[#9b7033]"
+                    }
                   >
                     <Link href={item.href}>
                       {isArabic
