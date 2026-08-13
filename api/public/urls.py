@@ -17,8 +17,23 @@ from .booking import (
     public_booking_options,
 )
 
+from .booking_confirmation import (
+    public_booking_confirm,
+    public_booking_requirements,
+)
+
 app_name = "public"
 urlpatterns = [
+    path(
+        "booking/requirements/",
+        public_booking_requirements,
+        name="booking-requirements",
+    ),
+    path(
+        "booking/confirm/",
+        public_booking_confirm,
+        name="booking-confirm",
+    ),
     path(
         "booking/options/",
         public_booking_options,

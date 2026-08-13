@@ -224,3 +224,87 @@ export function formatBookingPrice(
     },
   ).format(numeric);
 }
+
+export type PublicBookingIdentifierType = {
+  value: string;
+};
+export type PublicBookingRequirements = {
+  success: boolean;
+  patient: {
+    require_identifier: boolean;
+    identifier_types: PublicBookingIdentifierType[];
+  };
+};
+export type PublicBookingPatientInput = {
+  full_name: string;
+  mobile: string;
+  email: string;
+  identifier_type: string;
+  identifier_number: string;
+};
+export type PublicBookingConfirmationAppointment = {
+  appointment_number: string;
+  status: string;
+  scheduled_start: string;
+  scheduled_end: string | null;
+  branch: PublicBookingBranch;
+  service: PublicBookingService;
+  practitioner: PublicBookingPractitioner;
+};
+export type PublicBookingConfirmation = {
+  success: boolean;
+  patient_reused: boolean;
+  appointment: PublicBookingConfirmationAppointment;
+};
+export type PublicBookingConfirmInput = {
+  practitioner_service_assignment_id: number;
+  scheduled_start: string;
+  patient: PublicBookingPatientInput;
+};
+export async function fetchPublicBookingRequirements():
+  Promise<PublicBookingRequirements> {
+  const base = apiBaseUrl();
+  if (!base) {
+    throw new Error(
+      "Public API base URL is not configured.",
+    );
+  }
+  const response = await fetch(
+    `${base}/api/public/booking/requirements/`,
+    {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    },
+  );
+  return responseJson<PublicBookingRequirements>(
+    response,
+  );
+}
+export async function confirmPublicBooking(
+  input: PublicBookingConfirmInput,
+): Promise<PublicBookingConfirmation> {
+  const base = apiBaseUrl();
+  if (!base) {
+    throw new Error(
+      "Public API base URL is not configured.",
+    );
+  }
+  const response = await fetch(
+    `${base}/api/public/booking/confirm/`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+      body: JSON.stringify(input),
+    },
+  );
+  return responseJson<PublicBookingConfirmation>(
+    response,
+  );
+}

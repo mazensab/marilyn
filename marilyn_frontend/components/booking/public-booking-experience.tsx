@@ -18,6 +18,7 @@ import {
   Stethoscope,
   UserRound,
 } from "lucide-react";
+import { PublicBookingCheckout } from "@/components/booking/public-booking-checkout";
 import { Button } from "@/components/ui/button";
 import {
   fetchPublicAvailability,
@@ -39,7 +40,7 @@ type Props = {
   initialServiceId?: number;
   initialPractitionerId?: number;
 };
-type WizardStep = 1 | 2 | 3 | 4;
+type WizardStep = 1 | 2 | 3 | 4 | 5 | 6;
 const LANDING_GOLD_BUTTON =
   "border border-[#b58c4d]/40 bg-[linear-gradient(110deg,#d9b979_0%,#c89e58_48%,#b7853f_100%)] text-[#2e251a] shadow-[0_10px_24px_rgba(168,121,56,0.18)] hover:brightness-[1.03]";
 function uniqueById<
@@ -941,6 +942,14 @@ export function PublicBookingExperience({
     }
   }
   function goBack() {
+    if (currentStep === 6) {
+      setCurrentStep(5);
+      return;
+    }
+    if (currentStep === 5) {
+      setCurrentStep(4);
+      return;
+    }
     if (currentStep === 4) {
       setCurrentStep(3);
       return;
@@ -1087,7 +1096,11 @@ export function PublicBookingExperience({
                       ? copy.selectBranch
                       : currentStep === 3
                         ? copy.selectPractitioner
-                        : copy.selectAppointment}
+                        : currentStep === 4
+                          ? copy.selectAppointment
+                          : currentStep === 5
+                            ? copy.patient
+                            : copy.confirm}
                 </h2>
                 <p className="mt-1.5 max-w-2xl text-sm leading-7 text-[#727985]">
                   {currentStep === 1
@@ -1096,7 +1109,19 @@ export function PublicBookingExperience({
                       ? copy.branchDescription
                       : currentStep === 3
                         ? copy.practitionerDescription
-                        : copy.appointmentDescription}
+                        : currentStep === 4
+                          ? copy.appointmentDescription
+                          : currentStep === 5
+                            ? (
+                                isArabic
+                                  ? "????? ???????? ???????? ??????? ?????? ?????."
+                                  : "Enter the essential patient details to continue the booking."
+                              )
+                            : (
+                                isArabic
+                                  ? "????? ???? ???????? ?? ???? ??????."
+                                  : "Review all details, then confirm the appointment."
+                              )}
                 </p>
               </div>
             </div>
@@ -1177,7 +1202,7 @@ export function PublicBookingExperience({
                   choosePractitioner
                 }
               />
-            ) : (
+            ) : currentStep === 4 ? (
               <AppointmentStep
                 dateChoices={
                   dateChoices
@@ -1216,9 +1241,40 @@ export function PublicBookingExperience({
                   copy.loadingAvailability
                 }
               />
+            ) : (
+              selectedAssignment &&
+              selectedSlot ? (
+                <PublicBookingCheckout
+                  locale={locale}
+                  step={currentStep}
+                  assignment={
+                    selectedAssignment
+                  }
+                  selectedSlot={
+                    selectedSlot
+                  }
+                  onStepChange={
+                    setCurrentStep
+                  }
+                  onBackToSchedule={() => {
+                    setSelectedSlot(
+                      null,
+                    );
+                    setBookingDate(
+                      "",
+                    );
+                    setSlots(
+                      [],
+                    );
+                    setCurrentStep(
+                      4,
+                    );
+                  }}
+                />
+              ) : null
             )}
             <div
-              className="
+              className={`
                 mt-7
                 flex
                 flex-col-reverse
@@ -1229,7 +1285,8 @@ export function PublicBookingExperience({
                 sm:flex-row
                 sm:items-center
                 sm:justify-between
-              "
+                ${currentStep >= 5 ? "hidden" : ""}
+              `}
             >
               <div>
                 {currentStep > 1 ? (
@@ -1290,12 +1347,17 @@ export function PublicBookingExperience({
                   {copy.next}
                   <NextArrow className="size-4" />
                 </Button>
-              ) : (
+              ) : currentStep === 4 ? (
                 <div className="w-full sm:w-auto">
                   <Button
                     type="button"
                     disabled={
                       !selectedSlot
+                    }
+                    onClick={() =>
+                      setCurrentStep(
+                        5,
+                      )
                     }
                     className={`
                       h-11
@@ -1311,13 +1373,8 @@ export function PublicBookingExperience({
                     <CheckCircle2 className="size-4" />
                     {copy.continue}
                   </Button>
-                  {selectedSlot ? (
-                    <p className="mt-2 max-w-sm text-xs leading-5 text-[#82786c]">
-                      {copy.pendingPatient}
-                    </p>
-                  ) : null}
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </section>
@@ -1472,7 +1529,7 @@ function BookingStepper({
     branchComplete,
     practitionerComplete,
     appointmentComplete,
-    false,
+    currentStep >= 6,
     false,
   ];
   return (
