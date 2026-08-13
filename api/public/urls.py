@@ -22,8 +22,17 @@ from .booking_confirmation import (
     public_booking_requirements,
 )
 
+from .booking_payment import (
+    public_booking_payment_options,
+)
+
 app_name = "public"
 urlpatterns = [
+    path(
+        "booking/payment/options/",
+        public_booking_payment_options,
+        name="booking-payment-options",
+    ),
     path(
         "booking/requirements/",
         public_booking_requirements,

@@ -30,6 +30,10 @@ from medical.models import (
     MedicalPractitionerServiceAssignment,
     MedicalSettings,
 )
+from .booking_payment import (
+    issue_public_payment_token,
+)
+
 from .booking import (
     _parse_positive_integer,
     _public_assignments,
@@ -1143,6 +1147,11 @@ def public_booking_confirm(
             ),
             "appointment": (
                 confirmation
+            ),
+            "payment_token": (
+                issue_public_payment_token(
+                    appointment
+                )
             ),
         },
         status=201,
