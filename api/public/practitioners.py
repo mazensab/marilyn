@@ -100,6 +100,7 @@ def public_practitioners(
     )
     company_ids = list(
         queryset
+        .order_by()
         .values_list(
             "company_id",
             flat=True,
@@ -162,6 +163,7 @@ def public_practitioner_detail(
     )
     company_ids = list(
         queryset
+        .order_by()
         .values_list(
             "company_id",
             flat=True,
