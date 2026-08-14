@@ -69,6 +69,7 @@ def _public_queryset():
 def _public_company_id(queryset) -> int | None:
     company_ids = list(
         queryset
+        .order_by()
         .values_list(
             "company_id",
             flat=True,
