@@ -30,6 +30,11 @@ def _related(value: Any) -> dict[str, Any] | None:
     )
     code = _text(
         getattr(value, "code", "")
+        or getattr(
+            value,
+            "branch_code",
+            "",
+        )
     )
     return {
         "id": getattr(value, "id", None),
