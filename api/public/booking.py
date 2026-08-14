@@ -609,10 +609,48 @@ def public_booking_availability(
                 schedule.start_time,
             )
         )
+        # A published closing boundary of 24:00 cannot be
+        # represented directly by Django TimeField. When
+        # an explicitly normalized schedule preserves that
+        # source boundary in metadata, treat its technical
+        # 23:59:59 value as midnight of the following day.
+        schedule_end_date = target_date
+        schedule_end_time = schedule.end_time
+
+        schedule_extra = (
+            schedule.extra_data
+            if isinstance(
+                schedule.extra_data,
+                dict,
+            )
+            else {}
+        )
+
+        if (
+            schedule.end_time
+            == time(23, 59, 59)
+            and schedule_extra.get(
+                "source_end_time"
+            )
+            == "24:00"
+            and schedule_extra.get(
+                "technical_normalization"
+            )
+            == (
+                "SOURCE_24_00_TO_TIMEFIELD_"
+                "23_59_59"
+            )
+        ):
+            schedule_end_date = (
+                target_date
+                + timedelta(days=1)
+            )
+            schedule_end_time = time.min
+
         schedule_end = (
             aware_datetime(
-                target_date,
-                schedule.end_time,
+                schedule_end_date,
+                schedule_end_time,
             )
         )
         recurring_breaks = [
