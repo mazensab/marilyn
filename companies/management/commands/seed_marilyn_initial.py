@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
@@ -108,15 +110,29 @@ def validate_required_fields(instance) -> None:
 class Command(BaseCommand):
     help = (
         "Create the initial Marilyn Clinics organization, medical activity "
-        "profile, main branch, and admin company membership."
+        "profile, main branch, and system administrator membership."
     )
 
     def add_arguments(self, parser):
-        parser.add_argument("--username", default="admin")
+        parser.add_argument(
+            "--username",
+            default=os.environ.get("MARILYN_ADMIN_USERNAME", "admin"),
+        )
+        parser.add_argument(
+            "--email",
+            default=os.environ.get("MARILYN_ADMIN_EMAIL", "info@marilynclinics.com"),
+        )
 
     @transaction.atomic
     def handle(self, *args, **options):
         username = str(options["username"]).strip()
+        email = str(options["email"]).strip()
+
+        if not username:
+            raise CommandError("Administrator username cannot be empty.")
+
+        if not email:
+            raise CommandError("Administrator email cannot be empty.")
 
         User = get_user_model()
         Company = apps.get_model("companies", "Company")
@@ -124,10 +140,47 @@ class Command(BaseCommand):
         UserProfile = apps.get_model("accounts", "UserProfile")
         CompanyMembership = apps.get_model("accounts", "CompanyMembership")
 
-        try:
-            admin = User.objects.get(username=username)
-        except User.DoesNotExist as exc:
-            raise CommandError(f"User '{username}' does not exist.") from exc
+        admin = User.objects.filter(username=username).first()
+        admin_created = admin is None
+
+        if admin_created:
+            admin_password = os.environ.get("MARILYN_ADMIN_PASSWORD", "")
+
+            if not admin_password:
+                raise CommandError(
+                    "MARILYN_ADMIN_PASSWORD is required when creating the "
+                    "initial administrator."
+                )
+
+            if len(admin_password) < 12:
+                raise CommandError(
+                    "MARILYN_ADMIN_PASSWORD must contain at least 12 characters."
+                )
+
+            admin = User.objects.create_superuser(
+                username=username,
+                email=email,
+                password=admin_password,
+            )
+        else:
+            # Existing credentials are intentionally preserved. Re-running the
+            # bootstrap must never rotate an administrator password implicitly.
+            admin_values = {
+                "email": admin.email or email,
+                "is_active": True,
+                "is_staff": True,
+                "is_superuser": True,
+            }
+
+            admin_changed = []
+
+            for field_name, value in admin_values.items():
+                if getattr(admin, field_name) != value:
+                    setattr(admin, field_name, value)
+                    admin_changed.append(field_name)
+
+            if admin_changed:
+                admin.save(update_fields=admin_changed)
 
         activity_defaults = {
             "name": "Clinics and Medical Centers",
@@ -300,6 +353,19 @@ class Command(BaseCommand):
                 ["ACTIVE"],
                 "ACTIVE",
             ),
+            "default_workspace": choice_value(
+                UserProfile,
+                "default_workspace",
+                ["SYSTEM"],
+                "SYSTEM",
+            ),
+            "system_role": choice_value(
+                UserProfile,
+                "system_role",
+                ["SUPER_ADMIN"],
+                "SUPER_ADMIN",
+            ),
+            "is_system_user": True,
             "display_name": profile.display_name or "Marilyn Admin",
             "language": "ar",
             "timezone": "Asia/Riyadh",
@@ -308,6 +374,9 @@ class Command(BaseCommand):
         set_existing(profile, profile_values)
         profile.save()
         profile.refresh_from_db()
+
+        if not profile.can_access_system:
+            raise CommandError("Admin still cannot access the system workspace.")
 
         if not profile.can_access_company:
             raise CommandError("Admin still cannot access the company workspace.")
@@ -350,6 +419,15 @@ class Command(BaseCommand):
         self.stdout.write(f"MEMBERSHIP_ROLE={membership.role}")
         self.stdout.write(f"MEMBERSHIP_CREATED={int(membership_created)}")
         self.stdout.write(f"PROFILE_CREATED={int(profile_created)}")
+        self.stdout.write(f"ADMIN_ID={admin.id}")
+        self.stdout.write(f"ADMIN_USERNAME={admin.username}")
+        self.stdout.write(f"ADMIN_CREATED={int(admin_created)}")
+        self.stdout.write(f"ADMIN_ACTIVE={int(admin.is_active)}")
+        self.stdout.write(f"ADMIN_STAFF={int(admin.is_staff)}")
+        self.stdout.write(f"ADMIN_SUPERUSER={int(admin.is_superuser)}")
+        self.stdout.write(f"PROFILE_WORKSPACE={profile.default_workspace}")
+        self.stdout.write(f"PROFILE_SYSTEM_ROLE={profile.system_role}")
+        self.stdout.write(f"PROFILE_SYSTEM_USER={int(profile.is_system_user)}")
         self.stdout.write(f"CAN_ACCESS_SYSTEM={int(profile.can_access_system)}")
         self.stdout.write(f"CAN_ACCESS_COMPANY={int(profile.can_access_company)}")
 
