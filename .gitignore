@@ -65,3 +65,6 @@ htmlcov/
 # WhatsApp Session Gateway runtime files
 whatsapp_session_gateway/gateway.pid
 whatsapp_session_gateway/logs/*.log
+
+# Local database backups
+backups/
