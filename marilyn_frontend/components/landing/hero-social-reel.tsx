@@ -2,17 +2,9 @@
 
 import * as React from "react";
 import {
-  Heart,
-  Instagram,
-  MessageCircle,
-  Music2,
   Play,
-  Share2,
-  Volume2,
-  VolumeX,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { API_PATHS } from "@/lib/api/endpoints";
 import { PUBLIC_SOCIAL_REELS } from "@/lib/public-content";
 import {
@@ -20,7 +12,6 @@ import {
   readPublicLocale,
   type PublicLocale,
 } from "@/lib/public-locale";
-import { PUBLIC_SITE } from "@/lib/public-site-config";
 
 
 type PublicTikTokVideo = {
@@ -111,29 +102,6 @@ function buildTikTokPlayerUrl(embedLink: string) {
   }
 }
 
-function formatSocialCount(value: number | null | undefined) {
-  const number = Number(value || 0);
-
-  if (!Number.isFinite(number) || number <= 0) {
-    return "—";
-  }
-
-  if (number >= 1_000_000) {
-    return `${(number / 1_000_000)
-      .toFixed(number >= 10_000_000 ? 0 : 1)
-      .replace(/\.0$/, "")}M`;
-  }
-
-  if (number >= 1_000) {
-    return `${(number / 1_000)
-      .toFixed(number >= 100_000 ? 0 : 1)
-      .replace(/\.0$/, "")}K`;
-  }
-
-  return new Intl.NumberFormat("en-US").format(number);
-}
-
-
 export function HeroSocialReel() {
   const [locale, setLocale] =
     React.useState<PublicLocale>("ar");
@@ -141,22 +109,10 @@ export function HeroSocialReel() {
   const [activeIndex, setActiveIndex] =
     React.useState(0);
 
-  const [muted, setMuted] =
-    React.useState(true);
-
   const [tiktokVideos, setTikTokVideos] =
     React.useState<PublicTikTokVideo[]>([]);
 
-  const [tiktokPlayerReady, setTikTokPlayerReady] =
-    React.useState(false);
-
   const [tiktokPlayerFailed, setTikTokPlayerFailed] =
-    React.useState(false);
-
-  const [tiktokPlayerPlaying, setTikTokPlayerPlaying] =
-    React.useState(false);
-
-  const [tiktokAutoplayBlocked, setTikTokAutoplayBlocked] =
     React.useState(false);
 
   const tiktokIframeRef =
@@ -284,10 +240,8 @@ export function HeroSocialReel() {
   React.useEffect(() => {
     endedTikTokVideoRef.current = null;
 
-    setTikTokPlayerReady(false);
     setTikTokPlayerFailed(false);
-    setTikTokPlayerPlaying(false);
-    setTikTokAutoplayBlocked(false);
+
   }, [activeTikTokReel?.id]);
 
   React.useEffect(() => {
@@ -331,9 +285,8 @@ export function HeroSocialReel() {
       }
 
       if (payload.type === "onPlayerReady") {
-        setTikTokPlayerReady(true);
+
         setTikTokPlayerFailed(false);
-        setTikTokPlayerPlaying(false);
 
         sendTikTokPlayerCommand("mute");
         sendTikTokPlayerCommand("play");
@@ -345,14 +298,12 @@ export function HeroSocialReel() {
         const state = Number(payload.value);
 
         if (state === 1) {
-          setTikTokPlayerPlaying(true);
-          setTikTokAutoplayBlocked(false);
+
           setTikTokPlayerFailed(false);
           return;
         }
 
         if (state === 0) {
-          setTikTokPlayerPlaying(false);
 
           const endedVideoId =
             activeTikTokReel?.id || null;
@@ -380,7 +331,6 @@ export function HeroSocialReel() {
           return;
         }
 
-        setTikTokPlayerPlaying(false);
         return;
       }
 
@@ -394,20 +344,17 @@ export function HeroSocialReel() {
             | undefined;
 
         if (Number(value?.errorCode) === 3002) {
-          setTikTokPlayerReady(true);
-          setTikTokPlayerPlaying(false);
-          setTikTokAutoplayBlocked(true);
+
           setTikTokPlayerFailed(false);
           return;
         }
 
-        setTikTokPlayerPlaying(false);
         setTikTokPlayerFailed(true);
         return;
       }
 
       if (payload.type === "onError") {
-        setTikTokPlayerPlaying(false);
+
         setTikTokPlayerFailed(true);
       }
     };
@@ -577,58 +524,9 @@ export function HeroSocialReel() {
                     bg-transparent
                     transition-opacity
                     duration-300
-                    ${
-                      tiktokPlayerReady
-                        ? "opacity-100"
-                        : "opacity-0"
-                    }
+                    opacity-100
                   `}
                 />
-              ) : null}
-
-              {!tiktokPlayerFailed &&
-              tiktokPlayerReady &&
-              (!tiktokPlayerPlaying ||
-                tiktokAutoplayBlocked) ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTikTokAutoplayBlocked(false);
-                    setTikTokPlayerFailed(false);
-
-                    sendTikTokPlayerCommand("mute");
-                    sendTikTokPlayerCommand("play");
-                  }}
-                  className="
-                    absolute
-                    left-1/2
-                    top-1/2
-                    z-[8]
-                    flex
-                    size-14
-                    -translate-x-1/2
-                    -translate-y-1/2
-                    items-center
-                    justify-center
-                    rounded-full
-                    border
-                    border-white/25
-                    bg-black/40
-                    text-white
-                    shadow-[0_12px_32px_rgba(0,0,0,0.28)]
-                    backdrop-blur-md
-                    transition
-                    hover:scale-105
-                    hover:bg-black/55
-                  "
-                  aria-label={
-                    isArabic
-                      ? "تشغيل فيديو TikTok"
-                      : "Play TikTok video"
-                  }
-                >
-                  <Play className="ml-0.5 size-5 fill-white" />
-                </button>
               ) : null}
 
               {tiktokPlayerFailed ? (
@@ -676,7 +574,7 @@ export function HeroSocialReel() {
               poster={activeLocalReel.posterSrc}
               autoPlay
               loop
-              muted={muted}
+              muted
               playsInline
               preload="metadata"
               className="absolute inset-0 size-full object-cover"
@@ -685,262 +583,7 @@ export function HeroSocialReel() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_12%,rgba(185,145,80,0.28),transparent_34%),linear-gradient(155deg,#392f24_0%,#171b24_47%,#0b111d_100%)]" />
           )}
 
-          <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/78 via-black/5 to-black/20" />
 
-          <div
-            className="
-              pointer-events-none
-              absolute
-              inset-x-0
-              top-7
-              flex
-              items-center
-              justify-center
-              gap-5
-              text-[10px]
-              font-medium
-              text-white/55
-
-              sm:text-[11px]
-            "
-          >
-            <span>
-              {isArabic
-                ? "متابعة"
-                : "Following"}
-            </span>
-
-            <span className="border-b-2 border-[#b48745] pb-1 text-white">
-              {isArabic
-                ? "لك"
-                : "For You"}
-            </span>
-          </div>
-
-          {!activeTikTokReel ? (
-            <div className="absolute left-3 top-7 z-[4]">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setMuted((value) => !value);
-              }}
-              className="
-                size-8
-                rounded-full
-                bg-black/20
-                text-white
-                backdrop-blur
-                hover:bg-black/35
-              "
-              aria-label={
-                muted
-                  ? isArabic
-                    ? "تشغيل الصوت"
-                    : "Unmute"
-                  : isArabic
-                    ? "كتم الصوت"
-                    : "Mute"
-              }
-            >
-              {muted ? (
-                <VolumeX className="size-4" />
-              ) : (
-                <Volume2 className="size-4" />
-              )}
-            </Button>
-            </div>
-          ) : null}
-
-          {!activeReel ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="
-                  flex
-                  size-12
-                  items-center
-                  justify-center
-                  rounded-full
-                  border
-                  border-white/20
-                  bg-white/10
-                  text-white
-                  backdrop-blur
-
-                  lg:size-13
-                "
-              >
-                <Play className="size-4 fill-white lg:size-[18px]" />
-              </div>
-            </div>
-          ) : null}
-
-          <div
-            className="
-              pointer-events-none
-              absolute
-              bottom-5
-              left-4
-              z-[3]
-              right-14
-              text-white
-
-              lg:bottom-5
-              lg:left-5
-              lg:right-20
-            "
-          >
-            <div className="flex items-center gap-2 text-xs font-semibold sm:text-sm">
-              <span dir="ltr">
-                marilyn.clinics
-              </span>
-
-              <span className="size-1.5 rounded-full bg-sky-400" />
-            </div>
-
-            <p
-              className="
-                mt-2
-                max-w-[240px]
-                text-xs
-                leading-5
-                text-white/82
-
-                sm:text-sm
-                sm:leading-6
-
-                lg:max-w-[360px]
-              "
-            >
-              {activeTikTokReel
-                ? activeTikTokReel.title ||
-                  activeTikTokReel.description ||
-                  (isArabic
-                    ? "من أحدث فيديوهات Marilyn على TikTok."
-                    : "From Marilyn's latest TikTok videos.")
-                : activeLocalReel
-                  ? isArabic
-                    ? activeLocalReel.title.ar
-                    : activeLocalReel.title.en
-                  : isArabic
-                    ? "هنا ستظهر فيديوهات Marilyn الحقيقية عند إضافتها."
-                    : "Real Marilyn videos will appear here once added."}
-            </p>
-
-            <div className="mt-2 flex items-center gap-2 text-[10px] text-white/70 sm:text-xs">
-              <Music2 className="size-3.5" />
-              Marilyn Clinics
-            </div>
-          </div>
-
-          <div
-            className="
-              absolute
-              bottom-5
-              right-3
-              z-[4]
-              flex
-              flex-col
-              items-center
-              gap-3
-              text-white
-
-              lg:right-4
-            "
-          >
-            <a
-              href={PUBLIC_SITE.instagram.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="
-                flex
-                size-9
-                items-center
-                justify-center
-                rounded-full
-                border
-                border-white/20
-                bg-white/10
-                backdrop-blur
-
-                lg:size-10
-              "
-              aria-label="Instagram"
-            >
-              <Instagram className="size-4" />
-            </a>
-
-            <button
-              type="button"
-              className="flex flex-col items-center gap-0.5"
-              aria-label={
-                isArabic
-                  ? "إعجاب"
-                  : "Like"
-              }
-            >
-              <Heart className="size-6 fill-white" />
-              <span className="text-[9px]">
-                {activeTikTokReel
-                  ? formatSocialCount(
-                      activeTikTokReel.like_count,
-                    )
-                  : "—"}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              className="flex flex-col items-center gap-0.5"
-              aria-label={
-                isArabic
-                  ? "تعليق"
-                  : "Comment"
-              }
-            >
-              <MessageCircle className="size-6 fill-white" />
-              <span className="text-[9px]">
-                {activeTikTokReel
-                  ? formatSocialCount(
-                      activeTikTokReel.comment_count,
-                    )
-                  : "—"}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              className="flex flex-col items-center gap-0.5"
-              aria-label={
-                isArabic
-                  ? "مشاركة"
-                  : "Share"
-              }
-            >
-              <Share2 className="size-6 fill-white" />
-              <span className="text-[9px]">
-                {activeTikTokReel
-                  ? formatSocialCount(
-                      activeTikTokReel.share_count,
-                    )
-                  : "—"}
-              </span>
-            </button>
-          </div>
-
-          <div className="pointer-events-none absolute bottom-2.5 left-1/2 z-[4] flex -translate-x-1/2 gap-1.5">
-            {Array.from({ length: Math.max(reels.length, 1) }, (_, item) => item).map((item) => (
-              <span
-                key={item}
-                className={
-                  item === activeIndex
-                    ? "size-1.5 rounded-full bg-white"
-                    : "size-1.5 rounded-full bg-white/35"
-                }
-              />
-            ))}
-          </div>
         </div>
 
       </div>
