@@ -364,6 +364,10 @@ class CompanyMedicalStructureAPITests(TestCase):
             200,
         )
         self.assertEqual(
+            response.data["summary"]["branches"],
+            1,
+        )
+        self.assertEqual(
             response.data["summary"]["departments"],
             1,
         )

@@ -1001,6 +1001,11 @@ def medical_summary(request: Request) -> Response:
         {
             "success": True,
             "summary": {
+                "branches": (
+                    Branch.objects.filter(
+                        company=company,
+                    ).count()
+                ),
                 "departments": (
                     MedicalDepartment.objects.filter(
                         company=company,
