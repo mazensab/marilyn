@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { API_PATHS } from "@/lib/api/endpoints";
 import {
   PUBLIC_LOCALE_CHANGE_EVENT,
   readPublicLocale,
@@ -20,6 +21,73 @@ import {
 import { PUBLIC_SOCIAL_REELS } from "@/lib/public-content";
 import { PUBLIC_SITE } from "@/lib/public-site-config";
 import { cn } from "@/lib/utils";
+
+
+type PublicTikTokVideo = {
+  id: string;
+  platform: "tiktok";
+  title: string;
+  description: string;
+  cover_image_url: string;
+  share_url: string;
+  embed_link: string;
+  duration: number;
+  width: number;
+  height: number;
+  like_count: number;
+  comment_count: number;
+  share_count: number;
+  view_count: number;
+  published_at: string | null;
+};
+
+type PublicTikTokPayload = {
+  count: number;
+  results: PublicTikTokVideo[];
+};
+
+async function fetchPublicTikTokVideos(
+  limit: number,
+  signal: AbortSignal,
+) {
+  const url = new URL(
+    API_PATHS.publicSocial.tiktokFeedProxy,
+    window.location.origin,
+  );
+
+  url.searchParams.set("limit", String(limit));
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    credentials: "omit",
+    cache: "no-store",
+    redirect: "follow",
+    signal,
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `TikTok public feed returned HTTP ${response.status}`,
+    );
+  }
+
+  const payload =
+    (await response.json()) as PublicTikTokPayload;
+
+  if (!Array.isArray(payload.results)) {
+    return [];
+  }
+
+  return payload.results.filter(
+    (item) =>
+      Boolean(item?.id) &&
+      Boolean(item?.embed_link),
+  );
+}
+
 
 export function SocialVideoFeed() {
   const [locale, setLocale] =
@@ -30,6 +98,9 @@ export function SocialVideoFeed() {
 
   const [muted, setMuted] =
     React.useState(true);
+
+  const [tiktokVideos, setTikTokVideos] =
+    React.useState<PublicTikTokVideo[]>([]);
 
   const touchStartY = React.useRef<number | null>(null);
   const wheelLocked = React.useRef(false);
@@ -65,19 +136,64 @@ export function SocialVideoFeed() {
   }, []);
 
   React.useEffect(() => {
+    const controller = new AbortController();
+
+    void fetchPublicTikTokVideos(
+      12,
+      controller.signal,
+    )
+      .then((videos) => {
+        setTikTokVideos(videos);
+      })
+      .catch((error: unknown) => {
+        if (
+          error instanceof DOMException &&
+          error.name === "AbortError"
+        ) {
+          return;
+        }
+
+        setTikTokVideos([]);
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  const isArabic = locale === "ar";
+
+  const usingTikTok =
+    tiktokVideos.length > 0;
+
+  const reels = usingTikTok
+    ? tiktokVideos
+    : PUBLIC_SOCIAL_REELS;
+
+  React.useEffect(() => {
     if (
-      PUBLIC_SOCIAL_REELS.length > 0 &&
-      activeIndex >= PUBLIC_SOCIAL_REELS.length
+      reels.length > 0 &&
+      activeIndex >= reels.length
     ) {
       setActiveIndex(0);
     }
-  }, [activeIndex]);
+  }, [activeIndex, reels.length]);
 
-  const isArabic = locale === "ar";
-  const hasReels = PUBLIC_SOCIAL_REELS.length > 0;
+  const hasReels = reels.length > 0;
+
   const activeReel = hasReels
-    ? PUBLIC_SOCIAL_REELS[activeIndex]
+    ? reels[activeIndex]
     : null;
+
+  const activeTikTokReel =
+    usingTikTok && activeReel
+      ? (activeReel as PublicTikTokVideo)
+      : null;
+
+  const activeLocalReel =
+    !usingTikTok && activeReel
+      ? (activeReel as (typeof PUBLIC_SOCIAL_REELS)[number])
+      : null;
 
   const copy = isArabic
     ? {
@@ -110,28 +226,28 @@ export function SocialVideoFeed() {
       };
 
   const goNext = React.useCallback(() => {
-    if (PUBLIC_SOCIAL_REELS.length < 2) {
+    if (reels.length < 2) {
       return;
     }
 
     setActiveIndex((current) =>
-      current >= PUBLIC_SOCIAL_REELS.length - 1
+      current >= reels.length - 1
         ? 0
         : current + 1,
     );
-  }, []);
+  }, [reels.length]);
 
   const goPrevious = React.useCallback(() => {
-    if (PUBLIC_SOCIAL_REELS.length < 2) {
+    if (reels.length < 2) {
       return;
     }
 
     setActiveIndex((current) =>
       current <= 0
-        ? PUBLIC_SOCIAL_REELS.length - 1
+        ? reels.length - 1
         : current - 1,
     );
-  }, []);
+  }, [reels.length]);
 
   const handleTouchStart = (
     event: React.TouchEvent<HTMLDivElement>,
@@ -171,7 +287,7 @@ export function SocialVideoFeed() {
     event: React.WheelEvent<HTMLDivElement>,
   ) => {
     if (
-      PUBLIC_SOCIAL_REELS.length < 2 ||
+      reels.length < 2 ||
       Math.abs(event.deltaY) < 35 ||
       wheelLocked.current
     ) {
@@ -226,59 +342,101 @@ export function SocialVideoFeed() {
             >
               {activeReel ? (
                 <>
-                  <video
-                    key={activeReel.id}
-                    src={activeReel.videoSrc}
-                    poster={activeReel.posterSrc}
-                    autoPlay
-                    loop
-                    muted={muted}
-                    playsInline
-                    preload="metadata"
-                    className="absolute inset-0 size-full object-cover"
-                  />
+                  {activeTikTokReel ? (
+                    <>
+                      {activeTikTokReel.cover_image_url ? (
+                        <img
+                          src={activeTikTokReel.cover_image_url}
+                          alt=""
+                          aria-hidden="true"
+                          className="absolute inset-0 size-full object-cover"
+                        />
+                      ) : null}
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/15" />
+                      <iframe
+                        key={activeTikTokReel.id}
+                        src={activeTikTokReel.embed_link}
+                        title={
+                          activeTikTokReel.title ||
+                          activeTikTokReel.description ||
+                          "Marilyn Clinics TikTok video"
+                        }
+                        loading="lazy"
+                        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        allowFullScreen
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        className="absolute inset-0 z-[1] size-full border-0 bg-black"
+                      />
+                    </>
+                  ) : activeLocalReel ? (
+                    <video
+                      key={activeLocalReel.id}
+                      src={activeLocalReel.videoSrc}
+                      poster={activeLocalReel.posterSrc}
+                      autoPlay
+                      loop
+                      muted={muted}
+                      playsInline
+                      preload="metadata"
+                      className="absolute inset-0 size-full object-cover"
+                    />
+                  ) : null}
 
-                  <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+                  <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/75 via-transparent to-black/15" />
+
+                  <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[3] p-5 text-white">
                     <p className="text-sm font-semibold">
-                      {isArabic
-                        ? activeReel.title.ar
-                        : activeReel.title.en}
+                      {activeTikTokReel
+                        ? activeTikTokReel.title ||
+                          activeTikTokReel.description ||
+                          (isArabic
+                            ? "فيديو من Marilyn Clinics"
+                            : "A Marilyn Clinics video")
+                        : activeLocalReel
+                          ? isArabic
+                            ? activeLocalReel.title.ar
+                            : activeLocalReel.title.en
+                          : ""}
                     </p>
 
-                    {activeReel.caption ? (
+                    {activeTikTokReel?.description ? (
+                      <p className="mt-2 line-clamp-2 text-xs leading-6 text-white/80">
+                        {activeTikTokReel.description}
+                      </p>
+                    ) : activeLocalReel?.caption ? (
                       <p className="mt-2 text-xs leading-6 text-white/80">
                         {isArabic
-                          ? activeReel.caption.ar
-                          : activeReel.caption.en}
+                          ? activeLocalReel.caption.ar
+                          : activeLocalReel.caption.en}
                       </p>
                     ) : null}
                   </div>
 
-                  <div className="absolute left-3 top-3 flex flex-col gap-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="icon"
-                      onClick={() =>
-                        setMuted((value) => !value)
-                      }
-                      className="size-9 rounded-full bg-black/35 text-white backdrop-blur hover:bg-black/50"
-                      aria-label={
-                        muted
-                          ? copy.unmute
-                          : copy.mute
-                      }
-                    >
-                      {muted ? (
-                        <VolumeX className="size-4" />
-                      ) : (
-                        <Volume2 className="size-4" />
-                      )}
-                    </Button>
+                  <div className="absolute left-3 top-3 z-[4] flex flex-col gap-2">
+                    {!activeTikTokReel ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon"
+                        onClick={() =>
+                          setMuted((value) => !value)
+                        }
+                        className="size-9 rounded-full bg-black/35 text-white backdrop-blur hover:bg-black/50"
+                        aria-label={
+                          muted
+                            ? copy.unmute
+                            : copy.mute
+                        }
+                      >
+                        {muted ? (
+                          <VolumeX className="size-4" />
+                        ) : (
+                          <Volume2 className="size-4" />
+                        )}
+                      </Button>
+                    ) : null}
 
-                    {PUBLIC_SOCIAL_REELS.length > 1 ? (
+                    {reels.length > 1 ? (
                       <>
                         <Button
                           type="button"
@@ -381,7 +539,7 @@ export function SocialVideoFeed() {
 
             {hasReels ? (
               <div className="mt-6 flex items-center gap-2">
-                {PUBLIC_SOCIAL_REELS.map((item, index) => (
+                {reels.map((item, index) => (
                   <button
                     key={item.id}
                     type="button"

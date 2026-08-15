@@ -242,6 +242,11 @@ export const API_PATHS = {
     disconnect: "/api/system/integrations/tiktok/disconnect/",
   },
 
+  publicSocial: {
+    tiktokVideos: "/api/public/social/tiktok/videos/",
+    tiktokFeedProxy: "/site-api/tiktok-feed",
+  },
+
   systemNotifications: {
     list: "/api/system/notifications/",
     readAll: "/api/system/notifications/read-all/",
