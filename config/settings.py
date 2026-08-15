@@ -327,3 +327,39 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 # ---------------------------------------------------------------------
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# ---------------------------------------------------------------------
+# TikTok Display API / Login Kit
+# ---------------------------------------------------------------------
+
+TIKTOK_CLIENT_KEY = os.getenv(
+    "TIKTOK_CLIENT_KEY",
+    "",
+).strip()
+
+TIKTOK_CLIENT_SECRET = os.getenv(
+    "TIKTOK_CLIENT_SECRET",
+    "",
+).strip()
+
+TIKTOK_REDIRECT_URI = os.getenv(
+    "TIKTOK_REDIRECT_URI",
+    "",
+).strip()
+
+TIKTOK_SCOPES = os.getenv(
+    "TIKTOK_SCOPES",
+    "user.info.basic,video.list",
+).strip()
+
+TIKTOK_FRONTEND_RETURN_URL = os.getenv(
+    "TIKTOK_FRONTEND_RETURN_URL",
+    "http://localhost:3000/system/integrations",
+).strip()
+
+
+TIKTOK_TOKEN_ENCRYPTION_KEY = os.getenv(
+    "TIKTOK_TOKEN_ENCRYPTION_KEY",
+    "",
+).strip()

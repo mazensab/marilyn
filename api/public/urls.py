@@ -1,5 +1,6 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 from django.urls import path
+from .social import public_tiktok_videos
 from .branches import (
     public_branch_detail,
     public_branch_list,
@@ -28,6 +29,11 @@ from .booking_payment import (
 
 app_name = "public"
 urlpatterns = [
+    path(
+        "social/tiktok/videos/",
+        public_tiktok_videos,
+        name="social-tiktok-videos",
+    ),
     path(
         "booking/payment/options/",
         public_booking_payment_options,
@@ -84,3 +90,4 @@ urlpatterns = [
         name="service-detail",
     ),
 ]
+

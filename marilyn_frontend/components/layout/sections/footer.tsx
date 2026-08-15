@@ -102,10 +102,14 @@ export function FooterSection() {
           "WhatsApp",
         follow:
           "تابعينا على",
-        unavailable:
-          "سيتم إضافة الرابط قريبًا",
         rights:
           "جميع الحقوق محفوظة",
+        privacy:
+          "سياسة الخصوصية",
+        terms:
+          "شروط الاستخدام",
+        refund:
+          "الإلغاء والاسترجاع",
       }
     : {
         description:
@@ -120,13 +124,19 @@ export function FooterSection() {
           "WhatsApp",
         follow:
           "Follow us",
-        unavailable:
-          "Link will be added soon",
         rights:
           "All rights reserved",
+        privacy:
+          "Privacy Policy",
+        terms:
+          "Terms of Use",
+        refund:
+          "Cancellation & Refunds",
       };
 
-  const whatsappHref = "https://wa.me/966115444888";
+  const whatsappHref =
+    "https://wa.me/966115444888";
+
   const socialLinks = [
     {
       key: "instagram",
@@ -299,9 +309,7 @@ export function FooterSection() {
                   href={item.href}
                   className="text-sm text-[#667184] transition-colors hover:text-[#a57b3d]"
                 >
-                  {ar
-                    ? item.ar
-                    : item.en}
+                  {ar ? item.ar : item.en}
                 </Link>
               ))}
             </div>
@@ -329,31 +337,34 @@ export function FooterSection() {
                 className="flex items-center gap-2 text-sm text-[#667184] transition-colors hover:text-[#a57b3d]"
               >
                 <Phone className="size-4 shrink-0 text-[#a57b3d]" />
+
                 <span dir="ltr">
                   011 544 4888
                 </span>
               </a>
-              {whatsappHref ? (
-                <a
-                  href={whatsappHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-[#667184] transition-colors hover:text-[#a57b3d]"
-                >
-                  <MessageCircle className="size-4 shrink-0 text-[#a57b3d]" />
-                  {copy.whatsapp}
-                </a>
-              ) : null}
+
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-[#667184] transition-colors hover:text-[#a57b3d]"
+              >
+                <MessageCircle className="size-4 shrink-0 text-[#a57b3d]" />
+                {copy.whatsapp}
+              </a>
             </div>
+
             <div className="mt-5">
               <p className="mb-3 text-xs font-semibold text-[#10213b]/75">
                 {copy.follow}
               </p>
+
               <div
                 className="
                   grid
                   grid-cols-4
                   gap-2
+
                   sm:grid-cols-7
                 "
                 aria-label={copy.follow}
@@ -371,6 +382,7 @@ export function FooterSection() {
                     backdrop-blur
                     transition
                   `;
+
                   return (
                     <a
                       key={social.key}
@@ -404,7 +416,7 @@ export function FooterSection() {
         className="
           flex
           flex-col
-          gap-2
+          gap-3
           px-2
           pt-4
           text-center
@@ -423,9 +435,50 @@ export function FooterSection() {
           {copy.rights}.
         </span>
 
-        <span dir="ltr">
-          {PUBLIC_SITE.domain}
-        </span>
+        <div
+          className="
+            flex
+            flex-wrap
+            items-center
+            justify-center
+            gap-x-4
+            gap-y-2
+
+            sm:justify-end
+          "
+        >
+          <Link
+            href="/privacy"
+            className="transition-colors hover:text-[#a57b3d]"
+          >
+            {copy.privacy}
+          </Link>
+
+          <Link
+            href="/terms"
+            className="transition-colors hover:text-[#a57b3d]"
+          >
+            {copy.terms}
+          </Link>
+
+          <Link
+            href="/refund-policy"
+            className="transition-colors hover:text-[#a57b3d]"
+          >
+            {copy.refund}
+          </Link>
+
+          <span
+            aria-hidden="true"
+            className="hidden text-[#c6b89f] sm:inline"
+          >
+            •
+          </span>
+
+          <span dir="ltr">
+            {PUBLIC_SITE.domain}
+          </span>
+        </div>
       </div>
     </footer>
   );
