@@ -20,6 +20,12 @@ import {
 } from "lucide-react";
 import { PublicBookingCheckout } from "@/components/booking/public-booking-checkout";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   fetchPublicAvailability,
   fetchPublicBookingOptions,
@@ -152,6 +158,54 @@ function timeLabel(
     },
   ).format(parsed);
 }
+function localizedTimeLabel(
+  value: string,
+  isArabic: boolean,
+) {
+  const label = timeLabel(value);
+  if (!isArabic) {
+    return label;
+  }
+  return label
+    .replace(/\s*AM$/i, " \u0635")
+    .replace(/\s*PM$/i, " \u0645");
+}
+function bookingDateLabel(
+  value: string,
+  isArabic: boolean,
+) {
+  const normalized = String(
+    value || "",
+  ).slice(0, 10);
+  const match =
+    /^(\d{4})-(\d{2})-(\d{2})$/.exec(
+      normalized,
+    );
+  if (!match) {
+    return value;
+  }
+  const date = new Date(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+    12,
+    0,
+    0,
+  );
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  void isArabic;
+  return new Intl.DateTimeFormat(
+    "en-GB",
+    {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    },
+  ).format(date);
+}
+
 function initials(
   value: string,
 ) {
@@ -1114,12 +1168,12 @@ export function PublicBookingExperience({
                           : currentStep === 5
                             ? (
                                 isArabic
-                                  ? "????? ???????? ???????? ??????? ?????? ?????."
+                                  ? "\u0623\u062f\u062e\u0644\u064a \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0623\u0633\u0627\u0633\u064a\u0629 \u0644\u0644\u0645\u0631\u0627\u062c\u0639 \u0644\u0625\u0643\u0645\u0627\u0644 \u0627\u0644\u062d\u062c\u0632."
                                   : "Enter the essential patient details to continue the booking."
                               )
                             : (
                                 isArabic
-                                  ? "????? ???? ???????? ?? ???? ??????."
+                                  ? "\u0631\u0627\u062c\u0639\u064a \u062c\u0645\u064a\u0639 \u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644 \u062b\u0645 \u0623\u0643\u062f\u064a \u0627\u0644\u0645\u0648\u0639\u062f."
                                   : "Review all details, then confirm the appointment."
                               )}
                 </p>
@@ -1534,19 +1588,7 @@ function BookingStepper({
   ];
   return (
     <div
-      className="
-        mt-8
-        overflow-x-auto
-        rounded-[26px]
-        border
-        border-[#d4c2a7]/45
-        bg-white/58
-        px-4
-        py-4
-        shadow-[0_16px_44px_rgba(79,58,35,0.055)]
-        backdrop-blur-xl
-        sm:px-5
-      "
+      className="mt-8 overflow-x-auto rounded-[26px] border border-[#d4c2a7]/45 bg-white/58 px-4 py-4 shadow-[0_16px_44px_rgba(79,58,35,0.055)] backdrop-blur-xl sm:px-5 scroll-mt-[112px] lg:sticky lg:top-[104px] lg:z-30"
     >
       <div className="mx-auto flex min-w-[680px] max-w-5xl items-start">
         {steps.map(
@@ -1983,6 +2025,150 @@ function PractitionerStep({
     </div>
   );
 }
+
+function parseBookingCalendarDate(
+  value: string,
+) {
+  if (!value) {
+    return undefined;
+  }
+  const [year, month, day] = value
+    .slice(0, 10)
+    .split("-")
+    .map(Number);
+  if (
+    !year ||
+    !month ||
+    !day
+  ) {
+    return undefined;
+  }
+  const parsed = new Date(
+    year,
+    month - 1,
+    day,
+    12,
+    0,
+    0,
+  );
+  return Number.isNaN(
+    parsed.getTime(),
+  )
+    ? undefined
+    : parsed;
+}
+function BookingDatePicker({
+  value,
+  onChange,
+  isArabic,
+  label,
+}: {
+  value: string;
+  onChange: (
+    value: string,
+  ) => void;
+  isArabic: boolean;
+  label: string;
+}) {
+  const [open, setOpen] =
+    React.useState(false);
+  const selected =
+    parseBookingCalendarDate(
+      value,
+    );
+  return (
+    <Popover
+      open={open}
+      onOpenChange={setOpen}
+    >
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className="
+            h-10
+            min-w-[220px]
+            justify-start
+            gap-2
+            rounded-xl
+            border-[#dbc9ad]/70
+            bg-white/75
+            px-3
+            text-start
+            font-normal
+            text-[#172238]
+            shadow-none
+            hover:border-[#c7a56d]
+            hover:bg-white
+          "
+        >
+          <CalendarDays
+            className="
+              size-4
+              shrink-0
+              text-[#b48745]
+            "
+          />
+          <span
+            className="
+              truncate
+              text-sm
+              tabular-nums
+            "
+          >
+            {value
+              ? bookingDateLabel(
+                  value,
+                  isArabic,
+                )
+              : label}
+          </span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="
+          w-auto
+          rounded-[20px]
+          border-[#dbc9ad]/70
+          bg-[#fffaf4]
+          p-0
+          shadow-[0_22px_55px_rgba(71,52,28,0.16)]
+        "
+        align={
+          isArabic
+            ? "end"
+            : "start"
+        }
+      >
+        <Calendar
+          mode="single"
+          selected={selected}
+          onSelect={(
+            date:
+              | Date
+              | undefined,
+          ) => {
+            if (!date) {
+              return;
+            }
+            onChange(
+              localDateValue(
+                date,
+              ),
+            );
+            setOpen(false);
+          }}
+          disabled={(date) =>
+            localDateValue(
+              date,
+            ) < localDateValue()
+          }
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
 function AppointmentStep({
   dateChoices,
   bookingDate,
@@ -2077,43 +2263,19 @@ function AppointmentStep({
         )}
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <label className="inline-flex items-center gap-2 text-xs font-semibold text-[#806443]">
-          <CalendarDays className="size-4 text-[#b48745]" />
-          <input
-            type="date"
-            min={
-              localDateValue()
-            }
-            value={
-              bookingDate
-            }
-            onChange={(
-              event,
-            ) => {
+        <BookingDatePicker
+            value={bookingDate}
+            onChange={(value) => {
               setBookingDate(
-                event.target.value,
+                value,
               );
               setSelectedSlot(
                 null,
               );
             }}
-            className="
-              h-10
-              rounded-xl
-              border
-              border-[#d0bda1]/60
-              bg-white/78
-              px-3
-              text-sm
-              font-normal
-              text-[#354153]
-              outline-none
-              focus:border-[#b48745]
-              focus:ring-2
-              focus:ring-[#d8b979]/20
-            "
+            isArabic={isArabic}
+            label={chooseDateText}
           />
-        </label>
       </div>
       {!bookingDate ? (
         <div className="mt-5">
@@ -2187,9 +2349,7 @@ function AppointmentStep({
                       : "border-[#d8c8b2]/55 bg-white/70 text-[#354153] hover:border-[#bea071]/70 hover:bg-[#f8efe2]",
                   ].join(" ")}
                 >
-                  {timeLabel(
-                    slot.start,
-                  )}
+                  {localizedTimeLabel(slot.start, isArabic)}
                 </button>
               );
             },
@@ -2317,14 +2477,9 @@ function BookingSummary({
             copy.date
           }
           value={
-            bookingDate ||
-            copy.notSelected
+            bookingDate ? bookingDateLabel(bookingDate, isArabic) : copy.notSelected
           }
-          ltr={
-            Boolean(
-              bookingDate,
-            )
-          }
+          ltr={!isArabic && Boolean(bookingDate)}
         />
         <SummaryRow
           icon={
@@ -2335,16 +2490,10 @@ function BookingSummary({
           }
           value={
             selectedSlot
-              ? timeLabel(
-                  selectedSlot.start,
-                )
+              ? localizedTimeLabel(selectedSlot.start, isArabic)
               : copy.notSelected
           }
-          ltr={
-            Boolean(
-              selectedSlot,
-            )
-          }
+          ltr={!isArabic && Boolean(selectedSlot)}
         />
       </div>
       {service ? (

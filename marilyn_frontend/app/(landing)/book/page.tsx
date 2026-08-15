@@ -81,9 +81,9 @@ export default async function BookPage({
         min-h-screen
         overflow-hidden
         bg-[#f8f2e9]
-        pt-12
+        pt-28
         text-[#172238]
-        sm:pt-14
+        sm:pt-32
       "
     >
       <section className="relative">

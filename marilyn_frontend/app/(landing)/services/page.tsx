@@ -195,13 +195,11 @@ export default async function ServicesPage() {
           </header>
           {services.length > 0 ? (
             <div
-              className="
-                mt-10
-                grid
-                gap-5
-                md:grid-cols-2
-                xl:grid-cols-3
-              "
+              className={
+                services.length === 1
+                  ? "mx-auto mt-10 grid w-full max-w-[520px] gap-5"
+                  : "mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-3"
+              }
             >
               {services.map((service) => {
                 const name =
