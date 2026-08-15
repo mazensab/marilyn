@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 
 from django.apps import apps
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -396,9 +397,16 @@ class Command(BaseCommand):
         ]
 
         endpoint_results = {}
+        use_secure_requests = bool(
+            getattr(settings, "SECURE_SSL_REDIRECT", False)
+        )
 
         for endpoint in endpoints:
-            response = client.get(endpoint, HTTP_HOST="127.0.0.1")
+            response = client.get(
+                endpoint,
+                HTTP_HOST="127.0.0.1",
+                secure=use_secure_requests,
+            )
             endpoint_results[endpoint] = response.status_code
 
             if response.status_code != 200:
