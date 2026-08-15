@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import secrets
@@ -386,8 +386,8 @@ def persist_token_payload(payload: dict[str, Any]) -> TikTokConnection:
 def sync_tiktok_account(
     connection: TikTokConnection,
     *,
-    max_pages: int = 5,
-) -> dict[str, int]:
+    max_pages: int | None = None,
+) -> dict[str, int | bool]:
     try:
         user = fetch_user_info(connection)
 
@@ -401,10 +401,13 @@ def sync_tiktok_account(
         cursor: int | None = None
         page_number = 0
         seen_ids: set[str] = set()
+        seen_cursors: set[int] = set()
         created_count = 0
         updated_count = 0
+        hidden_count = 0
+        sync_complete = False
 
-        while page_number < max(max_pages, 1):
+        while max_pages is None or page_number < max(int(max_pages), 1):
             page = fetch_video_page(
                 connection,
                 cursor=cursor,
@@ -469,6 +472,7 @@ def sync_tiktok_account(
                         "published_at": _published_at(
                             video.get("create_time")
                         ),
+                        "is_visible": True,
                     },
                 )
 
@@ -480,14 +484,33 @@ def sync_tiktok_account(
             page_number += 1
 
             if not page.get("has_more"):
+                sync_complete = True
                 break
 
             next_cursor = page.get("cursor")
 
             if next_cursor is None:
-                break
+                raise TikTokIntegrationError(
+                    "TikTok pagination returned has_more without a cursor."
+                )
 
-            cursor = int(next_cursor)
+            next_cursor = int(next_cursor)
+
+            if next_cursor in seen_cursors:
+                raise TikTokIntegrationError(
+                    "TikTok pagination cursor repeated."
+                )
+
+            seen_cursors.add(next_cursor)
+            cursor = next_cursor
+
+        if sync_complete:
+            stale_videos = connection.videos.filter(is_visible=True)
+
+            if seen_ids:
+                stale_videos = stale_videos.exclude(tiktok_video_id__in=seen_ids)
+
+            hidden_count = stale_videos.update(is_visible=False)
 
         connection.last_synced_at = timezone.now()
         connection.last_error = ""
@@ -504,7 +527,10 @@ def sync_tiktok_account(
         return {
             "created": created_count,
             "updated": updated_count,
+            "hidden": hidden_count,
             "seen": len(seen_ids),
+            "pages": page_number,
+            "complete": sync_complete,
         }
 
     except Exception as exc:
