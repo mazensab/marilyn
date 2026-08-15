@@ -20,6 +20,8 @@ import * as React from "react";
 import Link from "next/link";
 import {
   ArrowUpDown,
+  CircleCheck,
+  CircleX,
   FileSpreadsheet,
   FileText,
   KeyRound,
@@ -27,11 +29,13 @@ import {
   Loader2,
   PlugZap,
   Printer,
+  RefreshCcw,
   RefreshCw,
   RotateCcw,
   ShieldCheck,
   Sparkles,
   TriangleAlert,
+  Video,
 } from "lucide-react";
 import { toast } from "sonner";
 import { openPrintReport } from "@/lib/print-report";
@@ -86,6 +90,32 @@ type IntegrationKeyRecord = {
   createdAt: string | null;
   expiresAt: string | null;
 };
+type TikTokConnection = {
+  id: number | string;
+  open_id: string;
+  display_name: string;
+  avatar_url: string;
+  scopes: string[];
+  is_active: boolean;
+  access_token_expires_at: string | null;
+  refresh_token_expires_at: string | null;
+  last_synced_at: string | null;
+  last_error: string;
+  video_count: number;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+type TikTokStatusPayload = {
+  configured: boolean;
+  connected: boolean;
+  connection: TikTokConnection | null;
+};
+
+type TikTokConnectPayload = {
+  authorization_url: string;
+};
+
 type QuickAction = {
   title: string;
   description: string;
@@ -335,6 +365,87 @@ async function fetchJson<T>(url: string): Promise<T> {
   }
   return (payload || {}) as T;
 }
+function readBrowserCookie(name: string) {
+  if (typeof document === "undefined") return "";
+
+  const prefix = `${encodeURIComponent(name)}=`;
+
+  for (const part of document.cookie.split(";")) {
+    const cookie = part.trim();
+
+    if (cookie.startsWith(prefix)) {
+      return decodeURIComponent(cookie.slice(prefix.length));
+    }
+  }
+
+  return "";
+}
+
+async function ensureCsrfToken() {
+  await fetch(makeApiUrl(API_PATHS.auth.csrf), {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+    redirect: "follow",
+    headers: {
+      Accept: "application/json",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  });
+
+  return readBrowserCookie("csrftoken");
+}
+
+async function postJson<T>(url: string): Promise<T> {
+  const csrfToken = await ensureCsrfToken();
+
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "X-Requested-With": "XMLHttpRequest",
+  };
+
+  if (csrfToken) {
+    headers["X-CSRFToken"] = csrfToken;
+  }
+
+  const response = await fetch(url, {
+    method: "POST",
+    credentials: "include",
+    cache: "no-store",
+    redirect: "follow",
+    headers,
+    body: JSON.stringify({}),
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+  const rawText = await response.text();
+
+  let payload: unknown = null;
+
+  if (rawText && contentType.includes("application/json")) {
+    try {
+      payload = JSON.parse(rawText) as unknown;
+    } catch {
+      payload = null;
+    }
+  }
+
+  if (!response.ok) {
+    const record = asRecord(payload);
+
+    const message =
+      normalizeText(record.message) ||
+      normalizeText(record.detail) ||
+      normalizeText(record.error) ||
+      `Request failed with status ${response.status}`;
+
+    throw new Error(message);
+  }
+
+  return (payload || {}) as T;
+}
+
 function extractArray(payload: unknown): unknown[] {
   if (Array.isArray(payload)) return payload;
   const record = asRecord(payload);
@@ -518,6 +629,16 @@ export default function SystemIntegrationsPage() {
   const [status, setStatus] = React.useState<StatusFilter>("all");
   const [environment, setEnvironment] = React.useState<EnvironmentFilter>("all");
   const [sort, setSort] = React.useState<SortKey>("newest");
+
+  const [tiktokStatus, setTikTokStatus] =
+    React.useState<TikTokStatusPayload | null>(null);
+
+  const [tiktokLoading, setTikTokLoading] = React.useState(true);
+
+  const [tiktokAction, setTikTokAction] = React.useState<
+    "connect" | "sync" | "disconnect" | null
+  >(null);
+
   const t = translations[locale];
   const dir = locale === "ar" ? "rtl" : "ltr";
   const alignClass = locale === "ar" ? "text-right" : "text-left";
@@ -561,9 +682,162 @@ export default function SystemIntegrationsPage() {
     },
     [t.errorDesc, t.refreshed],
   );
+  const loadTikTokStatus = React.useCallback(async () => {
+    try {
+      setTikTokLoading(true);
+
+      const payload = await fetchJson<TikTokStatusPayload>(
+        makeApiUrl(API_PATHS.systemTikTok.status),
+      );
+
+      setTikTokStatus(payload);
+    } catch (caughtError) {
+      const message =
+        caughtError instanceof Error
+          ? caughtError.message
+          : locale === "ar"
+            ? "تعذر تحميل حالة TikTok."
+            : "Could not load TikTok status.";
+
+      setTikTokStatus(null);
+      toast.error(message);
+    } finally {
+      setTikTokLoading(false);
+    }
+  }, [locale]);
+
   React.useEffect(() => {
     void loadIntegrations();
-  }, [loadIntegrations]);
+    void loadTikTokStatus();
+  }, [loadIntegrations, loadTikTokStatus]);
+
+  const connectTikTok = React.useCallback(async () => {
+    try {
+      setTikTokAction("connect");
+
+      const payload = await fetchJson<TikTokConnectPayload>(
+        makeApiUrl(API_PATHS.systemTikTok.connect),
+      );
+
+      const authorizationUrl = normalizeText(
+        payload.authorization_url,
+      );
+
+      if (!authorizationUrl) {
+        throw new Error(
+          locale === "ar"
+            ? "لم يُرجع TikTok رابط التفويض."
+            : "TikTok authorization URL was not returned.",
+        );
+      }
+
+      window.location.assign(authorizationUrl);
+    } catch (caughtError) {
+      toast.error(
+        caughtError instanceof Error
+          ? caughtError.message
+          : locale === "ar"
+            ? "تعذر بدء ربط TikTok."
+            : "Could not start TikTok connection.",
+      );
+
+      setTikTokAction(null);
+    }
+  }, [locale]);
+
+  const syncTikTok = React.useCallback(async () => {
+    try {
+      setTikTokAction("sync");
+
+      await postJson(
+        makeApiUrl(API_PATHS.systemTikTok.sync),
+      );
+
+      toast.success(
+        locale === "ar"
+          ? "تمت مزامنة حساب TikTok."
+          : "TikTok account synchronized.",
+      );
+
+      await loadTikTokStatus();
+    } catch (caughtError) {
+      toast.error(
+        caughtError instanceof Error
+          ? caughtError.message
+          : locale === "ar"
+            ? "تعذرت مزامنة TikTok."
+            : "Could not synchronize TikTok.",
+      );
+    } finally {
+      setTikTokAction(null);
+    }
+  }, [loadTikTokStatus, locale]);
+
+  const disconnectTikTok = React.useCallback(async () => {
+    try {
+      setTikTokAction("disconnect");
+
+      await postJson(
+        makeApiUrl(API_PATHS.systemTikTok.disconnect),
+      );
+
+      toast.success(
+        locale === "ar"
+          ? "تم فصل حساب TikTok."
+          : "TikTok account disconnected.",
+      );
+
+      await loadTikTokStatus();
+    } catch (caughtError) {
+      toast.error(
+        caughtError instanceof Error
+          ? caughtError.message
+          : locale === "ar"
+            ? "تعذر فصل TikTok."
+            : "Could not disconnect TikTok.",
+      );
+    } finally {
+      setTikTokAction(null);
+    }
+  }, [loadTikTokStatus, locale]);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get("tiktok");
+    const message = params.get("message");
+
+    if (result === "connected") {
+      toast.success(
+        locale === "ar"
+          ? "تم ربط حساب TikTok بنجاح."
+          : "TikTok account connected successfully.",
+      );
+
+      void loadTikTokStatus();
+    }
+
+    if (result === "error") {
+      toast.error(
+        message ||
+          (locale === "ar"
+            ? "تعذر إكمال ربط TikTok."
+            : "TikTok connection could not be completed."),
+      );
+    }
+
+    if (result) {
+      const cleanUrl = new URL(window.location.href);
+
+      cleanUrl.searchParams.delete("tiktok");
+      cleanUrl.searchParams.delete("message");
+
+      window.history.replaceState(
+        {},
+        "",
+        `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`,
+      );
+    }
+  }, [loadTikTokStatus, locale]);
   const resetFilters = React.useCallback(() => {
     setSearch("");
     setStatus("all");
@@ -868,6 +1142,201 @@ export default function SystemIntegrationsPage() {
             );
           })}
         </nav>
+        <Card className="w-full rounded-lg border bg-card shadow-none">
+          <CardHeader className="gap-3">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex items-start gap-3">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full border bg-background shadow-sm">
+                  <Video className="h-5 w-5 text-[#a57b3d]" />
+                </span>
+
+                <div className="space-y-1">
+                  <CardTitle className="flex flex-wrap items-center gap-2">
+                    TikTok
+
+                    {!tiktokLoading && tiktokStatus?.connected ? (
+                      <Badge
+                        variant="outline"
+                        className="border-emerald-200 bg-emerald-50 text-emerald-700"
+                      >
+                        <CircleCheck className="me-1 h-3.5 w-3.5" />
+                        {locale === "ar" ? "متصل" : "Connected"}
+                      </Badge>
+                    ) : !tiktokLoading ? (
+                      <Badge
+                        variant="outline"
+                        className="border-slate-200 bg-slate-50 text-slate-600"
+                      >
+                        <CircleX className="me-1 h-3.5 w-3.5" />
+                        {locale === "ar" ? "غير متصل" : "Not connected"}
+                      </Badge>
+                    ) : null}
+                  </CardTitle>
+
+                  <CardDescription>
+                    {locale === "ar"
+                      ? "ربط حساب TikTok الرسمي ومزامنة الفيديوهات العامة لعرضها تلقائيًا في الموقع."
+                      : "Connect the official TikTok account and synchronize public videos for the website."}
+                  </CardDescription>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {tiktokStatus?.connected ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={registerOutlineButtonClass}
+                      disabled={tiktokAction !== null}
+                      onClick={() => void syncTikTok()}
+                    >
+                      {tiktokAction === "sync" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCcw className="h-4 w-4" />
+                      )}
+                      {locale === "ar" ? "مزامنة" : "Sync"}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={registerOutlineButtonClass}
+                      disabled={tiktokAction !== null}
+                      onClick={() => void disconnectTikTok()}
+                    >
+                      {tiktokAction === "disconnect" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <CircleX className="h-4 w-4" />
+                      )}
+                      {locale === "ar"
+                        ? "فصل الحساب"
+                        : "Disconnect"}
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="brand"
+                    className={registerBrandButtonClass}
+                    disabled={
+                      tiktokLoading ||
+                      tiktokAction !== null ||
+                      !tiktokStatus?.configured
+                    }
+                    onClick={() => void connectTikTok()}
+                  >
+                    {tiktokAction === "connect" ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <PlugZap className="h-4 w-4" />
+                    )}
+                    {locale === "ar"
+                      ? "ربط حساب TikTok"
+                      : "Connect TikTok"}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            {tiktokLoading ? (
+              <div className="grid gap-3 md:grid-cols-3">
+                <Skeleton className="h-20 rounded-lg" />
+                <Skeleton className="h-20 rounded-lg" />
+                <Skeleton className="h-20 rounded-lg" />
+              </div>
+            ) : !tiktokStatus?.configured ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-4 text-sm text-amber-800">
+                <div className="flex items-start gap-3">
+                  <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div>
+                    <p className="font-semibold">
+                      {locale === "ar"
+                        ? "إعداد TikTok غير مكتمل"
+                        : "TikTok is not configured"}
+                    </p>
+                    <p className="mt-1 text-xs text-amber-700">
+                      {locale === "ar"
+                        ? "تحقق من Client Key وClient Secret وRedirect URI في إعدادات الخادم."
+                        : "Check the server Client Key, Client Secret, and Redirect URI."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : tiktokStatus.connected &&
+              tiktokStatus.connection ? (
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-lg border bg-background p-4">
+                  <p className="text-xs text-muted-foreground">
+                    {locale === "ar" ? "الحساب" : "Account"}
+                  </p>
+                  <p className="mt-2 truncate text-sm font-semibold">
+                    {tiktokStatus.connection.display_name || "TikTok"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-background p-4">
+                  <p className="text-xs text-muted-foreground">
+                    {locale === "ar" ? "الفيديوهات" : "Videos"}
+                  </p>
+                  <p className="mt-2 text-xl font-bold tabular-nums">
+                    {formatInteger(
+                      tiktokStatus.connection.video_count,
+                    )}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-background p-4">
+                  <p className="text-xs text-muted-foreground">
+                    {locale === "ar"
+                      ? "آخر مزامنة"
+                      : "Last sync"}
+                  </p>
+                  <p className="mt-2 text-sm tabular-nums">
+                    {formatDate(
+                      tiktokStatus.connection.last_synced_at,
+                    )}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-background p-4">
+                  <p className="text-xs text-muted-foreground">
+                    {locale === "ar" ? "الصلاحيات" : "Scopes"}
+                  </p>
+                  <p className="mt-2 truncate text-sm">
+                    {tiktokStatus.connection.scopes?.length
+                      ? tiktokStatus.connection.scopes.join(", ")
+                      : "—"}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border bg-background p-4">
+                <p className="text-sm font-semibold">
+                  {locale === "ar"
+                    ? "TikTok جاهز للربط"
+                    : "TikTok is ready to connect"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {locale === "ar"
+                    ? "إعدادات الخادم موجودة. اربط الحساب لبدء مزامنة الفيديوهات."
+                    : "Server configuration is available. Connect the account to start video synchronization."}
+                </p>
+              </div>
+            )}
+
+            {tiktokStatus?.connection?.last_error ? (
+              <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50/60 p-3 text-xs text-rose-700">
+                {tiktokStatus.connection.last_error}
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+
         <Card className="w-full overflow-hidden rounded-lg border bg-card shadow-none">
           <CardHeader className="gap-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

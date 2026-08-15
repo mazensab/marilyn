@@ -234,6 +234,14 @@ export const API_PATHS = {
     usage: (id: ApiPathId) => `/api/system/integration-api-keys/${id}/usage/`,
   },
 
+  systemTikTok: {
+    status: "/api/system/integrations/tiktok/status/",
+    connect: "/api/system/integrations/tiktok/connect/",
+    callback: "/api/system/integrations/tiktok/callback/",
+    sync: "/api/system/integrations/tiktok/sync/",
+    disconnect: "/api/system/integrations/tiktok/disconnect/",
+  },
+
   systemNotifications: {
     list: "/api/system/notifications/",
     readAll: "/api/system/notifications/read-all/",
