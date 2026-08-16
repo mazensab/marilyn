@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { ChatWidget } from "@/components/chat-widget";
 import { PublicBookingExperience } from "@/components/booking/public-booking-experience";
+import { PublicBookingPayment } from "@/components/booking/public-booking-payment";
 import { MobileBottomNav } from "@/components/landing/mobile-bottom-nav";
 import { FooterSection } from "@/components/layout/sections/footer";
 import { normalizePublicLocale } from "@/lib/public-locale";
@@ -11,6 +12,7 @@ type PageProps = {
     branch?: string;
     service?: string;
     practitioner?: string;
+    payment_return?: string;
   }>;
 };
 function positiveInteger(
@@ -137,6 +139,12 @@ export default async function BookPage({
             lg:py-16
           "
         >
+          {params.payment_return === "1" ? (
+            <PublicBookingPayment
+              locale={locale}
+              returnMode
+            />
+          ) : (
           <PublicBookingExperience
             locale={locale}
             initialBranchId={
@@ -155,6 +163,7 @@ export default async function BookPage({
               )
             }
           />
+          )}
         </div>
       </section>
       <FooterSection />

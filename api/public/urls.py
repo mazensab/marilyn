@@ -26,6 +26,8 @@ from .booking_confirmation import (
 from .booking_payment import (
     public_booking_payment_checkout,
     public_booking_payment_options,
+    public_booking_payment_return,
+    public_booking_payment_status,
     public_booking_payment_verify,
 )
 
@@ -59,6 +61,11 @@ urlpatterns = [
         name="social-tiktok-videos",
     ),
     path(
+        "booking/payment/return/<str:provider>/<str:result>/",
+        public_booking_payment_return,
+        name="booking-payment-return",
+    ),
+    path(
         "booking/payment/options/",
         public_booking_payment_options,
         name="booking-payment-options",
@@ -67,6 +74,11 @@ urlpatterns = [
         "booking/payment/checkout/",
         public_booking_payment_checkout,
         name="booking-payment-checkout",
+    ),
+    path(
+        "booking/payment/status/",
+        public_booking_payment_status,
+        name="booking-payment-status",
     ),
     path(
         "booking/payment/verify/",

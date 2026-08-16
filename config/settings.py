@@ -359,6 +359,12 @@ TIKTOK_FRONTEND_RETURN_URL = os.getenv(
 ).strip()
 
 
+PUBLIC_BOOKING_PAYMENT_RETURN_URL = os.getenv(
+    "PUBLIC_BOOKING_PAYMENT_RETURN_URL",
+    "http://localhost:3000/book",
+).strip()
+
+
 TIKTOK_TOKEN_ENCRYPTION_KEY = os.getenv(
     "TIKTOK_TOKEN_ENCRYPTION_KEY",
     "",

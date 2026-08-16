@@ -1,13 +1,11 @@
 "use client";
 import * as React from "react";
-import Link from "next/link";
 import {
   ArrowLeft,
   ArrowRight,
   Building2,
   CalendarDays,
   Check,
-  CheckCircle2,
   Clock3,
   Loader2,
   Mail,
@@ -16,6 +14,7 @@ import {
   Stethoscope,
   UserRound,
 } from "lucide-react";
+import { PublicBookingPayment } from "@/components/booking/public-booking-payment";
 import { Button } from "@/components/ui/button";
 import {
   confirmPublicBooking,
@@ -846,57 +845,13 @@ export function PublicBookingCheckout({
   }
   if (confirmation) {
     return (
-      <div className="rounded-[24px] border border-[#c4a16b]/50 bg-[linear-gradient(145deg,#fbf5ec_0%,#eee0cd_100%)] p-6 text-center sm:p-8">
-        <div className="mx-auto flex size-16 items-center justify-center rounded-full border border-white/80 bg-[#c89e58] text-white shadow-[0_14px_34px_rgba(168,121,56,0.20)]">
-          <CheckCircle2 className="size-8" />
-        </div>
-        <h3 className="mt-5 text-2xl font-semibold tracking-[-0.03em] text-[#172238]">
-          {copy.successTitle}
-        </h3>
-        <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-[#747a83]">
-          {copy.successText}
-        </p>
-        <div className="mx-auto mt-6 max-w-sm rounded-[20px] border border-[#cfb58c]/48 bg-white/65 p-4">
-          <div className="text-xs text-[#8d857b]">
-            {copy.bookingNumber}
-          </div>
-          <div
-            dir="ltr"
-            className="mt-1 text-xl font-semibold tracking-[0.08em] text-[#966d37]"
-          >
-            {confirmation
-              .appointment
-              .appointment_number}
-          </div>
-        </div>
-        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-          <Button
-            asChild
-            variant="outline"
-            className="h-11 rounded-full border-[#cab28e]/55 bg-white/65 px-6 text-[#6e583b] hover:bg-[#f6ead9] hover:text-[#8f6936]"
-          >
-            <Link href="/">
-              {copy.home}
-            </Link>
-          </Button>
-          <Button
-            asChild
-            className={`
-              h-11
-              rounded-full
-              px-7
-              font-semibold
-              ${GOLD_BUTTON}
-            `}
-          >
-            <Link href="/book">
-              {copy.another}
-            </Link>
-          </Button>
-        </div>
-      </div>
+      <PublicBookingPayment
+        locale={locale}
+        confirmation={confirmation}
+      />
     );
   }
+
   return (
     <div>
       <div className="grid gap-4 xl:grid-cols-2">

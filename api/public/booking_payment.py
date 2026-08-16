@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+from urllib.parse import (
+    parse_qsl,
+    urlencode,
+    urlsplit,
+    urlunsplit,
+)
+
 from decimal import (
     Decimal,
     InvalidOperation,
@@ -7,7 +14,9 @@ from decimal import (
 )
 from typing import Any
 
+from django.conf import settings
 from django.core import signing
+from django.http import HttpResponseRedirect
 from django.utils import timezone
 
 from rest_framework.decorators import (
@@ -1200,6 +1209,207 @@ def _public_payment_method(
     return None
 
 
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def public_booking_payment_return(
+    request: Request,
+    provider: str,
+    result: str,
+):
+    """
+    Return the customer from a payment provider to the public
+    booking frontend.
+
+    This endpoint does NOT mark a payment as paid.
+
+    Security:
+    - provider and result are allow-listed;
+    - session must be a positive integer;
+    - arbitrary provider query parameters are not forwarded;
+    - Moyasar payment ID is forwarded only so the frontend can
+      request server-side verification;
+    - no payment token, patient data, gateway secret, amount,
+      or currency is placed in the redirect.
+    """
+
+    provider_value = str(
+        provider or ""
+    ).strip().lower()
+
+    result_value = str(
+        result or ""
+    ).strip().lower()
+
+    if provider_value not in {
+        "moyasar",
+        "tamara",
+        "tabby",
+    }:
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Payment provider "
+                    "is not supported."
+                ),
+            },
+            status=404,
+        )
+
+    if result_value not in {
+        "success",
+        "failure",
+        "cancel",
+    }:
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Payment return result "
+                    "is not supported."
+                ),
+            },
+            status=404,
+        )
+
+    try:
+        session_id = int(
+            request.query_params.get(
+                "session",
+                "",
+            )
+        )
+    except (
+        TypeError,
+        ValueError,
+    ):
+        session_id = 0
+
+    if session_id <= 0:
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Payment checkout session "
+                    "is invalid."
+                ),
+            },
+            status=400,
+        )
+
+    frontend_url = str(
+        getattr(
+            settings,
+            "PUBLIC_BOOKING_PAYMENT_RETURN_URL",
+            "",
+        )
+        or ""
+    ).strip()
+
+    if not frontend_url:
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Payment return URL "
+                    "is not configured."
+                ),
+            },
+            status=503,
+        )
+
+    parsed = urlsplit(
+        frontend_url
+    )
+
+    if (
+        parsed.scheme not in {
+            "http",
+            "https",
+        }
+        or not parsed.netloc
+    ):
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Payment return URL "
+                    "is invalid."
+                ),
+            },
+            status=503,
+        )
+
+    query = dict(
+        parse_qsl(
+            parsed.query,
+            keep_blank_values=True,
+        )
+    )
+
+    query.update(
+        {
+            "payment_return": "1",
+            "provider": provider_value,
+            "result": result_value,
+            "session": str(
+                session_id
+            ),
+        }
+    )
+
+    if provider_value == "moyasar":
+        payment_id = str(
+            request.query_params.get(
+                "id",
+                "",
+            )
+            or ""
+        ).strip()
+
+        if (
+            payment_id
+            and len(payment_id) <= 200
+        ):
+            query[
+                "payment_id"
+            ] = payment_id
+
+    redirect_url = urlunsplit(
+        (
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path or "/book",
+            urlencode(
+                query
+            ),
+            "",
+        )
+    )
+
+    response = HttpResponseRedirect(
+        redirect_url
+    )
+
+    response[
+        "Cache-Control"
+    ] = (
+        "no-store, no-cache, "
+        "must-revalidate, max-age=0"
+    )
+
+    response[
+        "Pragma"
+    ] = "no-cache"
+
+    response[
+        "Referrer-Policy"
+    ] = "no-referrer"
+
+    return response
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def public_booking_payment_options(
@@ -1589,6 +1799,13 @@ def public_booking_payment_checkout(
                         session.id
                     )
                 ),
+                "callback_url": (
+                    _public_callback_urls(
+                        request,
+                        provider="moyasar",
+                        session=session,
+                    )["success"]
+                ),
             }
         )
         return Response(
@@ -1788,6 +2005,124 @@ def public_booking_payment_checkout(
         },
         status=409,
     )
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def public_booking_payment_status(
+    request: Request,
+) -> Response:
+    """
+    Read the internal checkout status for the appointment represented
+    by the signed public payment token.
+
+    This endpoint never mutates payment state.
+    """
+
+    appointment = (
+        _load_public_payment_appointment(
+            request.query_params.get(
+                "token",
+                "",
+            )
+        )
+    )
+
+    if appointment is None:
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Payment access is invalid "
+                    "or has expired."
+                ),
+            },
+            status=404,
+        )
+
+    try:
+        session_id = int(
+            request.query_params.get(
+                "session",
+                "",
+            )
+        )
+    except (
+        TypeError,
+        ValueError,
+    ):
+        session_id = 0
+
+    if session_id <= 0:
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Checkout session is invalid."
+                ),
+            },
+            status=400,
+        )
+
+    session = (
+        PaymentCheckoutSession.objects
+        .filter(
+            id=session_id,
+            company=appointment.company,
+            source_type=(
+                PaymentCheckoutSession
+                .SourceType
+                .OTHER
+            ),
+            source_id=appointment.id,
+        )
+        .select_related(
+            "gateway",
+            "payment_method",
+        )
+        .first()
+    )
+
+    if session is None:
+        return Response(
+            {
+                "success": False,
+                "message": (
+                    "Checkout session was not found."
+                ),
+            },
+            status=404,
+        )
+
+    provider = ""
+
+    if session.payment_method is not None:
+        provider = _provider_for_method(
+            session.payment_method
+        )
+
+    status_value = str(
+        session.status or ""
+    ).strip()
+
+    return Response(
+        {
+            "success": True,
+            "provider": provider,
+            "payment_status": status_value,
+            "paid": (
+                session.status
+                == PaymentCheckoutSession.Status.PAID
+            ),
+            "checkout_session": (
+                _serialize_checkout_session(
+                    session
+                )
+            ),
+        },
+        status=200,
+    )
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
