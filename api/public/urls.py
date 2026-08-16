@@ -1,5 +1,7 @@
-﻿from __future__ import annotations
+from __future__ import annotations
+
 from django.urls import path
+
 from .social import public_tiktok_videos
 from .branches import (
     public_branch_detail,
@@ -17,18 +19,40 @@ from .booking import (
     public_booking_availability,
     public_booking_options,
 )
-
 from .booking_confirmation import (
     public_booking_confirm,
     public_booking_requirements,
 )
-
 from .booking_payment import (
+    public_booking_payment_checkout,
     public_booking_payment_options,
+    public_booking_payment_verify,
 )
 
+from .payment_webhooks.receiver import provider_payment_webhook
+
 app_name = "public"
+
+
 urlpatterns = [
+    path(
+        "payments/webhooks/moyasar/<int:gateway_id>/",
+        provider_payment_webhook,
+        {"provider": "moyasar"},
+        name="payment-webhook-moyasar",
+    ),
+    path(
+        "payments/webhooks/tabby/<int:gateway_id>/",
+        provider_payment_webhook,
+        {"provider": "tabby"},
+        name="payment-webhook-tabby",
+    ),
+    path(
+        "payments/webhooks/tamara/<int:gateway_id>/",
+        provider_payment_webhook,
+        {"provider": "tamara"},
+        name="payment-webhook-tamara",
+    ),
     path(
         "social/tiktok/videos/",
         public_tiktok_videos,
@@ -38,6 +62,16 @@ urlpatterns = [
         "booking/payment/options/",
         public_booking_payment_options,
         name="booking-payment-options",
+    ),
+    path(
+        "booking/payment/checkout/",
+        public_booking_payment_checkout,
+        name="booking-payment-checkout",
+    ),
+    path(
+        "booking/payment/verify/",
+        public_booking_payment_verify,
+        name="booking-payment-verify",
     ),
     path(
         "booking/requirements/",
@@ -90,4 +124,3 @@ urlpatterns = [
         name="service-detail",
     ),
 ]
-
