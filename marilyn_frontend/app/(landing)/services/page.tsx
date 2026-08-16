@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import {
@@ -423,9 +424,14 @@ export default async function ServicesPage() {
                               >
                                 {price}
                               </span>
-                              <span>
-                                {copy.currency}
-                              </span>
+                              <Image
+                                src="/currency/sar.svg"
+                                alt=""
+                                aria-hidden="true"
+                                width={16}
+                                height={16}
+                                className="size-4 shrink-0"
+                              />
                             </div>
                           ) : null}
                           {service.default_session_count > 1 ? (

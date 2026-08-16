@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import Image from "next/image";
 import {
   ArrowLeft,
   ArrowRight,
@@ -1775,16 +1776,21 @@ function ServiceStep({
                       </span>
                     ) : null}
                     {price ? (
-                      <span className="font-semibold text-[#956d37]">
+                      <span className="inline-flex items-center gap-1.5 font-semibold text-[#956d37]">
                         <span
                           dir="ltr"
                           className="tabular-nums"
                         >
                           {price}
-                        </span>{" "}
-                        {isArabic
-                          ? "ر.س"
-                          : "SAR"}
+                        </span>
+                        <Image
+                          src="/currency/sar.svg"
+                          alt=""
+                          aria-hidden="true"
+                          width={14}
+                          height={14}
+                          className="size-3.5 shrink-0"
+                        />
                       </span>
                     ) : null}
                   </div>
@@ -2522,16 +2528,21 @@ function BookingSummary({
               <span className="text-xs text-[#786e62]">
                 {copy.price}
               </span>
-              <span className="font-semibold text-[#956c35]">
+              <span className="inline-flex items-center gap-1.5 font-semibold text-[#956c35]">
                 <span
                   dir="ltr"
                   className="tabular-nums"
                 >
                   {price}
-                </span>{" "}
-                {isArabic
-                  ? "ر.س"
-                  : "SAR"}
+                </span>
+                <Image
+                  src="/currency/sar.svg"
+                  alt=""
+                  aria-hidden="true"
+                  width={14}
+                  height={14}
+                  className="size-3.5 shrink-0"
+                />
               </span>
             </div>
           ) : null}

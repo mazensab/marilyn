@@ -5,6 +5,7 @@ import type {
   ReactNode,
 } from "react";
 import { cookies } from "next/headers";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -517,9 +518,14 @@ export default async function ServiceDetailPage({
                     >
                       {price}
                     </span>
-                    <span>
-                      {copy.currency}
-                    </span>
+                    <Image
+                      src="/currency/sar.svg"
+                      alt=""
+                      aria-hidden="true"
+                      width={18}
+                      height={18}
+                      className="size-[18px] shrink-0"
+                    />
                   </div>
                 ) : (
                   <div />
