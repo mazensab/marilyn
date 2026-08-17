@@ -38,6 +38,7 @@ SENSITIVE_GATEWAY_KEYS = {
     "token",
     "access_token",
     "webhook_secret",
+    "webhook_header_value",
 }
 
 

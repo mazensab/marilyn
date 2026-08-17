@@ -18,6 +18,7 @@ from django.urls import path
 
 from .detail import payment_gateway_detail
 from .list import payment_gateways_list
+from .provider_configuration import payment_gateway_provider_configuration
 from .status import payment_gateway_status
 
 
@@ -25,6 +26,11 @@ app_name = "company_payment_gateways"
 
 urlpatterns = [
     path("", payment_gateways_list, name="list"),
+    path(
+        "integrations/<str:provider>/",
+        payment_gateway_provider_configuration,
+        name="provider-configuration",
+    ),
     path("<int:gateway_id>/", payment_gateway_detail, name="detail"),
     path("<int:gateway_id>/status/", payment_gateway_status, name="status"),
 ]

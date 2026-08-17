@@ -22,6 +22,7 @@ import {
   ArrowUpDown,
   CircleCheck,
   CircleX,
+  CreditCard,
   FileSpreadsheet,
   FileText,
   KeyRound,
@@ -32,6 +33,8 @@ import {
   RefreshCcw,
   RefreshCw,
   RotateCcw,
+  Save,
+  Settings2,
   ShieldCheck,
   Sparkles,
   TriangleAlert,
@@ -56,6 +59,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -116,6 +120,44 @@ type TikTokConnectPayload = {
   authorization_url: string;
 };
 
+type PaymentProviderCode = "moyasar" | "tamara" | "tabby";
+type PaymentProviderStatus = {
+  provider: PaymentProviderCode;
+  name: string;
+  exists: boolean;
+  configured: boolean;
+  is_active: boolean;
+  environment: "SANDBOX" | "LIVE";
+  gateway_id: number | null;
+  payment_method_id: number | null;
+  payment_method_active: boolean;
+  public_key: string;
+  merchant_code: string;
+  base_url: string;
+  timeout: number;
+  webhook_header_name: string;
+  credential_status: Record<string, boolean>;
+  updated_at: string | null;
+};
+
+type PaymentProviderPayload = {
+  item: PaymentProviderStatus;
+};
+
+type PaymentProviderForm = {
+  environment: "SANDBOX" | "LIVE";
+  is_active: boolean;
+  public_key: string;
+  merchant_code: string;
+  secret_key: string;
+  webhook_secret: string;
+  api_token: string;
+  notification_token: string;
+  webhook_header_name: string;
+  webhook_header_value: string;
+  timeout: string;
+};
+
 type QuickAction = {
   title: string;
   description: string;
@@ -124,6 +166,7 @@ type QuickAction = {
 };
 const statusFilters: StatusFilter[] = ["all", "active", "disabled", "revoked", "expired"];
 const environmentFilters: EnvironmentFilter[] = ["all", "live", "test"];
+const paymentProviderCodes: PaymentProviderCode[] = ["moyasar", "tamara", "tabby"];
 const translations = {
   ar: {
     title: "مركز التكاملات",
@@ -446,6 +489,57 @@ async function postJson<T>(url: string): Promise<T> {
   return (payload || {}) as T;
 }
 
+async function mutateJson<T>(
+  url: string,
+  method: "PATCH" | "PUT" | "POST",
+  body: Record<string, unknown>,
+): Promise<T> {
+  const csrfToken = await ensureCsrfToken();
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "X-Requested-With": "XMLHttpRequest",
+  };
+  if (csrfToken) headers["X-CSRFToken"] = csrfToken;
+
+  const response = await fetch(url, {
+    method,
+    credentials: "include",
+    cache: "no-store",
+    redirect: "follow",
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  const contentType = response.headers.get("content-type") || "";
+  const rawText = await response.text();
+  let payload: unknown = null;
+  if (rawText && contentType.includes("application/json")) {
+    try {
+      payload = JSON.parse(rawText) as unknown;
+    } catch {
+      payload = null;
+    }
+  }
+
+  if (!response.ok) {
+    const record = asRecord(payload);
+    const errors = asRecord(record.errors);
+    const firstError = Object.values(errors)
+      .flatMap((value) => (Array.isArray(value) ? value : [value]))
+      .map((value) => normalizeText(value))
+      .find(Boolean);
+    throw new Error(
+      firstError ||
+        normalizeText(record.message) ||
+        normalizeText(record.detail) ||
+        `Request failed with status ${response.status}`,
+    );
+  }
+
+  return (payload || {}) as T;
+}
+
 function extractArray(payload: unknown): unknown[] {
   if (Array.isArray(payload)) return payload;
   const record = asRecord(payload);
@@ -591,6 +685,289 @@ function PillBadge({
     </Badge>
   );
 }
+function PaymentProviderIntegrationCard({
+  provider,
+  item,
+  locale,
+  loading,
+  saving,
+  onSave,
+}: {
+  provider: PaymentProviderCode;
+  item: PaymentProviderStatus | null;
+  locale: Locale;
+  loading: boolean;
+  saving: boolean;
+  onSave: (provider: PaymentProviderCode, form: PaymentProviderForm) => Promise<void>;
+}) {
+  const isArabic = locale === "ar";
+  const [expanded, setExpanded] = React.useState(false);
+  const [form, setForm] = React.useState<PaymentProviderForm>({
+    environment: "SANDBOX",
+    is_active: false,
+    public_key: "",
+    merchant_code: "",
+    secret_key: "",
+    webhook_secret: "",
+    api_token: "",
+    notification_token: "",
+    webhook_header_name: "",
+    webhook_header_value: "",
+    timeout: "15",
+  });
+
+  React.useEffect(() => {
+    if (!item) return;
+    setForm((current) => ({
+      ...current,
+      environment: item.environment,
+      is_active: item.is_active,
+      public_key: item.public_key || "",
+      merchant_code: item.merchant_code || "",
+      webhook_header_name: item.webhook_header_name || "",
+      timeout: String(item.timeout || 15),
+      // Secrets intentionally remain blank. Blank means preserve stored value.
+      secret_key: "",
+      webhook_secret: "",
+      api_token: "",
+      notification_token: "",
+      webhook_header_value: "",
+    }));
+  }, [item]);
+
+  const providerName = provider === "moyasar" ? "Moyasar" : provider === "tamara" ? "Tamara" : "Tabby";
+  const configured = Boolean(item?.configured);
+  const active = Boolean(item?.is_active);
+  const credentialStatus = item?.credential_status || {};
+  const secretPlaceholder = (key: string) =>
+    credentialStatus[key]
+      ? isArabic
+        ? "محفوظ — اتركه فارغًا للإبقاء عليه"
+        : "Stored — leave blank to keep it"
+      : isArabic
+        ? "أدخل القيمة"
+        : "Enter value";
+
+  return (
+    <Card className="overflow-hidden rounded-lg border bg-card shadow-none">
+      <CardHeader className="gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full border bg-background shadow-sm">
+              <CreditCard className="h-5 w-5 text-[#a57b3d]" />
+            </span>
+            <div className="space-y-1">
+              <CardTitle className="flex flex-wrap items-center gap-2">
+                {providerName}
+                <Badge
+                  variant="outline"
+                  className={
+                    active
+                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      : configured
+                        ? "border-amber-200 bg-amber-50 text-amber-700"
+                        : "border-slate-200 bg-slate-50 text-slate-600"
+                  }
+                >
+                  {active
+                    ? isArabic
+                      ? "مفعل"
+                      : "Active"
+                    : configured
+                      ? isArabic
+                        ? "جاهز وغير مفعل"
+                        : "Configured"
+                      : isArabic
+                        ? "غير مكتمل"
+                        : "Not configured"}
+                </Badge>
+                {item ? (
+                  <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-600">
+                    {item.environment === "LIVE" ? "Live" : "Sandbox"}
+                  </Badge>
+                ) : null}
+              </CardTitle>
+              <CardDescription>
+                {isArabic
+                  ? "إدارة مفاتيح الربط وحالة بوابة الدفع مباشرة من قاعدة البيانات."
+                  : "Manage credentials and gateway status directly from the database."}
+              </CardDescription>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className={registerOutlineButtonClass}
+            disabled={loading || saving}
+            onClick={() => setExpanded((value) => !value)}
+          >
+            <Settings2 className="h-4 w-4" />
+            {expanded
+              ? isArabic
+                ? "إغلاق الإعداد"
+                : "Close settings"
+              : isArabic
+                ? "إعداد الربط"
+                : "Configure"}
+          </Button>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {loading ? (
+          <div className="grid gap-3 md:grid-cols-3">
+            <Skeleton className="h-16 rounded-lg" />
+            <Skeleton className="h-16 rounded-lg" />
+            <Skeleton className="h-16 rounded-lg" />
+          </div>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg border bg-background p-3">
+              <p className="text-xs text-muted-foreground">{isArabic ? "الحالة" : "Status"}</p>
+              <p className="mt-1 text-sm font-semibold">{active ? (isArabic ? "مفعل" : "Active") : isArabic ? "غير مفعل" : "Inactive"}</p>
+            </div>
+            <div className="rounded-lg border bg-background p-3">
+              <p className="text-xs text-muted-foreground">{isArabic ? "بيانات الاعتماد" : "Credentials"}</p>
+              <p className="mt-1 text-sm font-semibold">{configured ? (isArabic ? "مكتملة" : "Complete") : isArabic ? "غير مكتملة" : "Incomplete"}</p>
+            </div>
+            <div className="rounded-lg border bg-background p-3">
+              <p className="text-xs text-muted-foreground">{isArabic ? "آخر تحديث" : "Updated"}</p>
+              <p className="mt-1 text-sm tabular-nums">{formatDate(item?.updated_at)}</p>
+            </div>
+          </div>
+        )}
+
+        {expanded ? (
+          <div className="space-y-4 rounded-lg border bg-background p-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="space-y-2">
+                <label className="text-xs font-medium">{isArabic ? "البيئة" : "Environment"}</label>
+                <Select
+                  value={form.environment}
+                  onValueChange={(value) =>
+                    setForm((current) => ({
+                      ...current,
+                      environment: value as "SANDBOX" | "LIVE",
+                    }))
+                  }
+                >
+                  <SelectTrigger className="h-10 bg-background shadow-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SANDBOX">Sandbox</SelectItem>
+                    <SelectItem value="LIVE">Live</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium">{isArabic ? "مهلة الاتصال" : "Timeout"}</label>
+                <Input
+                  inputMode="numeric"
+                  value={form.timeout}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, timeout: event.target.value.replace(/[^0-9]/g, "") }))
+                  }
+                  placeholder="15"
+                  className="h-10"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium">API Base URL</label>
+                <Input value={item?.base_url || ""} disabled className="h-10 bg-muted/30 font-mono text-xs" dir="ltr" />
+              </div>
+
+              {provider === "moyasar" ? (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Public Key</label>
+                    <Input value={form.public_key} onChange={(event) => setForm((current) => ({ ...current, public_key: event.target.value }))} className="h-10 font-mono text-xs" dir="ltr" autoComplete="off" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Secret Key</label>
+                    <Input type="password" value={form.secret_key} onChange={(event) => setForm((current) => ({ ...current, secret_key: event.target.value }))} placeholder={secretPlaceholder("secret_key")} className="h-10 font-mono text-xs" dir="ltr" autoComplete="new-password" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Webhook Secret</label>
+                    <Input type="password" value={form.webhook_secret} onChange={(event) => setForm((current) => ({ ...current, webhook_secret: event.target.value }))} placeholder={secretPlaceholder("webhook_secret")} className="h-10 font-mono text-xs" dir="ltr" autoComplete="new-password" />
+                  </div>
+                </>
+              ) : null}
+
+              {provider === "tamara" ? (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">API Token</label>
+                    <Input type="password" value={form.api_token} onChange={(event) => setForm((current) => ({ ...current, api_token: event.target.value }))} placeholder={secretPlaceholder("api_token")} className="h-10 font-mono text-xs" dir="ltr" autoComplete="new-password" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Notification Token</label>
+                    <Input type="password" value={form.notification_token} onChange={(event) => setForm((current) => ({ ...current, notification_token: event.target.value }))} placeholder={secretPlaceholder("notification_token")} className="h-10 font-mono text-xs" dir="ltr" autoComplete="new-password" />
+                  </div>
+                </>
+              ) : null}
+
+              {provider === "tabby" ? (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Merchant Code</label>
+                    <Input value={form.merchant_code} onChange={(event) => setForm((current) => ({ ...current, merchant_code: event.target.value }))} className="h-10 font-mono text-xs" dir="ltr" autoComplete="off" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Secret Key</label>
+                    <Input type="password" value={form.secret_key} onChange={(event) => setForm((current) => ({ ...current, secret_key: event.target.value }))} placeholder={secretPlaceholder("secret_key")} className="h-10 font-mono text-xs" dir="ltr" autoComplete="new-password" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Webhook Header Name</label>
+                    <Input value={form.webhook_header_name} onChange={(event) => setForm((current) => ({ ...current, webhook_header_name: event.target.value }))} className="h-10 font-mono text-xs" dir="ltr" autoComplete="off" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Webhook Header Value</label>
+                    <Input type="password" value={form.webhook_header_value} onChange={(event) => setForm((current) => ({ ...current, webhook_header_value: event.target.value }))} placeholder={secretPlaceholder("webhook_header_value")} className="h-10 font-mono text-xs" dir="ltr" autoComplete="new-password" />
+                  </div>
+                </>
+              ) : null}
+            </div>
+
+            <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={form.is_active}
+                onClick={() => setForm((current) => ({ ...current, is_active: !current.is_active }))}
+                className={cn(
+                  "inline-flex items-center gap-3 rounded-lg border px-3 py-2 text-sm font-medium transition",
+                  form.is_active
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-slate-200 bg-slate-50 text-slate-700",
+                )}
+              >
+                <span className={cn("relative h-5 w-9 rounded-full transition", form.is_active ? "bg-emerald-500" : "bg-slate-300")}>
+                  <span className={cn("absolute top-0.5 size-4 rounded-full bg-white shadow-sm transition-all", form.is_active ? "start-[18px]" : "start-0.5")} />
+                </span>
+                {form.is_active ? (isArabic ? "تفعيل البوابة" : "Gateway enabled") : isArabic ? "البوابة غير مفعلة" : "Gateway disabled"}
+              </button>
+
+              <Button type="button" variant="brand" className={registerBrandButtonClass} disabled={saving} onClick={() => void onSave(provider, form)}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {isArabic ? "حفظ الإعدادات" : "Save settings"}
+              </Button>
+            </div>
+
+            <p className="text-xs leading-5 text-muted-foreground">
+              {isArabic
+                ? "القيم السرية لا تُعرض بعد الحفظ. اترك الحقل السري فارغًا للإبقاء على القيمة الحالية، أو أدخل قيمة جديدة لاستبدالها."
+                : "Stored secrets are never displayed. Leave a secret field blank to keep the current value, or enter a new value to replace it."}
+            </p>
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
 function IntegrationsOverviewSkeleton() {
   return (
     <main className="min-h-screen bg-transparent px-4 py-6 text-foreground sm:px-6 lg:px-8">
@@ -638,6 +1015,11 @@ export default function SystemIntegrationsPage() {
   const [tiktokAction, setTikTokAction] = React.useState<
     "connect" | "sync" | "disconnect" | null
   >(null);
+  const [paymentProviders, setPaymentProviders] = React.useState<
+    Record<PaymentProviderCode, PaymentProviderStatus | null>
+  >({ moyasar: null, tamara: null, tabby: null });
+  const [paymentProvidersLoading, setPaymentProvidersLoading] = React.useState(true);
+  const [paymentProviderSaving, setPaymentProviderSaving] = React.useState<PaymentProviderCode | null>(null);
 
   const t = translations[locale];
   const dir = locale === "ar" ? "rtl" : "ltr";
@@ -706,10 +1088,39 @@ export default function SystemIntegrationsPage() {
     }
   }, [locale]);
 
+  const loadPaymentProviders = React.useCallback(async () => {
+    try {
+      setPaymentProvidersLoading(true);
+      const entries = await Promise.all(
+        paymentProviderCodes.map(async (provider) => {
+          const payload = await fetchJson<PaymentProviderPayload>(
+            makeApiUrl(API_PATHS.paymentGateways.providerConfiguration(provider)),
+          );
+          return [provider, payload.item] as const;
+        }),
+      );
+      setPaymentProviders((current) => ({
+        ...current,
+        ...Object.fromEntries(entries),
+      }));
+    } catch (caughtError) {
+      toast.error(
+        caughtError instanceof Error
+          ? caughtError.message
+          : locale === "ar"
+            ? "تعذر تحميل إعدادات بوابات الدفع."
+            : "Could not load payment gateway settings.",
+      );
+    } finally {
+      setPaymentProvidersLoading(false);
+    }
+  }, [locale]);
+
   React.useEffect(() => {
     void loadIntegrations();
     void loadTikTokStatus();
-  }, [loadIntegrations, loadTikTokStatus]);
+    void loadPaymentProviders();
+  }, [loadIntegrations, loadTikTokStatus, loadPaymentProviders]);
 
   const connectTikTok = React.useCallback(async () => {
     try {
@@ -800,6 +1211,55 @@ export default function SystemIntegrationsPage() {
       setTikTokAction(null);
     }
   }, [loadTikTokStatus, locale]);
+
+  const savePaymentProvider = React.useCallback(
+    async (provider: PaymentProviderCode, form: PaymentProviderForm) => {
+      try {
+        setPaymentProviderSaving(provider);
+        const body: Record<string, unknown> = {
+          environment: form.environment,
+          is_active: form.is_active,
+          timeout: form.timeout || "15",
+        };
+        if (provider === "moyasar") {
+          body.public_key = form.public_key.trim();
+          body.secret_key = form.secret_key.trim();
+          body.webhook_secret = form.webhook_secret.trim();
+        } else if (provider === "tamara") {
+          body.api_token = form.api_token.trim();
+          body.notification_token = form.notification_token.trim();
+        } else {
+          body.merchant_code = form.merchant_code.trim();
+          body.secret_key = form.secret_key.trim();
+          body.webhook_header_name = form.webhook_header_name.trim();
+          body.webhook_header_value = form.webhook_header_value.trim();
+        }
+
+        const payload = await mutateJson<PaymentProviderPayload>(
+          makeApiUrl(API_PATHS.paymentGateways.providerConfiguration(provider)),
+          "PATCH",
+          body,
+        );
+        setPaymentProviders((current) => ({ ...current, [provider]: payload.item }));
+        toast.success(
+          locale === "ar"
+            ? `تم حفظ إعدادات ${payload.item.name}.`
+            : `${payload.item.name} settings saved.`,
+        );
+      } catch (caughtError) {
+        toast.error(
+          caughtError instanceof Error
+            ? caughtError.message
+            : locale === "ar"
+              ? "تعذر حفظ إعدادات بوابة الدفع."
+              : "Could not save payment gateway settings.",
+        );
+      } finally {
+        setPaymentProviderSaving(null);
+      }
+    },
+    [locale],
+  );
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1336,6 +1796,49 @@ export default function SystemIntegrationsPage() {
             ) : null}
           </CardContent>
         </Card>
+
+        <section className="space-y-3" aria-labelledby="payment-integrations-title">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 text-xs font-medium text-[#a57b3d]">
+                <CreditCard className="h-4 w-4" />
+                {locale === "ar" ? "بوابات الدفع" : "Payment gateways"}
+              </div>
+              <h2 id="payment-integrations-title" className="mt-1 text-xl font-bold tracking-tight">
+                {locale === "ar" ? "إعدادات Moyasar وTamara وTabby" : "Moyasar, Tamara and Tabby settings"}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {locale === "ar"
+                  ? "تُقرأ الإعدادات من قاعدة البيانات وتُحفظ التعديلات فيها مباشرة مع إبقاء الأسرار مخفية."
+                  : "Settings are read from and saved directly to the database while stored secrets remain hidden."}
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className={registerOutlineButtonClass}
+              disabled={paymentProvidersLoading || paymentProviderSaving !== null}
+              onClick={() => void loadPaymentProviders()}
+            >
+              {paymentProvidersLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              {locale === "ar" ? "تحديث البوابات" : "Refresh gateways"}
+            </Button>
+          </div>
+
+          <div className="grid gap-3 xl:grid-cols-3">
+            {paymentProviderCodes.map((provider) => (
+              <PaymentProviderIntegrationCard
+                key={provider}
+                provider={provider}
+                item={paymentProviders[provider]}
+                locale={locale}
+                loading={paymentProvidersLoading}
+                saving={paymentProviderSaving === provider}
+                onSave={savePaymentProvider}
+              />
+            ))}
+          </div>
+        </section>
 
         <Card className="w-full overflow-hidden rounded-lg border bg-card shadow-none">
           <CardHeader className="gap-3">

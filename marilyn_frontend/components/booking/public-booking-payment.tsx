@@ -687,6 +687,24 @@ export function PublicBookingPayment({
               }}
             />
           ))}
+
+          {!options.methods.some(
+            (method) => method.provider.trim().toLowerCase() === "tamara",
+          ) ? (
+            <ComingSoonPaymentMethodCard
+              provider="tamara"
+              isArabic={isArabic}
+            />
+          ) : null}
+
+          {!options.methods.some(
+            (method) => method.provider.trim().toLowerCase() === "tabby",
+          ) ? (
+            <ComingSoonPaymentMethodCard
+              provider="tabby"
+              isArabic={isArabic}
+            />
+          ) : null}
         </div>
 
         <div className="mt-5 flex items-start gap-2 rounded-[16px] border border-[#d7c5aa]/45 bg-white/60 px-3.5 py-3 text-xs leading-6 text-[#766e64]">
@@ -742,6 +760,54 @@ export function PublicBookingPayment({
           />
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function ComingSoonPaymentMethodCard({
+  provider,
+  isArabic,
+}: {
+  provider: "tamara" | "tabby";
+  isArabic: boolean;
+}) {
+  const hint =
+    provider === "tamara"
+      ? isArabic
+        ? "قسمي دفعتك بسهولة مع تمارا عند تفعيل الخدمة."
+        : "Split your payment with Tamara when the service becomes available."
+      : isArabic
+        ? "قسمي دفعتك بسهولة مع تابي عند تفعيل الخدمة."
+        : "Split your payment with Tabby when the service becomes available.";
+
+  return (
+    <div
+      aria-disabled="true"
+      className="relative flex w-full cursor-not-allowed items-start gap-3 overflow-hidden rounded-[19px] border border-[#d9cab5]/45 bg-white/45 p-4 opacity-[0.72]"
+    >
+      <div className="flex size-11 shrink-0 items-center justify-center rounded-[15px] border border-white/80 bg-[linear-gradient(145deg,#fbf5ec_0%,#ead8bf_100%)] text-[#a57b3d]">
+        {paymentIcon(provider)}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h4 className="font-semibold text-[#273245]">
+                {providerLabel(provider, isArabic)}
+              </h4>
+
+              <span className="rounded-full border border-[#c9aa7a]/45 bg-[#f5ead9] px-2.5 py-1 text-[10px] font-semibold text-[#9a7138]">
+                {isArabic ? "قريبا" : "Coming soon"}
+              </span>
+            </div>
+
+            <p className="mt-1 text-xs leading-6 text-[#777d85]">{hint}</p>
+          </div>
+
+          <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border border-[#d4c3aa] bg-white/55" />
+        </div>
+      </div>
     </div>
   );
 }

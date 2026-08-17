@@ -276,6 +276,8 @@ export const API_PATHS = {
   paymentGateways: {
     list: "/api/company/payments/gateways/",
     detail: (id: ApiPathId) => `/api/company/payments/gateways/${id}/`,
+    providerConfiguration: (provider: "moyasar" | "tamara" | "tabby") =>
+      `/api/company/payments/gateways/integrations/${provider}/`,
 
     tapCreateCheckout: "/api/company/payments/gateways/tap/create-checkout/",
     tapWebhook: "/api/company/payments/gateways/tap/webhook/",
