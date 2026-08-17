@@ -471,6 +471,12 @@ export function PublicBookingPayment({
           callback_url: moyasarCheckout.callback_url,
           methods: ["creditcard", "applepay"],
           supported_networks: ["mada", "visa", "mastercard"],
+          apple_pay: {
+            country: "SA",
+            label: "Marilyn Clinics",
+            validate_merchant_url:
+              "https://api.moyasar.com/v1/applepay/initiate",
+          },
         });
       })
       .catch((assetError) => {
