@@ -10,7 +10,7 @@ from datetime import (
 from unittest.mock import patch
 
 from django.core import signing
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from rest_framework.test import APIClient
@@ -260,6 +260,187 @@ class PublicBookingPaymentTests(TestCase):
                 external_payment_id
             ),
         )
+    def tamara_checkout(
+        self,
+        appointment: MedicalAppointment,
+        *,
+        amount=Decimal("125.00"),
+        currency_code="SAR",
+        status=(
+            PaymentCheckoutSession
+            .Status
+            .PROCESSING
+        ),
+        order_id="tamara-order-001",
+    ) -> PaymentCheckoutSession:
+        gateway = self.gateway(
+            name="Tamara Return",
+            code=(
+                "tamara-return-"
+                f"{self.sequence}"
+            ),
+            gateway_type=(
+                CompanyPaymentGateway
+                .GatewayType
+                .CUSTOM
+            ),
+        )
+        method = self.payment_method(
+            name="Tamara Return",
+            code=(
+                "tamara-return-method-"
+                f"{self.sequence}"
+            ),
+            method_type=(
+                CompanyPaymentMethod
+                .MethodType
+                .TAMARA
+            ),
+            gateway=gateway,
+        )
+        return PaymentCheckoutSession.objects.create(
+            company=self.company_a,
+            payment_method=method,
+            gateway=gateway,
+            source_type=(
+                PaymentCheckoutSession
+                .SourceType
+                .OTHER
+            ),
+            source_id=appointment.id,
+            amount=amount,
+            currency_code=currency_code,
+            status=status,
+            external_checkout_id=order_id,
+            checkout_url=(
+                "https://checkout.tamara.example/"
+                f"{order_id}"
+            ),
+        )
+
+    def tamara_result(
+        self,
+        appointment: MedicalAppointment,
+        *,
+        order_id: str,
+        status: PaymentStatus,
+        amount: int = 12500,
+        currency: str = "SAR",
+        reference: str | None = None,
+    ) -> PaymentResult:
+        return PaymentResult(
+            gateway=PaymentGatewayName.TAMARA,
+            provider_payment_id=order_id,
+            status=status,
+            amount=amount,
+            currency=currency,
+            reference=(
+                reference
+                if reference is not None
+                else appointment.appointment_number
+            ),
+        )
+
+    def tamara_return_url(
+        self,
+        session: PaymentCheckoutSession,
+        result: str = "success",
+    ) -> str:
+        return (
+            "/api/public/booking/payment/"
+            f"return/tamara/{result}/"
+            f"?session={session.id}"
+        )
+
+    def tabby_checkout(
+        self,
+        appointment: MedicalAppointment,
+        *,
+        amount=Decimal("125.00"),
+        currency_code="SAR",
+        status=(
+            PaymentCheckoutSession
+            .Status
+            .PROCESSING
+        ),
+        payment_id="tabby-payment-001",
+    ) -> PaymentCheckoutSession:
+        gateway = self.gateway(
+            name="Tabby Return",
+            code="tabby",
+            gateway_type=(
+                CompanyPaymentGateway
+                .GatewayType
+                .CUSTOM
+            ),
+        )
+        method = self.payment_method(
+            name="Tabby Return",
+            code=(
+                "tabby-return-method-"
+                f"{self.sequence}"
+            ),
+            method_type=(
+                CompanyPaymentMethod
+                .MethodType
+                .TABBY
+            ),
+            gateway=gateway,
+        )
+        return PaymentCheckoutSession.objects.create(
+            company=self.company_a,
+            payment_method=method,
+            gateway=gateway,
+            source_type=(
+                PaymentCheckoutSession
+                .SourceType
+                .OTHER
+            ),
+            source_id=appointment.id,
+            amount=amount,
+            currency_code=currency_code,
+            status=status,
+            external_checkout_id=payment_id,
+            checkout_url=(
+                "https://checkout.tabby.example/"
+                f"{payment_id}"
+            ),
+        )
+
+    def tabby_result(
+        self,
+        appointment: MedicalAppointment,
+        *,
+        payment_id: str,
+        status: PaymentStatus,
+        amount: int = 12500,
+        currency: str = "SAR",
+        reference: str | None = None,
+    ) -> PaymentResult:
+        return PaymentResult(
+            gateway=PaymentGatewayName.TABBY,
+            provider_payment_id=payment_id,
+            status=status,
+            amount=amount,
+            currency=currency,
+            reference=(
+                reference
+                if reference is not None
+                else appointment.appointment_number
+            ),
+        )
+
+    def tabby_return_url(
+        self,
+        session: PaymentCheckoutSession,
+        result: str = "success",
+    ) -> str:
+        return (
+            "/api/public/booking/payment/"
+            f"return/tabby/{result}/"
+            f"?session={session.id}"
+        )
+
     def verify_payment(
         self,
         appointment: MedicalAppointment,
@@ -1300,4 +1481,845 @@ class PublicBookingPaymentTests(TestCase):
         self.assertEqual(
             session.external_payment_id,
             "pay_original",
+        )
+
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tamara_success_authorises_pending_order_and_marks_paid(
+        self,
+    ):
+        appointment = self.appointment()
+        order_id = "tamara-approved-order"
+        session = self.tamara_checkout(
+            appointment,
+            order_id=order_id,
+        )
+
+        pending_result = self.tamara_result(
+            appointment,
+            order_id=order_id,
+            status=PaymentStatus.PENDING,
+        )
+        authorised_result = self.tamara_result(
+            appointment,
+            order_id=order_id,
+            status=PaymentStatus.AUTHORIZED,
+        )
+
+        with patch(
+            "api.public.booking_payment._tamara_adapter"
+        ) as adapter_factory:
+            adapter = adapter_factory.return_value
+            adapter.retrieve_payment.return_value = (
+                pending_result
+            )
+            adapter.authorise_payment.return_value = (
+                authorised_result
+            )
+
+            response = self.client.get(
+                self.tamara_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+        adapter.retrieve_payment.assert_called_once_with(
+            order_id
+        )
+        adapter.authorise_payment.assert_called_once_with(
+            order_id
+        )
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PAID,
+        )
+        self.assertEqual(
+            session.external_payment_id,
+            order_id,
+        )
+        self.assertIsNotNone(
+            session.paid_at
+        )
+        self.assertEqual(
+            session.metadata["payment_provider"],
+            "tamara",
+        )
+        self.assertEqual(
+            session.metadata["provider_payment_id"],
+            order_id,
+        )
+        self.assertEqual(
+            session.metadata["provider_status"],
+            "authorized",
+        )
+        self.assertEqual(
+            session.metadata["verified_via"],
+            "tamara_return_api",
+        )
+        self.assertTrue(
+            session.metadata["capture_required"]
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tamara_authorized_order_marks_paid_without_reauthorising(
+        self,
+    ):
+        appointment = self.appointment()
+        order_id = "tamara-authorized-order"
+        session = self.tamara_checkout(
+            appointment,
+            order_id=order_id,
+        )
+        result = self.tamara_result(
+            appointment,
+            order_id=order_id,
+            status=PaymentStatus.AUTHORIZED,
+        )
+
+        with patch(
+            "api.public.booking_payment._tamara_adapter"
+        ) as adapter_factory:
+            adapter = adapter_factory.return_value
+            adapter.retrieve_payment.return_value = result
+
+            response = self.client.get(
+                self.tamara_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+        adapter.authorise_payment.assert_not_called()
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PAID,
+        )
+        self.assertTrue(
+            session.metadata["capture_required"]
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tamara_captured_order_marks_paid_without_capture_required(
+        self,
+    ):
+        appointment = self.appointment()
+        order_id = "tamara-captured-order"
+        session = self.tamara_checkout(
+            appointment,
+            order_id=order_id,
+        )
+        result = self.tamara_result(
+            appointment,
+            order_id=order_id,
+            status=PaymentStatus.PAID,
+        )
+
+        with patch(
+            "api.public.booking_payment._tamara_adapter"
+        ) as adapter_factory:
+            adapter_factory.return_value.retrieve_payment.return_value = (
+                result
+            )
+
+            response = self.client.get(
+                self.tamara_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PAID,
+        )
+        self.assertFalse(
+            session.metadata["capture_required"]
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tamara_amount_mismatch_does_not_mark_paid(
+        self,
+    ):
+        appointment = self.appointment()
+        order_id = "tamara-amount-mismatch"
+        session = self.tamara_checkout(
+            appointment,
+            order_id=order_id,
+        )
+        result = self.tamara_result(
+            appointment,
+            order_id=order_id,
+            status=PaymentStatus.AUTHORIZED,
+            amount=12499,
+        )
+
+        with patch(
+            "api.public.booking_payment._tamara_adapter"
+        ) as adapter_factory:
+            adapter_factory.return_value.retrieve_payment.return_value = (
+                result
+            )
+
+            response = self.client.get(
+                self.tamara_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PROCESSING,
+        )
+        self.assertEqual(
+            session.external_payment_id,
+            "",
+        )
+        self.assertIsNone(
+            session.paid_at
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tamara_currency_mismatch_does_not_mark_paid(
+        self,
+    ):
+        appointment = self.appointment()
+        order_id = "tamara-currency-mismatch"
+        session = self.tamara_checkout(
+            appointment,
+            order_id=order_id,
+        )
+        result = self.tamara_result(
+            appointment,
+            order_id=order_id,
+            status=PaymentStatus.AUTHORIZED,
+            currency="USD",
+        )
+
+        with patch(
+            "api.public.booking_payment._tamara_adapter"
+        ) as adapter_factory:
+            adapter_factory.return_value.retrieve_payment.return_value = (
+                result
+            )
+
+            response = self.client.get(
+                self.tamara_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PROCESSING,
+        )
+        self.assertEqual(
+            session.external_payment_id,
+            "",
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tamara_reference_mismatch_does_not_mark_paid(
+        self,
+    ):
+        appointment = self.appointment()
+        order_id = "tamara-reference-mismatch"
+        session = self.tamara_checkout(
+            appointment,
+            order_id=order_id,
+        )
+        result = self.tamara_result(
+            appointment,
+            order_id=order_id,
+            status=PaymentStatus.AUTHORIZED,
+            reference="OTHER-APPOINTMENT",
+        )
+
+        with patch(
+            "api.public.booking_payment._tamara_adapter"
+        ) as adapter_factory:
+            adapter_factory.return_value.retrieve_payment.return_value = (
+                result
+            )
+
+            response = self.client.get(
+                self.tamara_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PROCESSING,
+        )
+        self.assertEqual(
+            session.external_payment_id,
+            "",
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tamara_failed_order_does_not_mark_paid(
+        self,
+    ):
+        appointment = self.appointment()
+        order_id = "tamara-failed-order"
+        session = self.tamara_checkout(
+            appointment,
+            order_id=order_id,
+        )
+        result = self.tamara_result(
+            appointment,
+            order_id=order_id,
+            status=PaymentStatus.FAILED,
+        )
+
+        with patch(
+            "api.public.booking_payment._tamara_adapter"
+        ) as adapter_factory:
+            adapter = adapter_factory.return_value
+            adapter.retrieve_payment.return_value = result
+
+            response = self.client.get(
+                self.tamara_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+        adapter.authorise_payment.assert_not_called()
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PROCESSING,
+        )
+        self.assertEqual(
+            session.external_payment_id,
+            "",
+        )
+        self.assertIsNone(
+            session.paid_at
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tamara_paid_return_is_idempotent(
+        self,
+    ):
+        appointment = self.appointment()
+        order_id = "tamara-already-paid"
+        session = self.tamara_checkout(
+            appointment,
+            status=(
+                PaymentCheckoutSession
+                .Status
+                .PAID
+            ),
+            order_id=order_id,
+        )
+        session.external_payment_id = order_id
+        session.paid_at = timezone.now()
+        session.save(
+            update_fields=[
+                "external_payment_id",
+                "paid_at",
+                "updated_at",
+            ]
+        )
+
+        with patch(
+            "api.public.booking_payment._tamara_adapter"
+        ) as adapter_factory:
+            response = self.client.get(
+                self.tamara_return_url(
+                    session
+                )
+            )
+            adapter_factory.assert_not_called()
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PAID,
+        )
+        self.assertEqual(
+            session.external_payment_id,
+            order_id,
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tabby_authorized_payment_is_captured_and_marked_paid(
+        self,
+    ):
+        appointment = self.appointment()
+        payment_id = "tabby-authorized-payment"
+        session = self.tabby_checkout(
+            appointment,
+            payment_id=payment_id,
+        )
+        authorized = self.tabby_result(
+            appointment,
+            payment_id=payment_id,
+            status=PaymentStatus.AUTHORIZED,
+        )
+        paid = self.tabby_result(
+            appointment,
+            payment_id=payment_id,
+            status=PaymentStatus.PAID,
+        )
+
+        with patch(
+            "api.public.booking_payment._tabby_adapter"
+        ) as adapter_factory:
+            adapter = adapter_factory.return_value
+            adapter.retrieve_payment.return_value = (
+                authorized
+            )
+            adapter.capture_payment.return_value = (
+                paid
+            )
+
+            response = self.client.get(
+                self.tabby_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+        adapter.retrieve_payment.assert_called_once_with(
+            payment_id
+        )
+        adapter.capture_payment.assert_called_once_with(
+            payment_id,
+            amount=12500,
+        )
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PAID,
+        )
+        self.assertEqual(
+            session.external_payment_id,
+            payment_id,
+        )
+        self.assertIsNotNone(
+            session.paid_at
+        )
+        self.assertEqual(
+            session.metadata["payment_provider"],
+            "tabby",
+        )
+        self.assertEqual(
+            session.metadata["provider_status"],
+            "paid",
+        )
+        self.assertEqual(
+            session.metadata["verified_via"],
+            "tabby_return_api",
+        )
+        self.assertFalse(
+            session.metadata["capture_required"]
+        )
+        self.assertTrue(
+            session.metadata["captured"]
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tabby_closed_payment_marks_paid_without_capture(
+        self,
+    ):
+        appointment = self.appointment()
+        payment_id = "tabby-closed-payment"
+        session = self.tabby_checkout(
+            appointment,
+            payment_id=payment_id,
+        )
+        paid = self.tabby_result(
+            appointment,
+            payment_id=payment_id,
+            status=PaymentStatus.PAID,
+        )
+
+        with patch(
+            "api.public.booking_payment._tabby_adapter"
+        ) as adapter_factory:
+            adapter = adapter_factory.return_value
+            adapter.retrieve_payment.return_value = (
+                paid
+            )
+
+            response = self.client.get(
+                self.tabby_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+        adapter.capture_payment.assert_not_called()
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PAID,
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tabby_amount_mismatch_does_not_capture_or_mark_paid(
+        self,
+    ):
+        appointment = self.appointment()
+        payment_id = "tabby-amount-mismatch"
+        session = self.tabby_checkout(
+            appointment,
+            payment_id=payment_id,
+        )
+        result = self.tabby_result(
+            appointment,
+            payment_id=payment_id,
+            status=PaymentStatus.AUTHORIZED,
+            amount=12499,
+        )
+
+        with patch(
+            "api.public.booking_payment._tabby_adapter"
+        ) as adapter_factory:
+            adapter = adapter_factory.return_value
+            adapter.retrieve_payment.return_value = (
+                result
+            )
+
+            response = self.client.get(
+                self.tabby_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+        adapter.capture_payment.assert_not_called()
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PROCESSING,
+        )
+        self.assertEqual(
+            session.external_payment_id,
+            "",
+        )
+        self.assertIsNone(
+            session.paid_at
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tabby_currency_mismatch_does_not_capture_or_mark_paid(
+        self,
+    ):
+        appointment = self.appointment()
+        payment_id = "tabby-currency-mismatch"
+        session = self.tabby_checkout(
+            appointment,
+            payment_id=payment_id,
+        )
+        result = self.tabby_result(
+            appointment,
+            payment_id=payment_id,
+            status=PaymentStatus.AUTHORIZED,
+            currency="USD",
+        )
+
+        with patch(
+            "api.public.booking_payment._tabby_adapter"
+        ) as adapter_factory:
+            adapter = adapter_factory.return_value
+            adapter.retrieve_payment.return_value = (
+                result
+            )
+
+            response = self.client.get(
+                self.tabby_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+        adapter.capture_payment.assert_not_called()
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PROCESSING,
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tabby_reference_mismatch_does_not_capture_or_mark_paid(
+        self,
+    ):
+        appointment = self.appointment()
+        payment_id = "tabby-reference-mismatch"
+        session = self.tabby_checkout(
+            appointment,
+            payment_id=payment_id,
+        )
+        result = self.tabby_result(
+            appointment,
+            payment_id=payment_id,
+            status=PaymentStatus.AUTHORIZED,
+            reference="OTHER-APPOINTMENT",
+        )
+
+        with patch(
+            "api.public.booking_payment._tabby_adapter"
+        ) as adapter_factory:
+            adapter = adapter_factory.return_value
+            adapter.retrieve_payment.return_value = (
+                result
+            )
+
+            response = self.client.get(
+                self.tabby_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+        adapter.capture_payment.assert_not_called()
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PROCESSING,
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tabby_capture_must_return_paid_before_session_is_paid(
+        self,
+    ):
+        appointment = self.appointment()
+        payment_id = "tabby-capture-not-final"
+        session = self.tabby_checkout(
+            appointment,
+            payment_id=payment_id,
+        )
+        authorized = self.tabby_result(
+            appointment,
+            payment_id=payment_id,
+            status=PaymentStatus.AUTHORIZED,
+        )
+
+        with patch(
+            "api.public.booking_payment._tabby_adapter"
+        ) as adapter_factory:
+            adapter = adapter_factory.return_value
+            adapter.retrieve_payment.return_value = (
+                authorized
+            )
+            adapter.capture_payment.return_value = (
+                authorized
+            )
+
+            response = self.client.get(
+                self.tabby_return_url(
+                    session
+                )
+            )
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+        adapter.capture_payment.assert_called_once_with(
+            payment_id,
+            amount=12500,
+        )
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PROCESSING,
+        )
+        self.assertIsNone(
+            session.paid_at
+        )
+
+    @override_settings(
+        PUBLIC_BOOKING_PAYMENT_RETURN_URL=(
+            "http://testserver/book"
+        )
+    )
+    def test_tabby_paid_return_is_idempotent(
+        self,
+    ):
+        appointment = self.appointment()
+        payment_id = "tabby-already-paid"
+        session = self.tabby_checkout(
+            appointment,
+            status=(
+                PaymentCheckoutSession
+                .Status
+                .PAID
+            ),
+            payment_id=payment_id,
+        )
+        session.external_payment_id = (
+            payment_id
+        )
+        session.paid_at = timezone.now()
+        session.save(
+            update_fields=[
+                "external_payment_id",
+                "paid_at",
+                "updated_at",
+            ]
+        )
+
+        with patch(
+            "api.public.booking_payment._tabby_adapter"
+        ) as adapter_factory:
+            response = self.client.get(
+                self.tabby_return_url(
+                    session
+                )
+            )
+            adapter_factory.assert_not_called()
+
+        self.assertEqual(
+            response.status_code,
+            302,
+        )
+
+        session.refresh_from_db()
+
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PAID,
+        )
+        self.assertEqual(
+            session.external_payment_id,
+            payment_id,
         )

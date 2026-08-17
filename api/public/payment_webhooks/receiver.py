@@ -13,6 +13,7 @@ from integrations.payments import (
     PaymentGatewayConfigurationError,
     PaymentGatewayError,
     PaymentGatewayVerificationError,
+    PaymentStatus,
 )
 from payments.models import CompanyPaymentGateway
 
@@ -135,13 +136,74 @@ def provider_payment_webhook(
             event.provider_payment_id
         )
 
+        payment_id_matches = (
+            payment.provider_payment_id
+            == event.provider_payment_id
+        )
+
+        status_matches = (
+            payment.status
+            == event.status
+        )
+
+        tabby_authorized_already_closed = (
+            provider == "tabby"
+            and event.status
+            == PaymentStatus.AUTHORIZED
+            and payment.status
+            == PaymentStatus.PAID
+        )
+
         if (
-            payment.provider_payment_id != event.provider_payment_id
-            or payment.status != event.status
+            not payment_id_matches
+            or not (
+                status_matches
+                or tabby_authorized_already_closed
+            )
         ):
             raise PaymentGatewayVerificationError(
                 "Provider payment changed during webhook verification."
             )
+
+        if (
+            provider == "tabby"
+            and payment.status
+            == PaymentStatus.AUTHORIZED
+        ):
+            authorized_payment = payment
+
+            payment = adapter.capture_payment(
+                authorized_payment.provider_payment_id,
+                amount=authorized_payment.amount,
+            )
+
+            if (
+                payment.provider_payment_id
+                != authorized_payment.provider_payment_id
+                or payment.status
+                != PaymentStatus.PAID
+                or payment.amount
+                != authorized_payment.amount
+                or str(
+                    payment.currency
+                    or ""
+                ).strip().upper()
+                != str(
+                    authorized_payment.currency
+                    or ""
+                ).strip().upper()
+                or str(
+                    payment.reference
+                    or ""
+                ).strip()
+                != str(
+                    authorized_payment.reference
+                    or ""
+                ).strip()
+            ):
+                raise PaymentGatewayVerificationError(
+                    "Tabby capture did not reach a verified paid state."
+                )
 
         ledger_event, session, created = process_verified_provider_webhook(
             gateway=gateway,

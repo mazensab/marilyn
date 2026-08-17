@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from urllib.parse import (
     parse_qsl,
     urlencode,
@@ -73,6 +75,8 @@ PUBLIC_PAYMENT_TOKEN_MAX_AGE_SECONDS = (
 )
 
 MONEY_QUANT = Decimal("0.01")
+
+logger = logging.getLogger(__name__)
 
 
 def issue_public_payment_token(
@@ -723,9 +727,12 @@ def _payment_request_for_tamara(
                 "cancel": urls[
                     "cancel"
                 ],
-                "notification": urls[
-                    "success"
-                ],
+                "notification": (
+                    request.build_absolute_uri(
+                        "/api/public/payments/webhooks/"
+                        f"tamara/{session.gateway_id}/"
+                    )
+                ),
             },
             "items": [
                 item
@@ -1210,6 +1217,578 @@ def _public_payment_method(
 
 
 
+
+def _tamara_result_status_value(
+    result: Any,
+) -> str:
+    status = getattr(
+        result,
+        "status",
+        "",
+    )
+
+    return str(
+        getattr(
+            status,
+            "value",
+            status,
+        )
+        or ""
+    ).strip().lower()
+
+
+def _validate_public_tamara_result(
+    *,
+    session: PaymentCheckoutSession,
+    appointment: MedicalAppointment,
+    result: Any,
+    order_id: str,
+) -> None:
+    returned_order_id = str(
+        getattr(
+            result,
+            "provider_payment_id",
+            "",
+        )
+        or ""
+    ).strip()
+
+    if returned_order_id != order_id:
+        raise ValueError(
+            "Tamara order identity does not match checkout session."
+        )
+
+    expected_amount = _minor_units(
+        _money(
+            session.amount
+        )
+    )
+
+    if getattr(
+        result,
+        "amount",
+        None,
+    ) != expected_amount:
+        raise ValueError(
+            "Tamara order amount does not match booking."
+        )
+
+    expected_currency = str(
+        session.currency_code
+        or "SAR"
+    ).strip().upper()
+
+    returned_currency = str(
+        getattr(
+            result,
+            "currency",
+            "",
+        )
+        or ""
+    ).strip().upper()
+
+    if returned_currency != expected_currency:
+        raise ValueError(
+            "Tamara order currency does not match booking."
+        )
+
+    expected_reference = _appointment_reference(
+        appointment
+    )
+
+    returned_reference = str(
+        getattr(
+            result,
+            "reference",
+            "",
+        )
+        or ""
+    ).strip()
+
+    if (
+        not returned_reference
+        or returned_reference != expected_reference
+    ):
+        raise ValueError(
+            "Tamara order reference does not match booking."
+        )
+
+
+def _reconcile_public_tamara_return(
+    session_id: int,
+) -> None:
+    """
+    Reconcile a successful Tamara browser return against Tamara's API.
+
+    The redirect itself is never authoritative. The provider order ID
+    comes only from the internal checkout session created by Marilyn.
+    """
+
+    session = (
+        PaymentCheckoutSession.objects
+        .filter(
+            id=session_id,
+            source_type=(
+                PaymentCheckoutSession
+                .SourceType
+                .OTHER
+            ),
+        )
+        .select_related(
+            "gateway",
+            "payment_method",
+            "company",
+        )
+        .first()
+    )
+
+    if session is None:
+        return
+
+    if (
+        session.status
+        == PaymentCheckoutSession.Status.PAID
+    ):
+        return
+
+    method = session.payment_method
+
+    if (
+        method is None
+        or _provider_for_method(
+            method
+        ) != "tamara"
+    ):
+        return
+
+    gateway = session.gateway
+
+    if (
+        gateway is None
+        or not gateway.is_active
+    ):
+        raise PaymentGatewayConfigurationError(
+            "Tamara payment gateway is unavailable."
+        )
+
+    order_id = str(
+        session.external_checkout_id
+        or ""
+    ).strip()
+
+    if (
+        not order_id
+        or len(order_id) > 200
+    ):
+        raise ValueError(
+            "Tamara order ID is missing from checkout session."
+        )
+
+    appointment = (
+        MedicalAppointment.objects
+        .filter(
+            id=session.source_id,
+            company=session.company,
+            source="ONLINE",
+            status__in=(
+                "SCHEDULED",
+                "CONFIRMED",
+            ),
+        )
+        .first()
+    )
+
+    if appointment is None:
+        raise ValueError(
+            "Tamara checkout appointment was not found."
+        )
+
+    adapter = _tamara_adapter(
+        gateway
+    )
+
+    result = adapter.retrieve_payment(
+        order_id
+    )
+
+    _validate_public_tamara_result(
+        session=session,
+        appointment=appointment,
+        result=result,
+        order_id=order_id,
+    )
+
+    if result.status == PaymentStatus.PENDING:
+        try:
+            result = adapter.authorise_payment(
+                order_id
+            )
+        except PaymentGatewayError:
+            result = adapter.retrieve_payment(
+                order_id
+            )
+
+        _validate_public_tamara_result(
+            session=session,
+            appointment=appointment,
+            result=result,
+            order_id=order_id,
+        )
+
+    if result.status not in {
+        PaymentStatus.AUTHORIZED,
+        PaymentStatus.PAID,
+    }:
+        return
+
+    now = timezone.now()
+
+    metadata = dict(
+        session.metadata
+        or {}
+    )
+
+    provider_status = (
+        _tamara_result_status_value(
+            result
+        )
+    )
+
+    metadata.update(
+        {
+            "payment_provider": "tamara",
+            "provider_payment_id": order_id,
+            "provider_status": provider_status,
+            "provider_reference": (
+                str(
+                    getattr(
+                        result,
+                        "reference",
+                        "",
+                    )
+                    or ""
+                ).strip()
+            ),
+            "verified_via": (
+                "tamara_return_api"
+            ),
+            "verified_at": (
+                now.isoformat()
+            ),
+            "capture_required": (
+                result.status
+                == PaymentStatus.AUTHORIZED
+            ),
+        }
+    )
+
+    session.external_payment_id = (
+        order_id
+    )
+    session.status = (
+        PaymentCheckoutSession
+        .Status
+        .PAID
+    )
+    session.paid_at = now
+    session.failure_reason = ""
+    session.metadata = metadata
+
+    session.save(
+        update_fields=[
+            "external_payment_id",
+            "status",
+            "paid_at",
+            "failure_reason",
+            "metadata",
+            "updated_at",
+        ]
+    )
+
+
+
+def _tabby_result_status_value(
+    result: Any,
+) -> str:
+    status = getattr(
+        result,
+        "status",
+        "",
+    )
+    return str(
+        getattr(
+            status,
+            "value",
+            status,
+        )
+        or ""
+    ).strip().lower()
+
+
+def _validate_public_tabby_result(
+    *,
+    session: PaymentCheckoutSession,
+    appointment: MedicalAppointment,
+    result: Any,
+    payment_id: str,
+) -> None:
+    returned_payment_id = str(
+        getattr(
+            result,
+            "provider_payment_id",
+            "",
+        )
+        or ""
+    ).strip()
+
+    if returned_payment_id != payment_id:
+        raise ValueError(
+            "Tabby payment identity does not match checkout session."
+        )
+
+    expected_amount = _minor_units(
+        _money(
+            session.amount
+        )
+    )
+
+    if getattr(
+        result,
+        "amount",
+        None,
+    ) != expected_amount:
+        raise ValueError(
+            "Tabby payment amount does not match booking."
+        )
+
+    expected_currency = str(
+        session.currency_code
+        or "SAR"
+    ).strip().upper()
+
+    returned_currency = str(
+        getattr(
+            result,
+            "currency",
+            "",
+        )
+        or ""
+    ).strip().upper()
+
+    if returned_currency != expected_currency:
+        raise ValueError(
+            "Tabby payment currency does not match booking."
+        )
+
+    expected_reference = _appointment_reference(
+        appointment
+    )
+
+    returned_reference = str(
+        getattr(
+            result,
+            "reference",
+            "",
+        )
+        or ""
+    ).strip()
+
+    if (
+        not returned_reference
+        or returned_reference != expected_reference
+    ):
+        raise ValueError(
+            "Tabby payment reference does not match booking."
+        )
+
+
+def _reconcile_public_tabby_return(
+    session_id: int,
+) -> None:
+    """
+    Reconcile a successful Tabby browser return against Tabby's API.
+
+    The browser redirect is never authoritative. AUTHORIZED payments
+    are captured server-side, and Marilyn marks the checkout PAID only
+    after Tabby reports the final PAID/CLOSED state.
+    """
+
+    session = (
+        PaymentCheckoutSession.objects
+        .filter(
+            id=session_id,
+            source_type=(
+                PaymentCheckoutSession
+                .SourceType
+                .OTHER
+            ),
+        )
+        .select_related(
+            "gateway",
+            "payment_method",
+            "company",
+        )
+        .first()
+    )
+
+    if session is None:
+        return
+
+    if (
+        session.status
+        == PaymentCheckoutSession.Status.PAID
+    ):
+        return
+
+    method = session.payment_method
+
+    if (
+        method is None
+        or _provider_for_method(
+            method
+        ) != "tabby"
+    ):
+        return
+
+    gateway = session.gateway
+
+    if (
+        gateway is None
+        or not gateway.is_active
+    ):
+        raise PaymentGatewayConfigurationError(
+            "Tabby payment gateway is unavailable."
+        )
+
+    payment_id = str(
+        session.external_checkout_id
+        or session.external_payment_id
+        or ""
+    ).strip()
+
+    if (
+        not payment_id
+        or len(payment_id) > 200
+    ):
+        raise ValueError(
+            "Tabby payment ID is missing from checkout session."
+        )
+
+    appointment = (
+        MedicalAppointment.objects
+        .filter(
+            id=session.source_id,
+            company=session.company,
+            source="ONLINE",
+            status__in=(
+                "SCHEDULED",
+                "CONFIRMED",
+            ),
+        )
+        .first()
+    )
+
+    if appointment is None:
+        raise ValueError(
+            "Tabby checkout appointment was not found."
+        )
+
+    adapter = _tabby_adapter(
+        gateway
+    )
+
+    result = adapter.retrieve_payment(
+        payment_id
+    )
+
+    _validate_public_tabby_result(
+        session=session,
+        appointment=appointment,
+        result=result,
+        payment_id=payment_id,
+    )
+
+    if result.status == PaymentStatus.AUTHORIZED:
+        result = adapter.capture_payment(
+            payment_id,
+            amount=_minor_units(
+                _money(
+                    session.amount
+                )
+            ),
+        )
+
+        _validate_public_tabby_result(
+            session=session,
+            appointment=appointment,
+            result=result,
+            payment_id=payment_id,
+        )
+
+    if result.status != PaymentStatus.PAID:
+        return
+
+    now = timezone.now()
+
+    metadata = dict(
+        session.metadata
+        or {}
+    )
+
+    metadata.update(
+        {
+            "payment_provider": "tabby",
+            "provider_payment_id": payment_id,
+            "provider_status": (
+                _tabby_result_status_value(
+                    result
+                )
+            ),
+            "provider_reference": (
+                str(
+                    getattr(
+                        result,
+                        "reference",
+                        "",
+                    )
+                    or ""
+                ).strip()
+            ),
+            "verified_via": (
+                "tabby_return_api"
+            ),
+            "verified_at": (
+                now.isoformat()
+            ),
+            "capture_required": False,
+            "captured": True,
+        }
+    )
+
+    session.external_payment_id = (
+        payment_id
+    )
+    session.status = (
+        PaymentCheckoutSession
+        .Status
+        .PAID
+    )
+    session.paid_at = now
+    session.failure_reason = ""
+    session.metadata = metadata
+
+    session.save(
+        update_fields=[
+            "external_payment_id",
+            "status",
+            "paid_at",
+            "failure_reason",
+            "metadata",
+            "updated_at",
+        ]
+    )
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def public_booking_payment_return(
@@ -1297,6 +1876,58 @@ def public_booking_payment_return(
             },
             status=400,
         )
+
+    if (
+        provider_value == "tamara"
+        and result_value == "success"
+    ):
+        try:
+            _reconcile_public_tamara_return(
+                session_id
+            )
+        except (
+            PaymentGatewayConfigurationError,
+            PaymentGatewayError,
+            ValueError,
+        ) as error:
+            logger.warning(
+                "Tamara public return reconciliation failed "
+                "for checkout session %s: %s",
+                session_id,
+                str(error)[:300],
+            )
+        except Exception:
+            logger.exception(
+                "Unexpected Tamara public return reconciliation "
+                "failure for checkout session %s.",
+                session_id,
+            )
+
+    if (
+        provider_value == "tabby"
+        and result_value == "success"
+    ):
+        try:
+            _reconcile_public_tabby_return(
+                session_id
+            )
+        except (
+            PaymentGatewayConfigurationError,
+            PaymentGatewayError,
+            ValueError,
+        ) as error:
+            logger.warning(
+                "Tabby public return reconciliation failed "
+                "for checkout session %s: %s",
+                session_id,
+                str(error)[:300],
+            )
+        except Exception:
+            logger.exception(
+                "Unexpected Tabby public return reconciliation "
+                "failure for checkout session %s.",
+                session_id,
+            )
 
     frontend_url = str(
         getattr(

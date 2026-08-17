@@ -39,6 +39,7 @@ class PaymentWebhookReceiverTests(TestCase):
     gateway = PublicBookingPaymentTests.gateway
     payment_method = PublicBookingPaymentTests.payment_method
     moyasar_checkout = PublicBookingPaymentTests.moyasar_checkout
+    tabby_checkout = PublicBookingPaymentTests.tabby_checkout
 
     def setUp(self) -> None:
         PublicBookingPaymentTests.setUp(self)
@@ -580,4 +581,261 @@ class PaymentWebhookReceiverTests(TestCase):
 
         self.assertTrue(
             response.data["duplicate"],
+        )
+
+    def tabby_webhook_url(
+        self,
+        gateway: CompanyPaymentGateway,
+    ) -> str:
+        return reverse(
+            "public:payment-webhook-tabby",
+            kwargs={
+                "gateway_id": gateway.id,
+            },
+        )
+
+    def tabby_payload(
+        self,
+        *,
+        payment_id: str,
+        event_id: str,
+    ) -> dict:
+        return {
+            "event_id": event_id,
+            "payment_id": payment_id,
+            "status": "authorized",
+        }
+
+    def tabby_event(
+        self,
+        *,
+        payment_id: str,
+    ) -> WebhookEvent:
+        return WebhookEvent(
+            gateway=PaymentGatewayName.TABBY,
+            event_type="payment.authorized",
+            provider_payment_id=payment_id,
+            status=PaymentStatus.AUTHORIZED,
+            payload={
+                "payment_id": payment_id,
+                "status": "authorized",
+            },
+        )
+
+    def tabby_result(
+        self,
+        *,
+        payment_id: str,
+        status: PaymentStatus,
+        reference: str,
+        amount: int = 12500,
+        currency: str = "SAR",
+    ) -> PaymentResult:
+        return PaymentResult(
+            gateway=PaymentGatewayName.TABBY,
+            provider_payment_id=payment_id,
+            status=status,
+            amount=amount,
+            currency=currency,
+            reference=reference,
+        )
+
+    @patch.dict(
+        "api.public.payment_webhooks.receiver._PROVIDER_BUILDERS",
+        {"tabby": MagicMock()},
+    )
+    def test_tabby_authorized_webhook_captures_and_marks_paid(
+        self,
+    ):
+        from api.public.payment_webhooks.receiver import _PROVIDER_BUILDERS
+
+        appointment = self.appointment_obj
+        payment_id = "tabby_webhook_authorized_001"
+        session = self.tabby_checkout(
+            appointment,
+            payment_id=payment_id,
+        )
+        url = self.tabby_webhook_url(session.gateway)
+
+        builder = _PROVIDER_BUILDERS["tabby"]
+        adapter = MagicMock()
+        builder.return_value = adapter
+        adapter.verify_webhook.return_value = self.tabby_event(
+            payment_id=payment_id,
+        )
+        adapter.retrieve_payment.return_value = self.tabby_result(
+            payment_id=payment_id,
+            status=PaymentStatus.AUTHORIZED,
+            reference=appointment.appointment_number,
+        )
+        adapter.capture_payment.return_value = self.tabby_result(
+            payment_id=payment_id,
+            status=PaymentStatus.PAID,
+            reference=appointment.appointment_number,
+        )
+
+        response = self.client.post(
+            url,
+            self.tabby_payload(
+                payment_id=payment_id,
+                event_id="evt_tabby_authorized_001",
+            ),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        adapter.capture_payment.assert_called_once_with(
+            payment_id,
+            amount=12500,
+        )
+        session.refresh_from_db()
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PAID,
+        )
+        self.assertEqual(session.external_payment_id, payment_id)
+        self.assertIsNotNone(session.paid_at)
+
+    @patch.dict(
+        "api.public.payment_webhooks.receiver._PROVIDER_BUILDERS",
+        {"tabby": MagicMock()},
+    )
+    def test_tabby_authorized_webhook_accepts_already_closed_payment(
+        self,
+    ):
+        from api.public.payment_webhooks.receiver import _PROVIDER_BUILDERS
+
+        appointment = self.appointment_obj
+        payment_id = "tabby_webhook_closed_001"
+        session = self.tabby_checkout(
+            appointment,
+            payment_id=payment_id,
+        )
+        url = self.tabby_webhook_url(session.gateway)
+
+        builder = _PROVIDER_BUILDERS["tabby"]
+        adapter = MagicMock()
+        builder.return_value = adapter
+        adapter.verify_webhook.return_value = self.tabby_event(
+            payment_id=payment_id,
+        )
+        adapter.retrieve_payment.return_value = self.tabby_result(
+            payment_id=payment_id,
+            status=PaymentStatus.PAID,
+            reference=appointment.appointment_number,
+        )
+
+        response = self.client.post(
+            url,
+            self.tabby_payload(
+                payment_id=payment_id,
+                event_id="evt_tabby_closed_001",
+            ),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        adapter.capture_payment.assert_not_called()
+        session.refresh_from_db()
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PAID,
+        )
+
+    @patch.dict(
+        "api.public.payment_webhooks.receiver._PROVIDER_BUILDERS",
+        {"tabby": MagicMock()},
+    )
+    def test_tabby_capture_must_reach_paid_state(
+        self,
+    ):
+        from api.public.payment_webhooks.receiver import _PROVIDER_BUILDERS
+
+        appointment = self.appointment_obj
+        payment_id = "tabby_webhook_not_paid_001"
+        session = self.tabby_checkout(
+            appointment,
+            payment_id=payment_id,
+        )
+        url = self.tabby_webhook_url(session.gateway)
+
+        builder = _PROVIDER_BUILDERS["tabby"]
+        adapter = MagicMock()
+        builder.return_value = adapter
+        authorized = self.tabby_result(
+            payment_id=payment_id,
+            status=PaymentStatus.AUTHORIZED,
+            reference=appointment.appointment_number,
+        )
+        adapter.verify_webhook.return_value = self.tabby_event(
+            payment_id=payment_id,
+        )
+        adapter.retrieve_payment.return_value = authorized
+        adapter.capture_payment.return_value = authorized
+
+        response = self.client.post(
+            url,
+            self.tabby_payload(
+                payment_id=payment_id,
+                event_id="evt_tabby_not_paid_001",
+            ),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 401)
+        session.refresh_from_db()
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PROCESSING,
+        )
+        self.assertEqual(session.external_payment_id, "")
+
+    @patch.dict(
+        "api.public.payment_webhooks.receiver._PROVIDER_BUILDERS",
+        {"tabby": MagicMock()},
+    )
+    def test_tabby_capture_identity_change_is_rejected(
+        self,
+    ):
+        from api.public.payment_webhooks.receiver import _PROVIDER_BUILDERS
+
+        appointment = self.appointment_obj
+        payment_id = "tabby_webhook_identity_001"
+        session = self.tabby_checkout(
+            appointment,
+            payment_id=payment_id,
+        )
+        url = self.tabby_webhook_url(session.gateway)
+
+        builder = _PROVIDER_BUILDERS["tabby"]
+        adapter = MagicMock()
+        builder.return_value = adapter
+        adapter.verify_webhook.return_value = self.tabby_event(
+            payment_id=payment_id,
+        )
+        adapter.retrieve_payment.return_value = self.tabby_result(
+            payment_id=payment_id,
+            status=PaymentStatus.AUTHORIZED,
+            reference=appointment.appointment_number,
+        )
+        adapter.capture_payment.return_value = self.tabby_result(
+            payment_id="different-tabby-payment",
+            status=PaymentStatus.PAID,
+            reference=appointment.appointment_number,
+        )
+
+        response = self.client.post(
+            url,
+            self.tabby_payload(
+                payment_id=payment_id,
+                event_id="evt_tabby_identity_001",
+            ),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 401)
+        session.refresh_from_db()
+        self.assertEqual(
+            session.status,
+            PaymentCheckoutSession.Status.PROCESSING,
         )
