@@ -16,7 +16,6 @@ import {
   Loader2,
   RefreshCw,
   ShieldCheck,
-  WalletCards,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -108,18 +107,75 @@ function providerLabel(provider: string, isArabic: boolean) {
   return isArabic ? label.ar : label.en;
 }
 
-function paymentIcon(provider: string) {
+const PAYMENT_PROVIDER_LOGOS: Record<
+  string,
+  { src: string; alt: string; width: number; height: number; className: string }
+> = {
+  moyasar: {
+    src: "/payment-methods/mada.svg",
+    alt: "mada",
+    width: 84,
+    height: 34,
+    className: "h-[28px] w-auto object-contain",
+  },
+  tamara: {
+    src: "/payment-methods/tamara.svg",
+    alt: "Tamara",
+    width: 84,
+    height: 34,
+    className: "h-[28px] w-auto object-contain",
+  },
+  tabby: {
+    src: "/payment-methods/tabby.svg",
+    alt: "Tabby",
+    width: 84,
+    height: 34,
+    className: "h-[28px] w-auto object-contain",
+  },
+};
+
+function PaymentProviderMark({
+  provider,
+  compact = false,
+}: {
+  provider: string;
+  compact?: boolean;
+}) {
   const normalized = provider.trim().toLowerCase();
 
   if (normalized === "cash_at_clinic") {
-    return <Banknote className="size-5" />;
+    return (
+      <div className="flex size-11 shrink-0 items-center justify-center rounded-[15px] border border-white/80 bg-[linear-gradient(145deg,#fbf5ec_0%,#ead8bf_100%)] text-[#a57b3d]">
+        <Banknote className="size-5" />
+      </div>
+    );
   }
 
-  if (normalized === "tamara" || normalized === "tabby") {
-    return <WalletCards className="size-5" />;
+  const logo = PAYMENT_PROVIDER_LOGOS[normalized];
+  if (logo) {
+    return (
+      <div
+        className={[
+          "flex shrink-0 items-center justify-center rounded-[15px] border border-white/80 bg-white/78 shadow-[0_6px_18px_rgba(45,34,20,0.04)]",
+          compact ? "h-11 min-w-[72px] px-2" : "h-11 min-w-[82px] px-2.5",
+        ].join(" ")}
+      >
+        <Image
+          src={logo.src}
+          alt={logo.alt}
+          width={logo.width}
+          height={logo.height}
+          className={logo.className}
+        />
+      </div>
+    );
   }
 
-  return <CreditCard className="size-5" />;
+  return (
+    <div className="flex size-11 shrink-0 items-center justify-center rounded-[15px] border border-white/80 bg-[linear-gradient(145deg,#fbf5ec_0%,#ead8bf_100%)] text-[#a57b3d]">
+      <CreditCard className="size-5" />
+    </div>
+  );
 }
 
 function savePaymentContext(value: StoredPaymentContext) {
@@ -738,9 +794,7 @@ export function PublicBookingPayment({
       {moyasarCheckout ? (
         <div className="mt-5 rounded-[22px] border border-[#d7c6ae]/48 bg-white/76 p-4 sm:p-5">
           <div className="mb-4 flex items-start gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-[14px] bg-[#f0dfc7] text-[#a57b3d]">
-              <CreditCard className="size-5" />
-            </div>
+            <PaymentProviderMark provider="moyasar" compact />
             <div>
               <h4 className="font-semibold text-[#273245]">
                 {providerLabel("moyasar", isArabic)}
@@ -785,9 +839,7 @@ function ComingSoonPaymentMethodCard({
       aria-disabled="true"
       className="relative flex w-full cursor-not-allowed items-start gap-3 overflow-hidden rounded-[19px] border border-[#d9cab5]/45 bg-white/45 p-4 opacity-[0.72]"
     >
-      <div className="flex size-11 shrink-0 items-center justify-center rounded-[15px] border border-white/80 bg-[linear-gradient(145deg,#fbf5ec_0%,#ead8bf_100%)] text-[#a57b3d]">
-        {paymentIcon(provider)}
-      </div>
+      <PaymentProviderMark provider={provider} />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
@@ -855,9 +907,7 @@ function PaymentMethodCard({
           : "border-[#d9cab5]/55 bg-white/72 hover:border-[#c5a474]/70 hover:bg-white",
       ].join(" ")}
     >
-      <div className="flex size-11 shrink-0 items-center justify-center rounded-[15px] border border-white/80 bg-[linear-gradient(145deg,#fbf5ec_0%,#ead8bf_100%)] text-[#a57b3d]">
-        {paymentIcon(provider)}
-      </div>
+      <PaymentProviderMark provider={provider} />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
